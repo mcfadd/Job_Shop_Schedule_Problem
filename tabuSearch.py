@@ -2,8 +2,8 @@ from random import randint
 
 
 # TODO
-# make this set more efficient (e.g. implement AVL tree instead of list)
-# redo pprint()
+# 1. make this class more efficient (e.g. implement AVL tree instead of list)
+# 2. redo pprint()
 class myset:
 
     def __init__(self, ):

@@ -1,5 +1,22 @@
 import csv
 
+class Solution:
+
+    def __init__(self, operationList=None):
+        self._operationList = [] if operation is None else operationList
+
+    def insertOperation(self, index, Operation):
+        self._operationList.insert(index, Operation)
+
+    def removeOperationAt(self, index):
+        return self._operationList.pop(index)
+
+    def getOperationAt(self, index):
+        return self._operationList[index]
+
+    # def createSchedule(self):
+        # TODO
+
 
 class task:
 
@@ -62,9 +79,10 @@ class operation:
         self._machine = machineId
 
     def getString(self):
-        return "[{}, {}, {}, {}]".format(self._task.getJobId(), self._task.getTaskId(), self._task.getSequence(),
+        return "[{}, {}, {}, {}]".format(self._task.getJobId(),
+                                         self._task.getTaskId(),
+                                         self._task.getSequence(),
                                          self._machine)
-
 
 class data:
     # create sequenceDependencyMatrix
@@ -73,8 +91,8 @@ class data:
     # create dictionary for sequenceDependencyMatrix getSetupTime()
     dependencyMatrixIndexEncoding = {}
 
-    # create list of jobs
-    jobs = []
+    # create mapping of {jobId : job}
+    jobs = {}
 
     # create list of machine speeds
     machineSpeeds = []
@@ -84,9 +102,9 @@ class data:
     #
     # Note: indexEncoding is used in getSetupTime()
     @staticmethod
-    def readjobTasksFile(numberOfJobs, inputFile):
-        data.jobs = [job(i) for i in range(numberOfJobs)]
-        index = 0
+    def readjobTasksFile(inputFile):
+        prevJobId = -1  # previously seen job
+        index = 0       # used for mapping (jobId, taskId) : index in dependencyMatrixIndexEncoding
         with open(inputFile) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
@@ -99,11 +117,16 @@ class data:
                     [int(x) for x in row[3][1:-1].split(' ')],
                     int(row[4])
                 )
-                # append task to associated job.tasks in self.jobs list
+                # create & append new job if we encounter jobId that has not been seen
+                if tmpTask._jobId != prevJobId:
+                    data.jobs[tmpTask._jobId] = job(tmpTask._jobId)
+                    prevJobId = tmpTask._jobId
+
+                # append task to associated job.tasks list
                 data.jobs[tmpTask._jobId]._tasks.append(tmpTask)
 
-                # add (jobId, taskId) : index to dependencyMatrixIndexEncoding
-                data.dependencyMatrixIndexEncoding[(tmpTask._jobId, tmpTask._taskId)] = index
+                # add mapping task : index to dependencyMatrixIndexEncoding dictionary
+                data.dependencyMatrixIndexEncoding[tmpTask] = index
                 index += 1
 
     # populates data.sequenceDependencyMatrix by reading sequenceDependencyMatrixcsv
@@ -126,8 +149,9 @@ class data:
 
     @staticmethod
     def getSetupTime(prevTask, curTask):
-        return data.sequenceDependencyMatrix[data.dependencyMatrixIndexEncoding[(prevTask._jobId, prevTask._taskId)]][
-            data.dependencyMatrixIndexEncoding[(curTask._jobId, curTask._taskId)]] if prevTask != None else 0
+        return data.sequenceDependencyMatrix[data.dependencyMatrixIndexEncoding[prevTask]][
+            data.dependencyMatrixIndexEncoding[curTask]] if prevTask != None else 0
+
 
     @staticmethod
     def getJob(jobId):
@@ -163,10 +187,16 @@ class data:
         print("  (jobId, taskId) : index\n")
         for key in data.dependencyMatrixIndexEncoding:
             print("  ", end="")
-            print("{} : {}".format(key, data.dependencyMatrixIndexEncoding[key]))
+            print(f"{key} : {data.dependencyMatrixIndexEncoding[key]}")
 
         print("\nMachineSpeeds:\n")
         print("  machine : speed\n")
         for machine, speed in enumerate(data.machineSpeeds):
             print("  ", end="")
-            print("{} : {}".format(machine, speed))
+            print(f"{machine} : {speed}")
+
+    @staticmethod
+    def readDataFromFiles(seqDepMatrixFile, machineRunspeedsFile, jobTasksFile):
+        data.readsequenceDependencyMatrixFile(seqDepMatrixFile)
+        data.readmachineSpeedsFile(machineRunspeedsFile)
+        data.readjobTasksFile(jobTasksFile)

@@ -2,26 +2,27 @@
 from tabuSearch import tabuSearch
 from dataSet import data, operation
 import makespan
+import time
+
+start_time = time.time()
 
 # read csv files and update data class
 # Note: make sure your relative paths are correct
 
-data.readsequenceDependencyMatrixFile('data/sequenceDependencyMatrix.csv')
-data.readmachineSpeedsFile('data/machineRunSpeed.csv')
-data.readjobTasksFile(3, 'data/jobTasks.csv')
+data.readDataFromFiles('data/sequenceDependencyMatrix.csv', 'data/machineRunSpeed.csv', 'data/jobTasks.csv')
 
 # uncomment to print data
 # data.printData()
 
 Solution = [
-    operation(data.getJob(0).getTask(0), 0),
-    operation(data.getJob(0).getTask(1), 1),
-    operation(data.getJob(1).getTask(0), 1),
-    operation(data.getJob(2).getTask(0), 0),
-    operation(data.getJob(1).getTask(1), 0),
+    operation(task=data.getJob(0).getTask(0), machine=0),
+    operation(task=data.getJob(0).getTask(1), machine=1),
+    operation(task=data.getJob(1).getTask(0), machine=1),
+    operation(task=data.getJob(2).getTask(0), machine=0),
+    operation(task=data.getJob(1).getTask(1), machine=0),
 ]
 
-print("Current Solution:")
+print("Initial Solution:")
 for operation in Solution:
     print(operation.getString())
 
@@ -32,11 +33,13 @@ result = make.compute_makespan(Solution)
 
 print("\nMakespan results:")
 print("(makespan, waitTime)\n")
-print("({}, {})\n".format(max(result[0]), result[1]))
+print(f"({ max(result[0]) }, { result[1] })\n")
 
 print("generate neighborhood results:")
 print("(makespan, waitTime) [ neighbor ]\n")
 tabuSearch(make).generate_neighborhood(8, Solution).pprint()
 
+duration = time.time() - start_time
 
+print(f"Duration {duration} seconds")
 
