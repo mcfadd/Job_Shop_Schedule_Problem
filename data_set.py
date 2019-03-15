@@ -3,10 +3,10 @@ import csv
 class Solution:
 
     def __init__(self, operationList=None):
-        self._operationList = [] if operation is None else operationList
+        self._operationList = [] if operationList is None else operationList
 
-    def insertOperation(self, index, Operation):
-        self._operationList.insert(index, Operation)
+    def insertOperation(self, index, operation):
+        self._operationList.insert(index, operation)
 
     def removeOperationAt(self, index):
         return self._operationList.pop(index)
@@ -14,11 +14,18 @@ class Solution:
     def getOperationAt(self, index):
         return self._operationList[index]
 
+    def getOperationsList(self):
+        return self._operationList
+
+    def print(self):
+        for operation in self._operationList:
+            print(operation.getString())
+
     # def createSchedule(self):
         # TODO
 
 
-class task:
+class Task:
 
     def __init__(self, jobId, taskId, sequence, usableMachines, pieces):
         self._jobId = jobId
@@ -50,7 +57,7 @@ class task:
                                             self._pieces))
 
 
-class job:
+class Job:
 
     def __init__(self, jobId):
         self._jobId = jobId
@@ -63,7 +70,7 @@ class job:
         return self._jobId
 
 
-class operation:
+class Operation:
 
     def __init__(self, task, machine):
         self._task = task
@@ -84,7 +91,7 @@ class operation:
                                          self._task.getSequence(),
                                          self._machine)
 
-class data:
+class Data:
     # create sequenceDependencyMatrix
     sequenceDependencyMatrix = []
 
@@ -110,7 +117,7 @@ class data:
             next(fin)
             for row in csv.reader(fin):
                 # create task object
-                tmpTask = task(
+                tmpTask = Task(
                     int(row[0]),
                     int(row[1]),
                     int(row[2]),
@@ -119,14 +126,14 @@ class data:
                 )
                 # create & append new job if we encounter jobId that has not been seen
                 if tmpTask._jobId != prevJobId:
-                    data.jobs[tmpTask._jobId] = job(tmpTask._jobId)
+                    Data.jobs[tmpTask._jobId] = Job(tmpTask._jobId)
                     prevJobId = tmpTask._jobId
 
                 # append task to associated job.tasks list
-                data.jobs[tmpTask._jobId]._tasks.append(tmpTask)
+                Data.jobs[tmpTask._jobId]._tasks.append(tmpTask)
 
                 # add mapping task : index to dependencyMatrixIndexEncoding dictionary
-                data.dependencyMatrixIndexEncoding[tmpTask] = index
+                Data.dependencyMatrixIndexEncoding[tmpTask] = index
                 index += 1
 
     # populates data.sequenceDependencyMatrix by reading sequenceDependencyMatrixcsv
@@ -136,7 +143,7 @@ class data:
             # skip headers (i.e. first row in csv file)
             next(fin)
             for row in csv.reader(fin):
-                data.sequenceDependencyMatrix.append([int(x) for x in row[1:]])
+                Data.sequenceDependencyMatrix.append([int(x) for x in row[1:]])
 
     # populates data.machineSpeeds by reading machineSeedscsv
     @staticmethod
@@ -145,58 +152,58 @@ class data:
             # skip headers (i.e. first row in csv file)
             next(fin)
             for row in csv.reader(fin):
-                data.machineSpeeds.append(int(row[1]))
+                Data.machineSpeeds.append(int(row[1]))
 
     @staticmethod
     def getSetupTime(prevTask, curTask):
-        return data.sequenceDependencyMatrix[data.dependencyMatrixIndexEncoding[prevTask]][
-            data.dependencyMatrixIndexEncoding[curTask]] if prevTask != None else 0
+        return Data.sequenceDependencyMatrix[Data.dependencyMatrixIndexEncoding[prevTask]][
+            Data.dependencyMatrixIndexEncoding[curTask]] if prevTask != None else 0
 
 
     @staticmethod
     def getJob(jobId):
-        return data.jobs[jobId]
+        return Data.jobs[jobId]
 
     @staticmethod
     def getMachineSpeed(machineId):
-        return data.machineSpeeds[machineId]
+        return Data.machineSpeeds[machineId]
 
     @staticmethod
     def getNumerOfMachines():
-        return len(data.machineSpeeds)
+        return len(Data.machineSpeeds)
 
     @staticmethod
     def getNumberOfJobs():
-        return len(data.jobs)
+        return len(Data.jobs)
 
     @staticmethod
     def printData():
         print("JobTasks:\n")
         print("  [jobId, taskId, sequence, usable_machines, pieces]\n")
-        for job in data.jobs:
+        for job in Data.jobs:
             for task in job._tasks:
                 print("  ", end="")
                 task.printTask()
 
         print("\nSequenceDependencyMatrix:\n")
-        for row in data.sequenceDependencyMatrix:
+        for row in Data.sequenceDependencyMatrix:
             print("  ", end="")
             print(row)
 
         print("\nDependencyMatrixIndexEncoding:\n")
         print("  (jobId, taskId) : index\n")
-        for key in data.dependencyMatrixIndexEncoding:
+        for key in Data.dependencyMatrixIndexEncoding:
             print("  ", end="")
-            print(f"{key} : {data.dependencyMatrixIndexEncoding[key]}")
+            print(f"{key} : {Data.dependencyMatrixIndexEncoding[key]}")
 
         print("\nMachineSpeeds:\n")
         print("  machine : speed\n")
-        for machine, speed in enumerate(data.machineSpeeds):
+        for machine, speed in enumerate(Data.machineSpeeds):
             print("  ", end="")
             print(f"{machine} : {speed}")
 
     @staticmethod
     def readDataFromFiles(seqDepMatrixFile, machineRunspeedsFile, jobTasksFile):
-        data.readsequenceDependencyMatrixFile(seqDepMatrixFile)
-        data.readmachineSpeedsFile(machineRunspeedsFile)
-        data.readjobTasksFile(jobTasksFile)
+        Data.readsequenceDependencyMatrixFile(seqDepMatrixFile)
+        Data.readmachineSpeedsFile(machineRunspeedsFile)
+        Data.readjobTasksFile(jobTasksFile)

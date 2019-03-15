@@ -1,12 +1,13 @@
 from random import randint
-
+from data_set import Solution
+from makespan import makespanCalculator
 
 # TODO
 # 1. make this class more efficient (e.g. implement AVL tree instead of list)
 # 2. redo pprint()
-class myset:
+class neighbor_set:
 
-    def __init__(self, ):
+    def __init__(self):
         self.size = 0
         self.elems = []
 
@@ -23,23 +24,22 @@ class myset:
             print("]")
 
 
-class tabuSearch:
+class TabuSearch:
 
-    def __init__(self, solver):
-        self.solver = solver
-
-    def generate_neighbor(self, solution, debug=False):
+    def generate_neighbor(self, operationsList, debug=False):
 
         lowerIndex = upperIndex = 0
         while lowerIndex == upperIndex:
-            result = list(solution)
-            randIndex = randint(0, len(solution) - 1)
+            result = list(operationsList)
+            randIndex = randint(0, len(operationsList) - 1)
             operation = result.pop(randIndex)
             jobId = operation.getTask().getJobId()
             sequence = operation.getTask().getSequence()
 
             if debug:
-                print("randIndex = {}\noperation = {}\nresult = {}".format(randIndex, operation.getString(), result))
+                print(f"randIndex = {randIndex}\n"
+                      f"operation = \n{operation.getString()}\n"
+                      f"result = \n{result}\n")
 
             lowerIndex = min(randIndex, len(result) - 1)
             while lowerIndex >= 0 and not (
@@ -62,20 +62,25 @@ class tabuSearch:
             placementIndex = randint(lowerIndex, upperIndex)
 
         if debug:
-            print("lowerIndex = {}\nupperIndex = {}\nplacementIndex = {}".format(lowerIndex, upperIndex,
-                                                                                 placementIndex))
+            print(f"lowerIndex = {lowerIndex}\n"
+                  f"upperIndex = {upperIndex}\n"
+                  f"placementIndex = {placementIndex}\n")
 
         result.insert(placementIndex, operation)
-        makespan = self.solver.compute_makespan(result)
+        makespan_and_wait = makespanCalculator.compute_makespan_and_wait(result)
 
         # this should never happen
-        assert makespan != -1, "\nsolution = {}\nrandIndex = {}\nlowerIndex = {}\nupperIndex = {}\nplacementIndex = {}\nresult = {}".format(
-            solution, randIndex, lowerIndex, upperIndex, placementIndex, result)
+        assert makespan_and_wait != -1, "Error in tabuSearch.generate_neighbor()!" \
+                               f"randIndex = {randIndex}\n" \
+                               f"lowerIndex = {lowerIndex}\n" \
+                               f"upperIndex = {upperIndex}\n" \
+                               f"placementIndex = {placementIndex}\n" \
+                               f"result = \n{result}\n"
 
-        return (max(makespan[0]), makespan[1], result)
+        return (max(makespan_and_wait[0]), makespan_and_wait[1], result)
 
     def generate_neighborhood(self, size, solution, debug=False):
-        result = myset()
+        result = neighbor_set()
         while result.size != size:
             result.add(self.generate_neighbor(solution, debug))
 
