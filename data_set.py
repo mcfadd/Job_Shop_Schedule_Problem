@@ -1,209 +1,219 @@
 import csv
 
-class Solution:
-
-    def __init__(self, operationList=None):
-        self._operationList = [] if operationList is None else operationList
-
-    def insertOperation(self, index, operation):
-        self._operationList.insert(index, operation)
-
-    def removeOperationAt(self, index):
-        return self._operationList.pop(index)
-
-    def getOperationAt(self, index):
-        return self._operationList[index]
-
-    def getOperationsList(self):
-        return self._operationList
-
-    def print(self):
-        for operation in self._operationList:
-            print(operation.getString())
-
-    # def createSchedule(self):
-        # TODO
-
 
 class Task:
 
-    def __init__(self, jobId, taskId, sequence, usableMachines, pieces):
-        self._jobId = jobId
-        self._taskId = taskId
+    def __init__(self, job_id, task_id, sequence, usable_machines, pieces):
+        self._jobId = job_id
+        self._taskId = task_id
         self._sequence = sequence
-        self._usableMachines = usableMachines
+        self._usable_machines = usable_machines
         self._pieces = pieces
 
-    def getJobId(self):
+    def get_job_id(self):
         return self._jobId
 
-    def getTaskId(self):
+    def get_task_id(self):
         return self._taskId
 
-    def getSequence(self):
+    def get_sequence(self):
         return self._sequence
 
-    def getUsableMachines(self):
-        return self._usableMachines
+    def get_usable_machines(self):
+        return self._usable_machines
 
-    def getPieces(self):
+    def get_pieces(self):
         return self._pieces
 
-    def printTask(self):
-        print("[{}, {}, {}, {}, {}]".format(self._jobId,
-                                            self._taskId,
-                                            self._sequence,
-                                            self._usableMachines,
-                                            self._pieces))
+    def pprint(self):
+        print(f"[{self._jobId}, "
+              f"{self._taskId}, "
+              f"{self._sequence}, "
+              f"{self._usable_machines}, "
+              f"{self._pieces}]")
 
 
 class Job:
 
-    def __init__(self, jobId):
-        self._jobId = jobId
+    def __init__(self, job_id):
+        self._jobId = job_id
         self._tasks = []
 
-    def getTask(self, taskId):
-        return self._tasks[taskId]
+    def get_task(self, task_id):
+        return self._tasks[task_id]
 
-    def getJobId(self):
+    def get_job_id(self):
         return self._jobId
 
 
 class Operation:
+    """
+    This class represents an operation which is composed of a task and a machine for the task to run on.
+    """
 
     def __init__(self, task, machine):
         self._task = task
         self._machine = machine
 
-    def getTask(self):
+    def get_task(self):
         return self._task
 
-    def getMachine(self):
+    def get_machine(self):
         return self._machine
 
-    def setMachine(self, machineId):
-        self._machine = machineId
+    def set_machine(self, machine_id):
+        self._machine = machine_id
 
-    def getString(self):
-        return "[{}, {}, {}, {}]".format(self._task.getJobId(),
-                                         self._task.getTaskId(),
-                                         self._task.getSequence(),
-                                         self._machine)
+    def get_usable_machines(self):
+        return self.get_task().get_usable_machines()
+
+    def __eq__(self, other_operation):
+        return (self.get_machine() == other_operation.get_machine()
+                and self.get_task() == other_operation.get_task())
+
+    def pprint(self):
+        print(f"[{self._task.get_job_id()}, "
+              f"{self._task.get_task_id()}, "
+              f"{self._task.get_sequence()}, "
+              f"{self._machine}]")
+
 
 class Data:
-    # create sequenceDependencyMatrix
-    sequenceDependencyMatrix = []
+    """
+    This static class contains all of the data that is read in from the csv files.
+    """
 
-    # create dictionary for sequenceDependencyMatrix getSetupTime()
-    dependencyMatrixIndexEncoding = {}
-
-    # create mapping of {jobId : job}
+    sequence_dependency_matrix = []
+    dependency_matrix_index_encoding = {}
     jobs = {}
+    machine_speeds = []
 
-    # create list of machine speeds
-    machineSpeeds = []
-
-    # populates data.jobs by reading jobTaskcsv
-    # and populates data.indexEncoding (i.e {(jobId, taskId) : index}) for sequenceDependencyMatrix
-    #
-    # Note: indexEncoding is used in getSetupTime()
     @staticmethod
-    def readjobTasksFile(inputFile):
-        prevJobId = -1  # previously seen job
-        index = 0       # used for mapping (jobId, taskId) : index in dependencyMatrixIndexEncoding
-        with open(inputFile) as fin:
+    def read_job_tasks_file(job_tasks_file):
+        """
+        Populates Data.jobs by reading the job_tasks_file csv file.
+        Additionally, this function populates Data.dependency_matrix_index_encoding
+        by creating a mapping of (job_id, task_id) : index for each task (row).
+
+        Note: this function assumes that all of the jobs in job_tasks_file are in ascending order
+         and are in the same order as in the sequence_dependency_matrix csv file.
+
+        :param job_tasks_file: The csv file that contains the job-task data.
+        :return: None
+        """
+        prev_job_id = -1  # record previously seen job
+        index = 0  # used for mapping (job_id, task_id) : index
+        with open(job_tasks_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
             for row in csv.reader(fin):
                 # create task object
-                tmpTask = Task(
+                tmp_task = Task(
                     int(row[0]),
                     int(row[1]),
                     int(row[2]),
                     [int(x) for x in row[3][1:-1].split(' ')],
                     int(row[4])
                 )
-                # create & append new job if we encounter jobId that has not been seen
-                if tmpTask._jobId != prevJobId:
-                    Data.jobs[tmpTask._jobId] = Job(tmpTask._jobId)
-                    prevJobId = tmpTask._jobId
+                # create & append new job if we encounter job_id that has not been seen
+                if tmp_task.get_job_id() != prev_job_id:
+                    Data.jobs[tmp_task.get_job_id()] = Job(tmp_task.get_job_id())
+                    prev_job_id = tmp_task.get_job_id()
 
                 # append task to associated job.tasks list
-                Data.jobs[tmpTask._jobId]._tasks.append(tmpTask)
+                Data.jobs[tmp_task.get_job_id()]._tasks.append(tmp_task)
 
                 # add mapping task : index to dependencyMatrixIndexEncoding dictionary
-                Data.dependencyMatrixIndexEncoding[tmpTask] = index
+                Data.dependency_matrix_index_encoding[tmp_task] = index
                 index += 1
 
-    # populates data.sequenceDependencyMatrix by reading sequenceDependencyMatrixcsv
     @staticmethod
-    def readsequenceDependencyMatrixFile(inputFile):
-        with open(inputFile) as fin:
+    def read_sequence_dependency_matrix_file(seq_dep_matrix_file):
+        """
+        Populates Data.sequence_dependency_matrix by reading the seq_dep_matrix_file csv file.
+
+        :param seq_dep_matrix_file: The csv file that contains the sequence dependency matrix.
+        :return: None
+        """
+        with open(seq_dep_matrix_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
             for row in csv.reader(fin):
-                Data.sequenceDependencyMatrix.append([int(x) for x in row[1:]])
+                Data.sequence_dependency_matrix.append([int(x) for x in row[1:]])
 
-    # populates data.machineSpeeds by reading machineSeedscsv
     @staticmethod
-    def readmachineSpeedsFile(inputFile):
-        with open(inputFile) as fin:
+    def read_machine_speeds_file(machine_speeds_file):
+        """
+        Populates Data.machine_speeds by reading the machine_speeds_file csv file.
+
+        Note: this function assumes that the machines are listed in ascending order.
+
+        :param machine_speeds_file: The csv file that contains the machine run speeds
+        :return: None
+        """
+        with open(machine_speeds_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
             for row in csv.reader(fin):
-                Data.machineSpeeds.append(int(row[1]))
+                Data.machine_speeds.append(int(row[1]))
 
     @staticmethod
-    def getSetupTime(prevTask, curTask):
-        return Data.sequenceDependencyMatrix[Data.dependencyMatrixIndexEncoding[prevTask]][
-            Data.dependencyMatrixIndexEncoding[curTask]] if prevTask != None else 0
+    def get_setup_time(prev_task, cur_task):
+        """
+        Gets the set up time required before processing cur_task after prev_task is complete.
+        The set up time is encoded in Data.sequence_dependency_matrix.
 
-
-    @staticmethod
-    def getJob(jobId):
-        return Data.jobs[jobId]
-
-    @staticmethod
-    def getMachineSpeed(machineId):
-        return Data.machineSpeeds[machineId]
-
-    @staticmethod
-    def getNumerOfMachines():
-        return len(Data.machineSpeeds)
+        :param prev_task: The previous task.
+        :param cur_task: The current task.
+        :return: set up time required before processing cur_task after prev_task is complete.
+        """
+        return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[prev_task]][
+            Data.dependency_matrix_index_encoding[cur_task]] if prev_task is not None else 0
 
     @staticmethod
-    def getNumberOfJobs():
+    def get_job(job_id):
+        return Data.jobs[job_id]
+
+    @staticmethod
+    def get_machine_speed(machine_id):
+        return Data.machine_speeds[machine_id]
+
+    @staticmethod
+    def get_number_of_machines():
+        return len(Data.machine_speeds)
+
+    @staticmethod
+    def get_number_of_jobs():
         return len(Data.jobs)
 
     @staticmethod
-    def printData():
-        print("JobTasks:\n")
+    def print_data():
+        print("job_tasks:\n")
         print("  [jobId, taskId, sequence, usable_machines, pieces]\n")
         for job in Data.jobs:
             for task in job._tasks:
                 print("  ", end="")
-                task.printTask()
+                task.pprint()
 
-        print("\nSequenceDependencyMatrix:\n")
-        for row in Data.sequenceDependencyMatrix:
+        print("\nsequence_dependency_matrix:\n")
+        for row in Data.sequence_dependency_matrix:
             print("  ", end="")
             print(row)
 
-        print("\nDependencyMatrixIndexEncoding:\n")
+        print("\ndependency_matrixIndex_encoding:\n")
         print("  (jobId, taskId) : index\n")
-        for key in Data.dependencyMatrixIndexEncoding:
+        for key in Data.dependency_matrix_index_encoding:
             print("  ", end="")
-            print(f"{key} : {Data.dependencyMatrixIndexEncoding[key]}")
+            print(f"{key} : {Data.dependency_matrix_index_encoding[key]}")
 
-        print("\nMachineSpeeds:\n")
+        print("\nmachine_speeds:\n")
         print("  machine : speed\n")
-        for machine, speed in enumerate(Data.machineSpeeds):
+        for machine, speed in enumerate(Data.machine_speeds):
             print("  ", end="")
             print(f"{machine} : {speed}")
 
     @staticmethod
-    def readDataFromFiles(seqDepMatrixFile, machineRunspeedsFile, jobTasksFile):
-        Data.readsequenceDependencyMatrixFile(seqDepMatrixFile)
-        Data.readmachineSpeedsFile(machineRunspeedsFile)
-        Data.readjobTasksFile(jobTasksFile)
+    def read_data_from_files(seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
+        Data.read_sequence_dependency_matrix_file(seq_dep_matrix_file)
+        Data.read_machine_speeds_file(machine_speeds_file)
+        Data.read_job_tasks_file(job_tasks_file)

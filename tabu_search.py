@@ -1,87 +1,142 @@
 from random import randint
-from data_set import Solution
-from makespan import makespanCalculator
+from makespan import Solution
 
-# TODO
-# 1. make this class more efficient (e.g. implement AVL tree instead of list)
-# 2. redo pprint()
-class neighbor_set:
+
+# TODO: make this class more efficient (e.g. use a different implementation than a list)
+class Neighborhood:
+    """
+    This class is a simple ADT for containing feasible solutions (neighbors).
+    """
 
     def __init__(self):
         self.size = 0
-        self.elems = []
+        self.solutions = []
 
-    def add(self, elem):
-        if elem not in self.elems:
-            self.elems.append(elem)
+    def add(self, solution):
+        """
+        Adds a solution and increments size if the solution is not already in this Neighborhood.
+
+        :param solution: The solution to add.
+        :return: None
+        """
+        if solution not in self.solutions:
+            self.solutions.append(solution)
             self.size += 1
 
+    def pprint_makespans(self):
+        """
+        Prints a list of make spans for the solutions in this Neighborhood.
+
+        :return: None
+        """
+        print([sol.makespan for sol in self.solutions])
+
     def pprint(self):
-        for e in self.elems:
-            print("({}, {})".format(e[0], e[1]).ljust(13, " "), end="")
-            for operation in e[2]:
-                print("[", operation.getString(), end=" ")
-            print("]")
+        """
+        Prints all of the solutions in this Neighborhood in a pretty way.
+
+        :return: None
+        """
+        for sol in self.solutions:
+            sol.pprint()
 
 
-class TabuSearch:
+# TODO: we may want to modify this function to produce a neighbor by sometimes changing an operation's machine
+#  instead of changing the placement of an operation.
+def generate_neighbor(solution):
+    """
+    This function generates a feasible solution that is a neighbor of the solution parameter.
 
-    def generate_neighbor(self, operationsList, debug=False):
+    :param solution: The solution to generate a neighbor of.
+    :return: A feasible solution that is a neighbor of the solution parameter.
+    """
+    operation_list = solution.operation_list    # get the operation list of the solution
+    result_operation_list = operation = None    # this is so compiler doesn't complain about uninitialized local variables
+    random_index = lower_index = upper_index = 0
 
-        lowerIndex = upperIndex = 0
-        while lowerIndex == upperIndex:
-            result = list(operationsList)
-            randIndex = randint(0, len(operationsList) - 1)
-            operation = result.pop(randIndex)
-            jobId = operation.getTask().getJobId()
-            sequence = operation.getTask().getSequence()
+    # this is to ensure we are not inserting the randomly removed operation into the same place
+    while lower_index == upper_index:
 
-            if debug:
-                print(f"randIndex = {randIndex}\n"
-                      f"operation = \n{operation.getString()}\n"
-                      f"result = \n{result}\n")
+        result_operation_list = operation_list[:]   # make a copy so we don't mess up the original operation list
+        random_index = randint(0, len(operation_list) - 1)  # remove a random operation
+        operation = result_operation_list.pop(random_index)
+        job_id = operation.get_task().get_job_id()  # the job id of the operation that was removed
+        sequence = operation.get_task().get_sequence()  # the sequence number of the operation that was removed
 
-            lowerIndex = min(randIndex, len(result) - 1)
-            while lowerIndex >= 0 and not (
-                    result[lowerIndex].getTask().getJobId() == jobId and result[
-                lowerIndex].getTask().getSequence() == sequence - 1):
-                lowerIndex -= 1
+        # find a lower bound for possible placement of the operation
+        lower_index = min(random_index, len(result_operation_list) - 1)
+        while lower_index >= 0 and not (
+                result_operation_list[lower_index].get_task().get_job_id() == job_id and result_operation_list[
+            lower_index].get_task().get_sequence() == sequence - 1):
+            lower_index -= 1
 
-            lowerIndex = 0 if lowerIndex < 0 else lowerIndex + 1
+        lower_index = 0 if lower_index < 0 else lower_index + 1     # add 1 because we shrunk the operation list by 1
 
-            upperIndex = min(randIndex, len(result) - 1)
-            while upperIndex < len(result) and not (
-                    result[upperIndex].getTask().getJobId() == jobId and result[
-                upperIndex].getTask().getSequence() == sequence + 1):
-                upperIndex += 1
+        # find an upper bound for possible placement of the operation
+        upper_index = min(random_index, len(result_operation_list) - 1)
+        while upper_index < len(result_operation_list) and not (
+                result_operation_list[upper_index].get_task().get_job_id() == job_id and result_operation_list[
+            upper_index].get_task().get_sequence() == sequence + 1):
+            upper_index += 1
 
-            upperIndex = upperIndex - 1 if upperIndex > len(result) else upperIndex
+        upper_index = upper_index - 1 if upper_index > len(result_operation_list) else upper_index
 
-        placementIndex = randIndex
-        while placementIndex == randIndex:
-            placementIndex = randint(lowerIndex, upperIndex)
+    # get a random placement index that is in between lower and upper index (bounds) and not equal to the random index
+    placement_index = random_index
+    while placement_index == random_index:
+        placement_index = randint(lower_index, upper_index)
 
-        if debug:
-            print(f"lowerIndex = {lowerIndex}\n"
-                  f"upperIndex = {upperIndex}\n"
-                  f"placementIndex = {placementIndex}\n")
+    # insert the operation into the result operation list at the placement index
+    result_operation_list.insert(placement_index, operation)
 
-        result.insert(placementIndex, operation)
-        makespan_and_wait = makespanCalculator.compute_makespan_and_wait(result)
+    # create and return a neighboring solution
+    return Solution(result_operation_list)
 
-        # this should never happen
-        assert makespan_and_wait != -1, "Error in tabuSearch.generate_neighbor()!" \
-                               f"randIndex = {randIndex}\n" \
-                               f"lowerIndex = {lowerIndex}\n" \
-                               f"upperIndex = {upperIndex}\n" \
-                               f"placementIndex = {placementIndex}\n" \
-                               f"result = \n{result}\n"
 
-        return (max(makespan_and_wait[0]), makespan_and_wait[1], result)
+# TODO: we may want to find a more efficient way of detecting/preventing duplicate neighbors
+#  or we may want to change the stopping criteria so it is not dependent on the size of the neighborhood,
+#  for that could cause some potential problems if there aren't a number of neighboring solutions = size.
+def generate_neighborhood(size, solution):
+    """
+    This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
 
-    def generate_neighborhood(self, size, solution, debug=False):
-        result = neighbor_set()
-        while result.size != size:
-            result.add(self.generate_neighbor(solution, debug))
+    :param size: The size of the neighborhood to generate.
+    :param solution: The solution to generate a neighborhood for.
+    :return: Neighborhood of feasible solutions.
+    """
+    result = Neighborhood()
+    while result.size < size:
+        result.add(generate_neighbor(solution))
 
-        return result
+    return result
+
+
+# TODO: we probably want to make the stopping condition time based instead of a number of iterations.
+def search(initial_solution, iters, tabu_size, neighborhood_size):
+    """
+    This function performs Tabu search for a number of iterations given an initial feasible solution.
+
+    :param initial_solution: The initial solution to start the Tabu search from.
+    :param iters: The number of iterations that Tabu search will execute.
+    :param tabu_size: The size of the Tabu list.
+    :param neighborhood_size: The size of Neighborhoods to generate during Tabu search.
+    :return best_solution: The best solution found while performing Tabu search.
+    """
+    solution = initial_solution
+    best_solution = initial_solution
+    tabu_list = list()  # TODO we probably want to make searching this better than linear search which is O(n)
+
+    for i in range(iters):
+
+        for neighbor in generate_neighborhood(neighborhood_size, solution).solutions:
+            if neighbor not in tabu_list and neighbor.makespan < solution.makespan:
+                solution = neighbor
+
+        if best_solution.makespan > solution.makespan:
+            best_solution = solution
+
+        tabu_list.append(solution)
+        if len(tabu_list) >= tabu_size:
+            tabu_list.pop(0)
+
+    return best_solution

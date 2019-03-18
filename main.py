@@ -1,49 +1,40 @@
 
-from tabu_search import TabuSearch
-from data_set import Data, Operation, Solution
+import tabu_search
+from data_set import Operation
 from makespan import *
 import time
 
 start_time = time.time()
 
 # read csv files and update data class
-# Note: make sure your paths are correct
-Data.readDataFromFiles('data/sequenceDependencyMatrix.csv', 'data/machineRunSpeed.csv', 'data/jobTasks.csv')
+# make sure the paths are correct!
+Data.read_data_from_files('data/sequenceDependencyMatrix.csv', 'data/machineRunSpeed.csv', 'data/jobTasks.csv')
 
 # uncomment to print data that was read in
-# Data.printData()
+# Data.print_data()
 
-# create an initial feasible solution
-initialSolution = Solution([
-    Operation(task=Data.getJob(0).getTask(0), machine=0),
-    Operation(task=Data.getJob(0).getTask(1), machine=1),
-    Operation(task=Data.getJob(1).getTask(0), machine=1),
-    Operation(task=Data.getJob(2).getTask(0), machine=0),
-    Operation(task=Data.getJob(1).getTask(1), machine=0),
-])
+# create a list of operations
+# Note this will be done inside of the feasible solution factory class
+operations_list = [
+    Operation(task=Data.get_job(0).get_task(0), machine=0),
+    Operation(task=Data.get_job(0).get_task(1), machine=1),
+    Operation(task=Data.get_job(1).get_task(0), machine=1),
+    Operation(task=Data.get_job(2).get_task(0), machine=0),
+    Operation(task=Data.get_job(1).get_task(1), machine=0),
+]
 
-print("Initial Solution:")
-initialSolution.print()
+initial_solution = Solution(operations_list)
 
-makespan = makespanCalculator.compute_makespan(initialSolution.getOperationsList())
-waitTime = makespanCalculator.compute_wait_time(initialSolution.getOperationsList())
+print("\nInitial Solution:")
+initial_solution.pprint()
 
-# alternative to get makespan and wait time in one function call
-# makespan_and_wait = makespanCalculator.compute_makespan_and_wait(initialSolution)
-# makespan = max(makespan_and_wait[0])
-# waitTime = makespan_and_wait[1]
+print("\nNeighborhood of Initial Solution:")
+neighborhood = tabu_search.generate_neighborhood(8, initial_solution).pprint()
 
-print("\nMakespan results:")
-print("(makespan, total wait time)\n")
-print(f"({ makespan }, { waitTime })\n")
-
-print("generate neighborhood results:")
-print("(makespan, total wait time) [ neighbor ]\n")
-neighborhood = TabuSearch().generate_neighborhood(8, initialSolution.getOperationsList())
-neighborhood.pprint()
+print("\nTabu Search Result:")
+tabu_search.search(initial_solution, iters=100, tabu_size=10, neighborhood_size=8).pprint()
 
 duration = time.time() - start_time
 
-print("")
-print(f"Duration {duration} seconds")
+print(f"\nDuration {duration} seconds")
 
