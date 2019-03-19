@@ -47,11 +47,14 @@ class Job:
 
 
 class Operation:
-    """
-    This class represents an operation which is composed of a task and a machine for the task to run on.
-    """
 
     def __init__(self, task, machine):
+        """
+        Constructs an Operation object composed of a task and a machine for the task to run on.
+
+        :param task: The Task this Operation will perform.
+        :param machine: The machine this Operation will perform it's task on.
+        """
         self._task = task
         self._machine = machine
 

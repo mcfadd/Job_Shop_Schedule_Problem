@@ -2,6 +2,10 @@ from data_set import Data
 from functools import reduce
 
 
+class InfeasibleSolutionException(Exception):
+    pass
+
+
 class Solution:
     """
     This class represents a solution which is composed of a list of operations, a list of machine make span times,
@@ -14,12 +18,10 @@ class Solution:
         the max make span time, and a total wait time.
 
         :param operation_list: The list of operations of this Solution.
+        :raise InfeasibleSolutionException if solution is infeasible
         """
 
         runtimes_and_wait = compute_machine_makespans_and_total_wait(operation_list)
-
-        if runtimes_and_wait == -1:
-            raise Exception("Infeasible operation_list")
 
         self.operation_list = operation_list
         self.machine_runtimes = runtimes_and_wait[0]
@@ -58,6 +60,7 @@ def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory
     :param job_memory: Memory for keeping track of all job's latest (task sequence, end time) that was processed
     :param machine_tasks_memory: Memory for keeping track of all job's latest task sequence, end time that was processed
     :return: a list of times where the list = [make span time, wait time, set up time]
+    :raise: InfeasibleSolutionException if adding the operation would create an infeasible solution (operation list)
     """
     machine = operation.get_machine()  # machine Id for operation
     task = operation.get_task()  # task object
@@ -67,7 +70,7 @@ def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory
 
     # check if current sequence is less than last sequence processed for job
     if sequence < job_memory[job_id][0]:
-        return -1
+        raise InfeasibleSolutionException("Infeasible operation_list")
 
     # get setup time given previous & current operation
     setup = Data.get_setup_time(machine_tasks_memory[machine], operation.get_task())
@@ -80,6 +83,7 @@ def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory
     return [pieces / Data.machine_speeds[machine], wait, setup]
 
 
+# TODO: we may want to implement a way of detecting duplicate operations if it doesn't add too much complexity.
 def compute_machine_makespans_and_total_wait(operation_list):
     """
     Computes a list of all machine's make span times, and the total wait time of a list of operations.
@@ -87,6 +91,8 @@ def compute_machine_makespans_and_total_wait(operation_list):
     :param operation_list: The list of operations to compute the make spans and total wait time for.
     :return: a list in the form [machine make spans, total wait time] where "machine make spans"
     is a list that has length = number of machines and contains a make span for machine i at index i.
+    :raise: InfeasibleSolutionException if the solution (operation list) is infeasible.
+
 
     Note: to get the actual make span of the operation list take the max of the list of machine make spans
     """
@@ -113,7 +119,7 @@ def compute_machine_makespans_and_total_wait(operation_list):
     runtime = pieces / Data.get_machine_speed(machine)
 
     # update memory modules
-    # Note: wait time and set up time memory does not need to be updated
+    # Note: wait time and set up time memory do not need to be updated
     machine_makespan_memory[machine] = runtime
     job_memory[job_id] = (sequence, machine_makespan_memory[machine])
     machine_tasks_memory[machine] = task
@@ -130,8 +136,8 @@ def compute_machine_makespans_and_total_wait(operation_list):
                                                            machine_tasks_memory)
 
         # check if solution is infeasible
-        if runtime_wait_setup == -1:
-            return -1
+        # if runtime_wait_setup == -1:
+        #     return -1
 
         # compute total added time and update memory, where runtime = (runtime on machine, wait, setup)
         machine_makespan_memory[machine] += reduce((lambda x, y: x + y), runtime_wait_setup)
