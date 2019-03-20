@@ -2,7 +2,6 @@ from random import randint
 from makespan import Solution
 
 
-# TODO: make this class more efficient (e.g. use a different implementation than a list)
 class Neighborhood:
     """
     This class is a simple ADT for containing feasible solutions (neighbors).
@@ -10,7 +9,7 @@ class Neighborhood:
 
     def __init__(self):
         self.size = 0
-        self.solutions = []
+        self.solutions = {}
 
     def add(self, solution):
         """
@@ -19,8 +18,11 @@ class Neighborhood:
         :param solution: The solution to add.
         :return: None
         """
-        if solution not in self.solutions:
-            self.solutions.append(solution)
+        if solution.makespan not in self.solutions.keys():
+            self.solutions[solution.makespan] = [solution]
+            self.size += 1
+        elif solution not in self.solutions[solution.makespan]:
+            self.solutions[solution.makespan].append(solution)
             self.size += 1
 
     def pprint_makespans(self):
@@ -37,8 +39,9 @@ class Neighborhood:
 
         :return: None
         """
-        for sol in self.solutions:
-            sol.pprint()
+        for key in self.solutions.keys():
+            for sol in self.solutions[key]:
+                sol.pprint()
 
 
 # TODO: we may want to modify this function to produce a neighbor by sometimes changing an operation's machine
@@ -127,10 +130,13 @@ def search(initial_solution, iters, tabu_size, neighborhood_size):
     tabu_list = list()  # TODO we probably want to make searching this better than linear search which is O(n)
 
     for i in range(iters):
+        neighborhood = generate_neighborhood(neighborhood_size, solution)
 
-        for neighbor in generate_neighborhood(neighborhood_size, solution).solutions:
-            if neighbor not in tabu_list and neighbor.makespan < solution.makespan:
-                solution = neighbor
+        for makespan in neighborhood.solutions.keys():
+            if makespan < solution.makespan:
+                for neighbor in neighborhood.solutions[makespan]:
+                    if neighbor not in tabu_list:
+                        solution = neighbor
 
         if best_solution.makespan > solution.makespan:
             best_solution = solution
