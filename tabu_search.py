@@ -2,9 +2,59 @@ from random import randint
 from makespan import Solution
 
 
-class Neighborhood:
+class Node:
+    def __init__(self, data_val=None):
+        self.data_val = data_val
+        self.next_node = None
+
+
+class TabuList:
     """
-    This class is a simple ADT for containing feasible solutions (neighbors).
+    This class is a set ADT that provides enqueue and dequeue behaviors.
+    """
+
+    def __init__(self):
+        self.head = self.tail = None        # use SLinkedList to keep LIFO property
+        self.solutions = SolutionSet()      # use SolutionSet for more efficient search
+
+    def enqueue(self, solution):
+        """
+        Adds a solution to the end of this TabuList.
+
+        :param solution: The solution to add.
+        :return: True if the solution was added.
+        """
+
+        if self.solutions.add(solution):
+            new_node = Node(data_val=solution)
+            if self.head is None:
+                self.head = self.tail = new_node
+            else:
+                self.tail.next_node = new_node
+                self.tail = new_node
+            return True
+
+        return False
+
+    def dequeue(self):
+        """
+        Removes the solution at the beginning of this TabuList
+
+        :return: True if a solution was dequeued.
+        """
+
+        if self.solutions.size > 0:
+            head_node = self.head
+            self.head = self.head.next_node
+            self.solutions.remove(head_node.data_val)
+            return True
+
+        return False
+
+
+class SolutionSet:
+    """
+    This class is a simple set ADT for containing Solution objects.
     """
 
     def __init__(self):
@@ -13,21 +63,49 @@ class Neighborhood:
 
     def add(self, solution):
         """
-        Adds a solution and increments size if the solution is not already in this Neighborhood.
+        Adds a solution and increments size if the solution is not already in this SolutionSet.
 
         :param solution: The solution to add.
-        :return: None
+        :return: True if solution was added.
         """
         if solution.makespan not in self.solutions.keys():
             self.solutions[solution.makespan] = [solution]
             self.size += 1
+            return True
         elif solution not in self.solutions[solution.makespan]:
             self.solutions[solution.makespan].append(solution)
             self.size += 1
+            return True
+
+        return False
+
+    def remove(self, solution):
+        """
+        Removes a solution and decrements size if the solution is in this SolutionSet.
+
+        :param solution: The solution to remove.
+        :return: True if the solution was removed.
+        """
+        if solution.makespan in self.solutions.keys():
+            self.solutions[solution.makespan].remove(solution)
+            self.size -= 1
+            return True
+
+        return False
+
+    def contains(self, solution):
+        """
+        Returns True if the solution is in this SolutionSet.
+
+        :param solution: The solution to look for.
+        :return: True if the solution is in this SolutionSet.
+        """
+
+        return solution.makespan in self.solutions.keys() and solution in self.solutions[solution.makespan]
 
     def pprint_makespans(self):
         """
-        Prints a list of make spans for the solutions in this Neighborhood.
+        Prints a list of make spans for the solutions in this SolutionSet.
 
         :return: None
         """
@@ -35,7 +113,7 @@ class Neighborhood:
 
     def pprint(self):
         """
-        Prints all of the solutions in this Neighborhood in a pretty way.
+        Prints all of the solutions in this SolutionSet in a pretty way.
 
         :return: None
         """
@@ -107,7 +185,7 @@ def generate_neighborhood(size, solution):
     :param solution: The solution to generate a neighborhood for.
     :return: Neighborhood of feasible solutions.
     """
-    result = Neighborhood()
+    result = SolutionSet()
     while result.size < size:
         result.add(generate_neighbor(solution))
 
@@ -127,22 +205,23 @@ def search(initial_solution, iters, tabu_size, neighborhood_size):
     """
     solution = initial_solution
     best_solution = initial_solution
-    tabu_list = list()  # TODO we probably want to make searching this better than linear search which is O(n)
+    tabu_list = TabuList()
 
     for i in range(iters):
         neighborhood = generate_neighborhood(neighborhood_size, solution)
 
+        # only look through neighbors that have a makespan < solution.makespan
         for makespan in neighborhood.solutions.keys():
             if makespan < solution.makespan:
                 for neighbor in neighborhood.solutions[makespan]:
-                    if neighbor not in tabu_list:
+                    if not tabu_list.solutions.contains(neighbor):
                         solution = neighbor
 
         if best_solution.makespan > solution.makespan:
             best_solution = solution
 
-        tabu_list.append(solution)
-        if len(tabu_list) >= tabu_size:
-            tabu_list.pop(0)
+        tabu_list.enqueue(solution)
+        if tabu_list.solutions.size >= tabu_size:
+            tabu_list.dequeue()
 
     return best_solution

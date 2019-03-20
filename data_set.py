@@ -45,6 +45,9 @@ class Job:
     def get_job_id(self):
         return self._jobId
 
+    def get_number_of_tasks(self):
+        return len(self._tasks)
+
 
 class Operation:
 
@@ -190,10 +193,14 @@ class Data:
         return len(Data.jobs)
 
     @staticmethod
+    def get_number_of_tasks():
+        return len(Data.dependency_matrix_index_encoding)
+
+    @staticmethod
     def print_data():
         print("job_tasks:\n")
         print("  [jobId, taskId, sequence, usable_machines, pieces]\n")
-        for job in Data.jobs:
+        for job in Data.jobs.values():
             for task in job._tasks:
                 print("  ", end="")
                 task.pprint()
@@ -207,7 +214,7 @@ class Data:
         print("  (jobId, taskId) : index\n")
         for key in Data.dependency_matrix_index_encoding:
             print("  ", end="")
-            print(f"{key} : {Data.dependency_matrix_index_encoding[key]}")
+            print(f"({key.get_job_id()}, {key.get_task_id()}) : {Data.dependency_matrix_index_encoding[key]}")
 
         print("\nmachine_speeds:\n")
         print("  machine : speed\n")
