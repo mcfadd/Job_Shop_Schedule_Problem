@@ -1,5 +1,6 @@
 from random import randint
 from makespan import Solution
+import time
 
 
 class Node:
@@ -15,7 +16,7 @@ class TabuList:
 
     def __init__(self):
         self.head = self.tail = None        # use SLinkedList to keep LIFO property
-        self.solutions = SolutionSet()      # use SolutionSet for more efficient search
+        self.solutions = SolutionSet()      # use SolutionSet for better efficient than O(n)
 
     def enqueue(self, solution):
         """
@@ -68,16 +69,17 @@ class SolutionSet:
         :param solution: The solution to add.
         :return: True if solution was added.
         """
-        if solution.makespan not in self.solutions.keys():
+        result = False
+        if solution.makespan not in self.solutions:
             self.solutions[solution.makespan] = [solution]
             self.size += 1
-            return True
+            result = True
         elif solution not in self.solutions[solution.makespan]:
             self.solutions[solution.makespan].append(solution)
             self.size += 1
-            return True
+            result = True
 
-        return False
+        return result
 
     def remove(self, solution):
         """
@@ -86,12 +88,18 @@ class SolutionSet:
         :param solution: The solution to remove.
         :return: True if the solution was removed.
         """
-        if solution.makespan in self.solutions.keys():
+        result = False
+        if solution.makespan in self.solutions and solution in self.solutions[solution.makespan]:
+
             self.solutions[solution.makespan].remove(solution)
             self.size -= 1
-            return True
 
-        return False
+            if len(self.solutions[solution.makespan]) == 0:
+                del self.solutions[solution.makespan]
+
+            result = True
+
+        return result
 
     def contains(self, solution):
         """
@@ -101,7 +109,7 @@ class SolutionSet:
         :return: True if the solution is in this SolutionSet.
         """
 
-        return solution.makespan in self.solutions.keys() and solution in self.solutions[solution.makespan]
+        return solution.makespan in self.solutions and solution in self.solutions[solution.makespan]
 
     def pprint_makespans(self):
         """
@@ -192,13 +200,12 @@ def generate_neighborhood(size, solution):
     return result
 
 
-# TODO: we probably want to make the stopping condition time based instead of a number of iterations.
-def search(initial_solution, iters, tabu_size, neighborhood_size):
+def search(initial_solution, search_time, tabu_size, neighborhood_size):
     """
     This function performs Tabu search for a number of iterations given an initial feasible solution.
 
     :param initial_solution: The initial solution to start the Tabu search from.
-    :param iters: The number of iterations that Tabu search will execute.
+    :param search_time: The time in minutes that Tabu search will run.
     :param tabu_size: The size of the Tabu list.
     :param neighborhood_size: The size of Neighborhoods to generate during Tabu search.
     :return best_solution: The best solution found while performing Tabu search.
@@ -206,11 +213,14 @@ def search(initial_solution, iters, tabu_size, neighborhood_size):
     solution = initial_solution
     best_solution = initial_solution
     tabu_list = TabuList()
+    stop_time = time.time() + search_time * 60
+    iterations = 0
 
-    for i in range(iters):
+    while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, solution)
 
-        # only look through neighbors that have a makespan < solution.makespan
+        # TODO this is still O(n).
+        #  We may want to think of a way to only look through neighbors with a makespan < solution.makespan
         for makespan in neighborhood.solutions.keys():
             if makespan < solution.makespan:
                 for neighbor in neighborhood.solutions[makespan]:
@@ -224,4 +234,6 @@ def search(initial_solution, iters, tabu_size, neighborhood_size):
         if tabu_list.solutions.size >= tabu_size:
             tabu_list.dequeue()
 
-    return best_solution
+        iterations += 1
+
+    return best_solution, iterations

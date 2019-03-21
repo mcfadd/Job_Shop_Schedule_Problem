@@ -6,6 +6,10 @@ class InfeasibleSolutionException(Exception):
     pass
 
 
+class IncompleteSolutionException(Exception):
+    pass
+
+
 class Solution:
     """
     This class represents a solution which is composed of a list of operations, a list of machine make span times,
@@ -19,18 +23,23 @@ class Solution:
 
         :param operation_list: The list of operations of this Solution.
         :raise InfeasibleSolutionException if solution is infeasible
+        :raise IncompleteSolutionException if solution does not contain
         """
+
+        if len(operation_list) != Data.get_number_of_tasks():
+            raise IncompleteSolutionException("Incomplete operation list")
 
         runtimes_and_wait = compute_machine_makespans_and_total_wait(operation_list)
 
         self.operation_list = operation_list
         self.machine_runtimes = runtimes_and_wait[0]
         self.makespan = max(runtimes_and_wait[0])
-        self.wait_time = runtimes_and_wait[1]
+        self.wait_time_after_operation = runtimes_and_wait[1]       # this will be needed for creating a schedule
+        self.total_wait_time = reduce((lambda x, y: x + y), runtimes_and_wait[1])
 
     def __eq__(self, other_solution):
-        return  self.makespan == other_solution.makespan and self.wait_time == other_solution.wait_time\
-                and self.operation_list == other_solution.operation_list
+        return self.makespan == other_solution.makespan and self.total_wait_time == other_solution.total_wait_time \
+               and self.operation_list == other_solution.operation_list
 
     def pprint(self):
         """
@@ -39,7 +48,7 @@ class Solution:
         :return: None
         """
         print(f"makespan = {self.makespan}\n"
-              f"wait_time = {self.wait_time}\n"
+              f"wait_time = {self.total_wait_time}\n"
               f"operation_list =")
         for op in self.operation_list:
             op.pprint()
@@ -80,7 +89,7 @@ def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory
         job_memory[job_id][1] > machine_makespan_memory[machine] else 0
 
     # return [num of pieces / speed of machine (i.e. runtime on machine), wait, setup]
-    return [pieces / Data.machine_speeds[machine], wait, setup]
+    return pieces / Data.machine_speeds[machine], wait, setup
 
 
 # TODO: we may want to implement a way of detecting duplicate operations if it doesn't add too much complexity.
@@ -106,7 +115,7 @@ def compute_machine_makespans_and_total_wait(operation_list):
     # memory for keeping track of all job's latest (task sequence, end time) that was processed
     job_memory = [(0, 0)] * Data.get_number_of_jobs()
 
-    total_wait_time = 0
+    wait_time_after_operation = []
 
     # process first operation in Solution
     operation = operation_list[0]
@@ -135,18 +144,15 @@ def compute_machine_makespans_and_total_wait(operation_list):
         runtime_wait_setup = iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory,
                                                            machine_tasks_memory)
 
-        # check if solution is infeasible
-        # if runtime_wait_setup == -1:
-        #     return -1
-
-        # compute total added time and update memory, where runtime = (runtime on machine, wait, setup)
+        # compute total added time and update memory
         machine_makespan_memory[machine] += reduce((lambda x, y: x + y), runtime_wait_setup)
         job_memory[job_id] = (
             sequence, machine_makespan_memory[machine])
         machine_tasks_memory[machine] = task
-        total_wait_time += runtime_wait_setup[1]
+        wait_time_after_operation.append(runtime_wait_setup[1])
 
-    return [machine_makespan_memory, total_wait_time]
+    wait_time_after_operation.append(0)  # no wait time after last operation
+    return machine_makespan_memory, wait_time_after_operation
 
 
 def compute_makespan(operation_list):
