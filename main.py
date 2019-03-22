@@ -48,9 +48,11 @@ def parse_args(argv):
         elif opt in ("-n", "--neighborhood"):
             neighborhood_size = int(arg)
 
+    # check if data directory was passed in
     if len(args) == 1:
         data_directory = args[0]
 
+    # check if all parameters were initialized
     if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or data_directory is None:
         print_usage_and_exit()
 
@@ -71,24 +73,16 @@ def main(args):
                               f'{args[3]}/machineRunSpeed.csv',
                               f'{args[3]}/jobTasks.csv')
 
-    # uncomment the line below to print data that was read in
-    # Data.print_data()
-
-    # initial_solution = get_test_operation() # this is for getting a consistent feasible solution for the smallest problem instance in data
     initial_solution = generate_feasible_solution()
 
     print("\nInitial Solution:")
-    print(f"makespan = {round(initial_solution.makespan)} wait= {round(initial_solution.total_wait_time)}")
-    # initial_solution.pprint()
+    print(f"makespan = {round(initial_solution.makespan)}")
 
     print("\nTabu Search Result:")
     print("...searching...")
     tuple = search(initial_solution, args[0], tabu_size=args[1], neighborhood_size=args[2])
-    print(f"makespan = {round(tuple[0].makespan)} wait= {round(tuple[0].total_wait_time)}\n"
+    print(f"makespan = {round(tuple[0].makespan)}\n"
           f"number of iterations TS performed = {tuple[1]}")
-
-    # tuple[0].pprint()
-    # print(tuple[0].wait_time_after_operation)
 
     duration = time.time() - start_time
 
@@ -97,5 +91,4 @@ def main(args):
 
 if __name__ == '__main__':
     # sys.argv[1:] = ["-t", .01, "-s", 10, "-n", 8, "./data"]  # uncomment this if you don't want to pass command line args
-    args = parse_args(sys.argv[1:])
-    main(args)
+    main(parse_args(sys.argv[1:]))

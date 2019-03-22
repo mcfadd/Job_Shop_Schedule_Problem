@@ -13,13 +13,13 @@ class IncompleteSolutionException(Exception):
 class Solution:
     """
     This class represents a solution which is composed of a list of operations, a list of machine make span times,
-    the max make span time, and a total wait time.
+    and the max make span time.
     """
 
     def __init__(self, operation_list):
         """
-        The constructor for this solution checks if the operation list is feasible and computes the list of machine make span times,
-        the max make span time, and a total wait time.
+        The constructor for this solution checks if the operation list is feasible,
+        computes the list of machine make span times, and the max make span time.
 
         :param operation_list: The list of operations of this Solution.
         :raise InfeasibleSolutionException if solution is infeasible
@@ -29,17 +29,12 @@ class Solution:
         if len(operation_list) != Data.get_number_of_tasks():
             raise IncompleteSolutionException("Incomplete operation list")
 
-        runtimes_and_wait = compute_machine_makespans_and_total_wait(operation_list)
-
+        self.machine_makespans = compute_machine_makespans(operation_list)
+        self.makespan = max(self.machine_makespans)
         self.operation_list = operation_list
-        self.machine_runtimes = runtimes_and_wait[0]
-        self.makespan = max(runtimes_and_wait[0])
-        self.wait_time_after_operation = runtimes_and_wait[1]       # this will be needed for creating a schedule
-        self.total_wait_time = reduce((lambda x, y: x + y), runtimes_and_wait[1])
 
     def __eq__(self, other_solution):
-        return self.makespan == other_solution.makespan and self.total_wait_time == other_solution.total_wait_time \
-               and self.operation_list == other_solution.operation_list
+        return self.makespan == other_solution.makespan and self.operation_list == other_solution.operation_list
 
     def pprint(self):
         """
@@ -48,13 +43,15 @@ class Solution:
         :return: None
         """
         print(f"makespan = {self.makespan}\n"
-              f"wait_time = {self.total_wait_time}\n"
               f"operation_list =")
         for op in self.operation_list:
             op.pprint()
 
     # def create_schedule(self):
-    # TODO complete this function
+    # TODO complete this function.
+    #  Need to iterate over self.operation_list and create a schedule for each machine.
+    #  The setup time, start time, end time, and wait time are needed for each operation.
+    #  We may want to create a separate schedule class that takes an operation_list as argument.
 
 
 def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory, machine_tasks_memory):
@@ -88,12 +85,11 @@ def iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory
     wait = job_memory[job_id][1] - machine_makespan_memory[machine] if \
         job_memory[job_id][1] > machine_makespan_memory[machine] else 0
 
-    # return [num of pieces / speed of machine (i.e. runtime on machine), wait, setup]
     return pieces / Data.machine_speeds[machine], wait, setup
 
 
 # TODO: we may want to implement a way of detecting duplicate operations if it doesn't add too much complexity.
-def compute_machine_makespans_and_total_wait(operation_list):
+def compute_machine_makespans(operation_list):
     """
     Computes a list of all machine's make span times, and the total wait time of a list of operations.
 
@@ -114,8 +110,6 @@ def compute_machine_makespans_and_total_wait(operation_list):
 
     # memory for keeping track of all job's latest (task sequence, end time) that was processed
     job_memory = [(0, 0)] * Data.get_number_of_jobs()
-
-    wait_time_after_operation = []
 
     # process first operation in Solution
     operation = operation_list[0]
@@ -144,15 +138,17 @@ def compute_machine_makespans_and_total_wait(operation_list):
         runtime_wait_setup = iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory,
                                                            machine_tasks_memory)
 
+        # print(runtime_wait_setup)
+
         # compute total added time and update memory
         machine_makespan_memory[machine] += reduce((lambda x, y: x + y), runtime_wait_setup)
-        job_memory[job_id] = (
-            sequence, machine_makespan_memory[machine])
-        machine_tasks_memory[machine] = task
-        wait_time_after_operation.append(runtime_wait_setup[1])
 
-    wait_time_after_operation.append(0)  # no wait time after last operation
-    return machine_makespan_memory, wait_time_after_operation
+        # print(f"machine {machine} : {machine_makespan_memory[machine]}")
+
+        job_memory[job_id] = (sequence, machine_makespan_memory[machine])
+        machine_tasks_memory[machine] = task
+
+    return machine_makespan_memory
 
 
 def compute_makespan(operation_list):
@@ -163,10 +159,10 @@ def compute_makespan(operation_list):
     :return: The make span or completion time in minutes to execute all of the operations
     in the order they appear in operation_list.
     """
-    return max(compute_machine_makespans_and_total_wait(operation_list)[0])
+    return max(compute_machine_makespans(operation_list)[0])
 
 
-def compute_wait_time(operation_list):
+def compute_total_wait_time(operation_list):
     """
     Computes the total wait time in minutes of a list of Operations.
 
@@ -174,4 +170,5 @@ def compute_wait_time(operation_list):
     :return: The total wait time in minutes to execute all of the operations
     in the order they appear in operation_list.
     """
-    return compute_machine_makespans_and_total_wait(operation_list)[1]
+    # TODO we were calculating the total wait time wrong before.
+    #  We were double counting. Need to find a way to not doubly count wait times on machines.

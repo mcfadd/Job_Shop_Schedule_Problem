@@ -13,8 +13,6 @@ This Unit Test contains test cases that do the following:
 5. test SolutionSet add method
 6. test SolutionSet remove method
 
-Note: the tests have been created using the smallest problem instance (i.e. data set) in the repository.
-
 """
 Data.read_data_from_files('data/sequenceDependencyMatrix.csv', 'data/machineRunSpeed.csv', 'data/jobTasks.csv')
 
