@@ -57,12 +57,12 @@ Here is an example of an infeasible solution:
 
 The solution is infeasible because job 0, task 1 with sequence = 1 is scheduled on machine 0 before job 0, task 0 with sequence = 0.
 
-To calulate the make span of a feasible solution we calculate the max of (total runtime + total wait time + total setup time) for each machine, where
-```
-runtime = task pieces / machine speed
-wait time = time a machine has to wait for another machine to finish processing a task with sequence number < current tasks sequence number 
-setup time = set up time before processing the current task given a previous task (encoded in the sequenceDependencyMatrix.csv) 
-```
+To calulate the make span of a feasible solution we calculate the max of (total run time + total wait time + total setup time) for each machine, where
+
+* run time = task pieces / machine speed
+* wait time = time a machine has to wait for a task with sequence < current task's sequence to be processed 
+* setup time = set up time before processing the current task
+
 
 To produce a schedule for each machine given a feasible solution, we iterate over the solution and add each Job-Task to a queue for the machine specified in the operation.
 
@@ -71,6 +71,7 @@ To produce a schedule for each machine given a feasible solution, we iterate ove
 Below is a basic high-level flow digram describing our design.
 
 ![Flow Diagram](/diagrams/Flow_Diagram.png)  
+
 
 
 

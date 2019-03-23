@@ -81,14 +81,12 @@ def main(args):
     print("\nTabu Search Result:")
     print("...searching...")
     tuple = search(initial_solution, args[0], tabu_size=args[1], neighborhood_size=args[2])
-    print(f"makespan = {round(tuple[0].makespan)}\n"
+    print(f"makespan = {round(tuple[0].makespan)}\n\n"
           f"number of iterations TS performed = {tuple[1]}")
 
-    duration = time.time() - start_time
-
-    print(f"\nDuration {duration} seconds")
+    print(f"\nDuration {time.time() - start_time} seconds")
 
 
 if __name__ == '__main__':
-    # sys.argv[1:] = ["-t", .01, "-s", 10, "-n", 8, "./data"]  # uncomment this if you don't want to pass command line args
+    #sys.argv[1:] = ["-t", .01, "-s", 10, "-n", 8, "./data"]  # uncomment this if you don't want to pass command line args
     main(parse_args(sys.argv[1:]))
