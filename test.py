@@ -14,7 +14,7 @@ This Unit Test contains test cases that do the following:
 6. test SolutionSet remove method
 
 """
-Data.read_data_from_files('data/sequenceDependencyMatrix.csv', 'data/machineRunSpeed.csv', 'data/jobTasks.csv')
+Data.read_data_from_files('data/data_set1/sequenceDependencyMatrix.csv', 'data/data_set1/machineRunSpeed.csv', 'data/data_set1/jobTasks.csv')
 
 
 class Test(unittest.TestCase):

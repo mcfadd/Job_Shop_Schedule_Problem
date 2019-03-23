@@ -138,12 +138,8 @@ def compute_machine_makespans(operation_list):
         runtime_wait_setup = iterative_makespan_wait_setup(operation, machine_makespan_memory, job_memory,
                                                            machine_tasks_memory)
 
-        # print(runtime_wait_setup)
-
         # compute total added time and update memory
         machine_makespan_memory[machine] += reduce((lambda x, y: x + y), runtime_wait_setup)
-
-        # print(f"machine {machine} : {machine_makespan_memory[machine]}")
 
         job_memory[job_id] = (sequence, machine_makespan_memory[machine])
         machine_tasks_memory[machine] = task
@@ -159,7 +155,7 @@ def compute_makespan(operation_list):
     :return: The make span or completion time in minutes to execute all of the operations
     in the order they appear in operation_list.
     """
-    return max(compute_machine_makespans(operation_list)[0])
+    return max(compute_machine_makespans(operation_list))
 
 
 def compute_total_wait_time(operation_list):
