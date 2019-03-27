@@ -139,24 +139,23 @@ def generate_neighbor(solution):
     :param solution: The solution to generate a neighbor of.
     :return: A feasible solution that is a neighbor of the solution parameter.
     """
-    operation_list = solution.operation_list    # get the operation list of the solution
-    result_operation_list = operation = None    # this is so compiler doesn't complain about uninitialized local variables
+    result_operation_list = None  # this is so compiler doesn't complain about uninitialized local variables
+    operation = None
     random_index = lower_index = upper_index = 0
 
     # this is to ensure we are not inserting the randomly removed operation into the same place
     while lower_index == upper_index:
 
-        result_operation_list = operation_list[:]   # make a copy so we don't mess up the original operation list
-        random_index = randint(0, len(operation_list) - 1)  # remove a random operation
+        result_operation_list = solution[:]   # make a copy so we don't mess up the original operation list
+        random_index = randint(0, len(solution) - 1)  # remove a random operation
         operation = result_operation_list.pop(random_index)
-        job_id = operation.get_task().get_job_id()  # the job id of the operation that was removed
-        sequence = operation.get_task().get_sequence()  # the sequence number of the operation that was removed
+        job_id = operation[0]  # the job id of the operation that was removed
+        sequence = operation[2]  # the sequence number of the operation that was removed
 
         # find a lower bound for possible placement of the operation
         lower_index = min(random_index, len(result_operation_list) - 1)
         while lower_index >= 0 and not (
-                result_operation_list[lower_index].get_task().get_job_id() == job_id and result_operation_list[
-            lower_index].get_task().get_sequence() == sequence - 1):
+                result_operation_list[lower_index][0] == job_id and result_operation_list[lower_index][2] == sequence - 1):
             lower_index -= 1
 
         lower_index = 0 if lower_index < 0 else lower_index + 1     # add 1 because we shrunk the operation list by 1
@@ -164,8 +163,7 @@ def generate_neighbor(solution):
         # find an upper bound for possible placement of the operation
         upper_index = min(random_index, len(result_operation_list) - 1)
         while upper_index < len(result_operation_list) and not (
-                result_operation_list[upper_index].get_task().get_job_id() == job_id and result_operation_list[
-            upper_index].get_task().get_sequence() == sequence + 1):
+                result_operation_list[upper_index][0] == job_id and result_operation_list[upper_index][2] == sequence + 1):
             upper_index += 1
 
         upper_index = upper_index - 1 if upper_index > len(result_operation_list) else upper_index
@@ -182,7 +180,22 @@ def generate_neighbor(solution):
     return Solution(result_operation_list)
 
 
-# TODO we may want to produce a neighborhood with makespans < solution.makespan since we only care
+# def change_operation_machine(solution):
+#     operation_list = solution.operation_list
+#     random_index = randint(0, len(operation_list) - 1)
+#     usable_machines = operation_list[random_index].get_usable_machines()
+#     min_machine_makespan = usable_machines[0]
+#
+#     makespans = solution.machine_makespans
+#     for machine in usable_machines:
+#         if makespans[machine] < makespans[min_machine_makespan]:
+#             min_machine_makespan = machine
+#
+#     operation_list[random_index].set_machine(machine)
+#     return Solution(operation_list)
+
+
+# TODO we may want to produce a neighborhood with makespans < solution.makespan
 def generate_neighborhood(size, wait, solution):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
@@ -195,7 +208,7 @@ def generate_neighborhood(size, wait, solution):
     stop_time = time.time() + wait
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
-        result.add(generate_neighbor(solution))
+            result.add(generate_neighbor(solution.operation_list))
 
     return result
 

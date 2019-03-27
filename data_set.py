@@ -130,7 +130,7 @@ class Data:
                 Data.jobs[tmp_task.get_job_id()]._tasks.append(tmp_task)
 
                 # add mapping task : index to dependencyMatrixIndexEncoding dictionary
-                Data.dependency_matrix_index_encoding[tmp_task] = index
+                Data.dependency_matrix_index_encoding[(tmp_task.get_job_id(), tmp_task.get_task_id())] = index
                 index += 1
 
     @staticmethod
@@ -174,7 +174,7 @@ class Data:
         :return: set up time required before processing cur_task after prev_task is complete.
         """
         return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[prev_task]][
-            Data.dependency_matrix_index_encoding[cur_task]] if prev_task is not None else 0
+            Data.dependency_matrix_index_encoding[cur_task]] if prev_task != (-1, -1) else 0
 
     @staticmethod
     def get_job(job_id):

@@ -70,7 +70,7 @@ To produce a schedule for each machine given a feasible solution, we iterate ove
 
 Below is a basic high-level flow digram describing our design.
 
-![Flow Diagram](/diagrams/Flow_Diagram.png)  
+![Flow Diagram](diagrams/Flow_Diagram.png)  
 
 
 

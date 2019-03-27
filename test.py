@@ -14,7 +14,8 @@ This Unit Test contains test cases that do the following:
 6. test SolutionSet remove method
 
 """
-Data.read_data_from_files('data/data_set1/sequenceDependencyMatrix.csv', 'data/data_set1/machineRunSpeed.csv', 'data/data_set1/jobTasks.csv')
+Data.read_data_from_files('data/data_set1/sequenceDependencyMatrix.csv', 'data/data_set1/machineRunSpeed.csv',
+                          'data/data_set1/jobTasks.csv')
 
 
 class Test(unittest.TestCase):
@@ -33,40 +34,40 @@ class Test(unittest.TestCase):
                             "These two Operations should not be equal")
 
     def test_solution_equality(self):
-        self.assertEqual(Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                                   Operation(task=Data.get_job(0).get_task(1), machine=1),
-                                   Operation(task=Data.get_job(1).get_task(0), machine=1),
-                                   Operation(task=Data.get_job(2).get_task(0), machine=0),
-                                   Operation(task=Data.get_job(1).get_task(1), machine=0)]),
-                         Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                                   Operation(task=Data.get_job(0).get_task(1), machine=1),
-                                   Operation(task=Data.get_job(1).get_task(0), machine=1),
-                                   Operation(task=Data.get_job(2).get_task(0), machine=0),
-                                   Operation(task=Data.get_job(1).get_task(1), machine=0)]),
+        self.assertEqual(Solution([[0, 0, 0, 1, 10],
+                                   [0, 1, 1, 0, 5],
+                                   [1, 0, 0, 1, 8],
+                                   [2, 0, 0, 0, 8],
+                                   [1, 1, 1, 0, 5]]),
+                         Solution([[0, 0, 0, 1, 10],
+                                   [0, 1, 1, 0, 5],
+                                   [1, 0, 0, 1, 8],
+                                   [2, 0, 0, 0, 8],
+                                   [1, 1, 1, 0, 5]]),
                          "These two Solutions should be equal"
                          )
 
-        self.assertNotEqual(Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                                      Operation(task=Data.get_job(0).get_task(1), machine=1),
-                                      Operation(task=Data.get_job(1).get_task(0), machine=1),
-                                      Operation(task=Data.get_job(2).get_task(0), machine=0),
-                                      Operation(task=Data.get_job(1).get_task(1), machine=0)]),
-                            Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                                      Operation(task=Data.get_job(0).get_task(1), machine=1),
-                                      Operation(task=Data.get_job(1).get_task(0), machine=1),
-                                      Operation(task=Data.get_job(2).get_task(0), machine=0),
-                                      Operation(task=Data.get_job(1).get_task(1), machine=1)]),
+        self.assertNotEqual(Solution([[0, 0, 0, 1, 10],
+                                      [0, 1, 1, 0, 5],
+                                      [1, 0, 0, 1, 8],
+                                      [2, 0, 0, 0, 8],
+                                      [1, 1, 1, 0, 5]]),
+                            Solution([[0, 0, 0, 1, 10],
+                                      [2, 0, 0, 0, 8],
+                                      [0, 1, 1, 0, 5],
+                                      [1, 0, 0, 1, 8],
+                                      [1, 1, 1, 0, 5]]),
                             "These two Solutions should not be equal"
                             )
 
     def test_infeasible_solution(self):
         try:
 
-            Solution([Operation(task=Data.get_job(0).get_task(1), machine=0),
-                      Operation(task=Data.get_job(0).get_task(0), machine=1),
-                      Operation(task=Data.get_job(1).get_task(0), machine=1),
-                      Operation(task=Data.get_job(2).get_task(0), machine=0),
-                      Operation(task=Data.get_job(1).get_task(1), machine=0)])
+            Solution([[0, 1, 1, 0, 5],
+                      [0, 0, 0, 1, 10],
+                      [1, 0, 0, 1, 8],
+                      [2, 0, 0, 0, 8],
+                      [1, 1, 1, 0, 5]])
 
             self.assertTrue(False, "Failed to raise InfeasibleSolutionException")
 
@@ -76,10 +77,10 @@ class Test(unittest.TestCase):
     def test_incomplete_solution(self):
         try:
 
-            Solution([Operation(task=Data.get_job(0).get_task(1), machine=0),
-                      Operation(task=Data.get_job(0).get_task(0), machine=1),
-                      Operation(task=Data.get_job(1).get_task(0), machine=1),
-                      Operation(task=Data.get_job(2).get_task(0), machine=0)])
+            Solution([[0, 0, 0, 1, 10],
+                      [1, 0, 0, 1, 8],
+                      [2, 0, 0, 0, 8],
+                      [1, 1, 1, 0, 5]])
 
             self.assertTrue(False, "Failed to raise IncompleteSolutionException")
 
@@ -89,11 +90,11 @@ class Test(unittest.TestCase):
     def test_solution_set_add(self):
         solution_set = SolutionSet()
 
-        solution = Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                             Operation(task=Data.get_job(0).get_task(1), machine=1),
-                             Operation(task=Data.get_job(1).get_task(0), machine=1),
-                             Operation(task=Data.get_job(2).get_task(0), machine=0),
-                             Operation(task=Data.get_job(1).get_task(1), machine=0)])
+        solution = Solution([[0, 0, 0, 1, 10],
+                             [0, 1, 1, 0, 5],
+                             [1, 0, 0, 1, 8],
+                             [2, 0, 0, 0, 8],
+                             [1, 1, 1, 0, 5]])
 
         solution_set.add(solution)
 
@@ -104,11 +105,11 @@ class Test(unittest.TestCase):
 
         # make sure duplicate Solution was not added
         self.assertEqual(solution_set.size, 1)
-        solution = Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                             Operation(task=Data.get_job(0).get_task(1), machine=1),
-                             Operation(task=Data.get_job(1).get_task(0), machine=1),
-                             Operation(task=Data.get_job(1).get_task(1), machine=0),
-                             Operation(task=Data.get_job(2).get_task(0), machine=0)])
+        solution = Solution([[0, 0, 0, 1, 10],
+                             [2, 0, 0, 0, 8],
+                             [0, 1, 1, 0, 5],
+                             [1, 0, 0, 1, 8],
+                             [1, 1, 1, 0, 5]])
 
         solution_set.add(solution)
 
@@ -119,11 +120,11 @@ class Test(unittest.TestCase):
     def test_solution_set_remove(self):
         solution_set = SolutionSet()
 
-        solution = Solution([Operation(task=Data.get_job(0).get_task(0), machine=0),
-                             Operation(task=Data.get_job(0).get_task(1), machine=1),
-                             Operation(task=Data.get_job(1).get_task(0), machine=1),
-                             Operation(task=Data.get_job(2).get_task(0), machine=0),
-                             Operation(task=Data.get_job(1).get_task(1), machine=0)])
+        solution = Solution([[0, 0, 0, 1, 10],
+                             [0, 1, 1, 0, 5],
+                             [1, 0, 0, 1, 8],
+                             [2, 0, 0, 0, 8],
+                             [1, 1, 1, 0, 5]])
 
         solution_set.add(solution)
 

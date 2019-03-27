@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from tabu_search import search
-from feasible_solution_factory import *
+from data_set import Data
+import tabu_search
+import feasible_solution_factory
 import time, sys, getopt
 import statistics
 
@@ -65,10 +66,12 @@ def parse_args(argv):
     if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None or iters is None:
         print_usage_and_exit()
 
-    print(f"search time = {tabu_search_time} minute(s)\n"
+    print(f"search time = {tabu_search_time} seconds\n"
           f"tabu list size = {tabu_list_size}\n"
           f"neighborhood size = {neighborhood_size}\n"
-          f"data directory = {data_directory}")
+          f"neighborhood wait time = {neighborhood_wait} seconds\n"
+          f"data directory = {data_directory}\n"
+          f"iterations = {iters}")
 
     return tabu_search_time, tabu_list_size, neighborhood_size, neighborhood_wait, data_directory, iters
 
@@ -83,9 +86,9 @@ def main(args):
                               f'{args[4]}/jobTasks.csv')
 
     if "data_set1" in args[4]:
-        initial_solution = get_small_test_operation()  # this is for getting a consistent feasible solution
+        initial_solution = feasible_solution_factory.get_small_test_solution()
     else:
-        initial_solution = get_large_test_operation()
+        initial_solution = feasible_solution_factory.get_large_test_solution()
 
     print()
     print(f"initial makespan = {round(initial_solution.makespan)}")
@@ -93,7 +96,7 @@ def main(args):
     makespans = []
     iterations = []
     for i in range(args[5]):
-        result = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3])
+        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3])
         makespans.append(result[0].makespan)
         iterations.append(result[1])
 
@@ -115,6 +118,6 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 10, "./data/data_set1"]
-    sys.argv[1:] = ["-t", 60, "-s", 200, "-n", 50, "-w", 60, "-i", 5, "./data/data_set2"]
+    # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "./data/data_set1"]
+    sys.argv[1:] = ["-t", 12, "-s", 200, "-n", 50, "-w", 60, "-i", 10, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))
