@@ -1,5 +1,6 @@
-from random import randint
+import random
 from makespan import Solution
+from data_set import Data
 import time
 
 
@@ -15,7 +16,7 @@ class TabuList:
     """
 
     def __init__(self):
-        self.head = self.tail = None        # use SLinkedList to keep LIFO property
+        self.head = self.tail = None        # use SLinkedList to keep FIFO property
         self.solutions = SolutionSet()      # use SolutionSet for better efficient than O(n)
 
     def enqueue(self, solution):
@@ -81,6 +82,7 @@ class SolutionSet:
 
         return result
 
+    # TODO do not need to check if solution is in set
     def remove(self, solution):
         """
         Removes a solution and decrements size if the solution is in this SolutionSet.
@@ -132,13 +134,15 @@ class SolutionSet:
 
 # TODO: we may want to modify this function to produce a neighbor by sometimes changing an operation's machine
 #  instead of changing the placement of an operation.
-def generate_neighbor(solution):
+def generate_neighbor(solution, probability_change_machine):
     """
     This function generates a feasible solution that is a neighbor of the solution parameter.
 
     :param solution: The solution to generate a neighbor of.
+    :param probability_change_machine: The probability of changing a chosen operations machine.
     :return: A feasible solution that is a neighbor of the solution parameter.
     """
+    operation_list = solution.operation_list
     result_operation_list = None  # this is so compiler doesn't complain about uninitialized local variables
     operation = None
     random_index = lower_index = upper_index = 0
@@ -146,8 +150,8 @@ def generate_neighbor(solution):
     # this is to ensure we are not inserting the randomly removed operation into the same place
     while lower_index == upper_index:
 
-        result_operation_list = solution[:]   # make a copy so we don't mess up the original operation list
-        random_index = randint(0, len(solution) - 1)  # remove a random operation
+        result_operation_list = operation_list[:]   # make a copy so we don't mess up the original operation list
+        random_index = random.randrange(len(operation_list))  # remove a random operation
         operation = result_operation_list.pop(random_index)
         job_id = operation[0]  # the job id of the operation that was removed
         sequence = operation[2]  # the sequence number of the operation that was removed
@@ -171,7 +175,18 @@ def generate_neighbor(solution):
     # get a random placement index that is in between lower and upper index (bounds) and not equal to the random index
     placement_index = random_index
     while placement_index == random_index:
-        placement_index = randint(lower_index, upper_index)
+        placement_index = random.randint(lower_index, upper_index)
+
+    if random.randint(0, 99) < probability_change_machine:
+        usable_machines = Data.get_job(job_id).get_task(operation[1]).get_usable_machines()
+        min_machine_makespan = usable_machines[0]
+
+        makespans = solution.machine_makespans
+        for machine in usable_machines:
+            if makespans[machine] < makespans[min_machine_makespan]:
+                min_machine_makespan = machine
+
+        operation[3] = min_machine_makespan
 
     # insert the operation into the result operation list at the placement index
     result_operation_list.insert(placement_index, operation)
@@ -196,24 +211,25 @@ def generate_neighbor(solution):
 
 
 # TODO we may want to produce a neighborhood with makespans < solution.makespan
-def generate_neighborhood(size, wait, solution):
+def generate_neighborhood(size, wait, solution, probability_change_machine):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
 
     :param size: The size of the neighborhood to generate.
     :param wait: The maximum time spent to generate a neighborhood.
     :param solution: The solution to generate a neighborhood for.
+    :param probability_change_machine: The probability of changing a chosen operations machine.
     :return: SolutionSet of neighboring solutions.
     """
     stop_time = time.time() + wait
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
-            result.add(generate_neighbor(solution.operation_list))
+            result.add(generate_neighbor(solution, probability_change_machine))
 
     return result
 
 
-def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait):
+def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine=0):
     """
     This function performs Tabu search for a number of iterations given an initial feasible solution.
 
@@ -222,6 +238,7 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     :param tabu_size: The size of the Tabu list.
     :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
+    :param probability_change_machine: The probability of changing a chosen operations machine.
     :return best_solution: The best solution found while performing Tabu search.
     """
     solution = initial_solution
@@ -231,7 +248,7 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     iterations = 0
 
     while time.time() < stop_time:
-        neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution)
+        neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution, probability_change_machine)
 
         for makespan in neighborhood.solutions.keys():
             if makespan < solution.makespan:

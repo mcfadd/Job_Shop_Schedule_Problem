@@ -38,6 +38,13 @@ class Job:
     def __init__(self, job_id):
         self._jobId = job_id
         self._tasks = []
+        self._max_sequence = 0
+
+    def get_max_sequence(self):
+        return self._max_sequence
+
+    def get_tasks(self):
+        return self._tasks
 
     def get_task(self, task_id):
         return self._tasks[task_id]
@@ -126,6 +133,10 @@ class Data:
                     Data.jobs[tmp_task.get_job_id()] = Job(tmp_task.get_job_id())
                     prev_job_id = tmp_task.get_job_id()
 
+                # update Job's max sequence number
+                if tmp_task.get_sequence() > Data.jobs[tmp_task.get_job_id()].get_max_sequence():
+                    Data.jobs[tmp_task.get_job_id()]._max_sequence = tmp_task.get_sequence()
+
                 # append task to associated job.tasks list
                 Data.jobs[tmp_task.get_job_id()]._tasks.append(tmp_task)
 
@@ -174,7 +185,7 @@ class Data:
         :return: set up time required before processing cur_task after prev_task is complete.
         """
         return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[prev_task]][
-            Data.dependency_matrix_index_encoding[cur_task]] if prev_task != (-1, -1) else 0
+            Data.dependency_matrix_index_encoding[cur_task]]
 
     @staticmethod
     def get_job(job_id):

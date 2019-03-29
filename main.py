@@ -1,30 +1,41 @@
-#!/usr/bin/env python3
 from tabu_search import search
 from feasible_solution_factory import *
 import time, sys, getopt
 
 
-def print_usage_and_exit():
-    print("usage:\n"
-          " main.py [-h] -t <runtime in seconds> -s <tabu list size> -n <neighborhood size> -w <max wait time for generating a neighborhood in seconds> <data directory>")
+def print_help_and_exit():
+    print("usage:\n")
+    print(" " * 2, "python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait> <data>")
+    print()
+    print("args:\n")
+    print("[-h]".center(10), "prints this help message")
+    print("-t".center(10), "runtime in seconds for tabu search")
+    print("-s".center(10), "tabu list size")
+    print("-n".center(10), "neighborhood size")
+    print("-w".center(10), "max time in seconds to wait for generating a neighborhood")
+    print("data".center(10), "directory containing the files: jobTasks.csv")
+    print(" " * 42, "machineRunSpeed.csv")
+    print(" " * 42, "sequenceDependencyMatrix.csv")
+    print("example:\n")
+    print(" " * 2, "python main.py -t 600 -s 100 -n 150 -w 1 ./data/data_set2")
     sys.exit()
 
 
 def parse_args(argv):
     """
     This function parses all of the command line arguments.
-    If the user does not provide all of the necessary arguments then a help message will be printed.
+    If the user does not provide all of the necessary arguments then a help message is printed.
 
     Parses the following arguments:
         [-h | --help]
-        (-t | --time=) time in minutes for tabu search to run
-        (-s | --tabu=) tabu list size
-        (-n | --neighborhood=) neighborhood size
-        (-w | --wait=) max time to wait for generating a neighborhood
-        (<data_dir>) directory that contains the csv files
+        (-t | --time=)          time in seconds for tabu search to run
+        (-s | --tabu=)          tabu list size
+        (-n | --neighborhood=)  neighborhood size
+        (-w | --wait=)          max time in seconds to wait for generating a neighborhood
+        data                    directory that contains the csv files
 
     :param argv: a list of command line arguments to parse
-    :return: parsed arguments in the order (time, tabu, neighborhoood, wait, data_dir)
+    :return: parsed arguments in the order (time, tabu, neighborhoood, wait, data)
     """
 
     tabu_search_time = None
@@ -38,11 +49,11 @@ def parse_args(argv):
         opts, args = getopt.getopt(argv, "ht:s:n:w:", ["help", "time=", "tabu=", "neighborhood=", "wait="])
 
     except getopt.GetoptError:
-        print_usage_and_exit()
+        print_help_and_exit()
 
     for opt, arg in opts:
         if opt in ('-h', "--help"):
-            print_usage_and_exit()
+            print_help_and_exit()
         elif opt in ("-t", "--time"):
             tabu_search_time = float(arg)
         elif opt in ("-s", "--tabu"):
@@ -58,7 +69,7 @@ def parse_args(argv):
 
     # check if all parameters were initialized
     if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None:
-        print_usage_and_exit()
+        print_help_and_exit()
 
     print(f"search time = {tabu_search_time} seconds\n"
           f"tabu list size = {tabu_list_size}\n"
@@ -95,5 +106,5 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    sys.argv[1:] = ["-t", 5, "-s", 10, "-n", 8, "-w", 0.1, "./data/data_set1"]
+    sys.argv[1:] = ["-t", 6, "-s", 10, "-n", 8, "-w", 0.1, "./data/data_set1"]
     main(parse_args(sys.argv[1:]))

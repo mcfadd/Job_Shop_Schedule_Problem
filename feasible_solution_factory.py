@@ -1,5 +1,5 @@
-from random import randint
-from data_set import Operation, Data
+import random
+from data_set import Data
 from makespan import Solution
 
 
@@ -10,14 +10,21 @@ def generate_feasible_solution():
     :return: a random feasible solution
     """
 
-    # this will be replaced by what Jessica and Anthony come up with
     operation_list = []
-    for job in range(Data.get_number_of_jobs()):
-        for task in range(Data.jobs[job].get_number_of_tasks()):
-            usable_machines = Data.jobs[job].get_task(task).get_usable_machines()
-            operation_list.append(Operation(task=Data.jobs[job].get_task(task),
-                                            machine=usable_machines[randint(0, len(usable_machines) - 1)]))
+    available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in Data.jobs.values()}
 
+    while 0 < len(available):
+        rand_job_id = random.choice(list(available.keys()))
+        rand_task = available[rand_job_id].pop(random.randrange(len(available[rand_job_id])))
+        rand_machine = rand_task.get_usable_machines().pop(random.randrange(len(rand_task.get_usable_machines())))
+
+        if len(available[rand_job_id]) == 0:
+            if rand_task.get_sequence() == Data.get_job(rand_job_id).get_max_sequence():
+                available.pop(rand_job_id)
+            else:
+                available[rand_job_id] = [task for task in Data.get_job(rand_job_id).get_tasks() if task.get_sequence() == rand_task.get_sequence() + 1]
+
+        operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine, rand_task.get_pieces()])
     return Solution(operation_list)
 
 

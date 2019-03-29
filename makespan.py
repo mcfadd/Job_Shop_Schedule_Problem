@@ -90,7 +90,8 @@ def compute_machine_makespans(operation_list):
         if sequence < job_seq_memory[job_id]:
             raise InfeasibleSolutionException("Infeasible operation_list")
 
-        setup = Data.get_setup_time((machine_jobs_memory[machine], machine_tasks_memory[machine]), (job_id, task_id))
+        setup = Data.get_setup_time((machine_jobs_memory[machine], machine_tasks_memory[machine]), (job_id, task_id)) \
+            if machine_jobs_memory[machine] != -1 else 0
 
         wait = job_end_memory[job_id] - machine_makespan_memory[machine] if job_end_memory[job_id] > machine_makespan_memory[machine] else 0
 
