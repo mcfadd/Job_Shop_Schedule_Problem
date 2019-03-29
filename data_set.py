@@ -184,8 +184,8 @@ class Data:
         :param cur_task: The current task.
         :return: set up time required before processing cur_task after prev_task is complete.
         """
-        return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[prev_task]][
-            Data.dependency_matrix_index_encoding[cur_task]]
+        return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[cur_task]][
+            Data.dependency_matrix_index_encoding[prev_task]]
 
     @staticmethod
     def get_job(job_id):

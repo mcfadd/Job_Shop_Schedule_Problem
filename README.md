@@ -1,4 +1,4 @@
-# Job Shop Schedule Problem
+# Job Shop Schedule Problem (JSP)
 
 This problem was given to us by [Quad Graphics](https://www.quad.com/) in a mathematics course titled *Math 490: Preparation for Industrial Careers: Solving Industrial and Applied Problems in Teams* (sponsered by [PIC Math](https://www.maa.org/programs-and-communities/professional-development/pic-math)) during the Spring 2019 semester.
 
@@ -8,7 +8,13 @@ This problem was given to us by [Quad Graphics](https://www.quad.com/) in a math
 [Maddie Kenney](https://github.com/MaddieKenney)  
 [Anthony Valdez ](https://github.com/avaldez96)  
 
-## Problem Description
+## Problem
+
+The specific JSP problem this program attempts to solve is classified as the 
+**Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**  
+For more information on JSP see https://en.wikipedia.org/wiki/Job_shop_scheduling.
+
+**Description**
 
 Given m machines with different run speeds and n jobs which have a varying number of tasks that need to be completed, create a program that schedules the tasks from all jobs on the machines such that the completion time (i.e. make span) is minimized.
 
@@ -16,10 +22,10 @@ Given m machines with different run speeds and n jobs which have a varying numbe
 * Each Task has a set amount of pieces that needs to be processed for the task to be complete.
 * The machines all have different run speeds.
 * Certain tasks can be run in parallel on these machines.
-* Each task has a sequence dependent setup time.
+* Each task has a sequence dependent setup time. Setup times are encoded in sequenceDependencyMatrix.csv, where the columns represent the preceding job task, and the rows represent the current job task.
 * If a task is the first to run on a machine there will be no setup time.
 
-**Constrains**  
+**Constraints**  
 * On a machine, there can be no overlap in start and end times for any job task.
 * Tasks within the same job cannot be started unless all other tasks within the same job with a sequence number less than the current task are complete.
 * Each task can only be run on certain machines.
@@ -76,7 +82,7 @@ To produce a schedule for each machine given a feasible solution, we iterate ove
 
 main:
 ```bash
-python main.py [-h] -t runtime -s <tabu size> -n <neighborhood size> -w <neighborhood wait>  <data directory>
+python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait>  <data directory>
 ```
 
 benchmark:
@@ -110,10 +116,7 @@ Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascendi
 
 ## Program Design
 
-Below is a basic high-level flow digram describing our design.
+Below is a basic high-level flow digram describing the design.
 
 ![Flow Diagram](diagrams/Flow_Diagram.png)  
-
-
-
 
