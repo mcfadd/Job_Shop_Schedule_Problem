@@ -225,7 +225,7 @@ class Data:
         print("  (jobId, taskId) : index\n")
         for key in Data.dependency_matrix_index_encoding:
             print("  ", end="")
-            print(f"({key.get_job_id()}, {key.get_task_id()}) : {Data.dependency_matrix_index_encoding[key]}")
+            print(f"({key[0]}, {key[1]}) : {Data.dependency_matrix_index_encoding[key]}")
 
         print("\nmachine_speeds:\n")
         print("  machine : speed\n")

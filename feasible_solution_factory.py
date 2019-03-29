@@ -16,7 +16,7 @@ def generate_feasible_solution():
     while 0 < len(available):
         rand_job_id = random.choice(list(available.keys()))
         rand_task = available[rand_job_id].pop(random.randrange(len(available[rand_job_id])))
-        rand_machine = rand_task.get_usable_machines().pop(random.randrange(len(rand_task.get_usable_machines())))
+        rand_machine = rand_task.get_usable_machines()[random.randrange(len(rand_task.get_usable_machines()))]
 
         if len(available[rand_job_id]) == 0:
             if rand_task.get_sequence() == Data.get_job(rand_job_id).get_max_sequence():

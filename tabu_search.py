@@ -178,7 +178,7 @@ def generate_neighbor(solution, probability_change_machine):
         placement_index = random.randint(lower_index, upper_index)
 
     if random.randint(0, 99) < probability_change_machine:
-        usable_machines = Data.get_job(job_id).get_task(operation[1]).get_usable_machines()
+        usable_machines = Data.get_job(operation[0]).get_task(operation[1]).get_usable_machines()
         min_machine_makespan = usable_machines[0]
 
         makespans = solution.machine_makespans

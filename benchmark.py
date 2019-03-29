@@ -131,5 +131,5 @@ def main(args):
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
     # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "./data/data_set1"]
-    sys.argv[1:] = ["-t", 6, "-s", 200, "-n", 50, "-w", 60, "-i", 2, "./data/data_set2"]
+    sys.argv[1:] = ["-t", 6, "-s", 200, "-n", 50, "-w", 60, "-i", 20, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))

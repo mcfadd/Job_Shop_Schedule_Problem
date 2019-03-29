@@ -96,8 +96,9 @@ def main(args):
 
     print("\nTabu Search Result:")
     print("...searching...")
+    # Note probability_change_machine is hard coded right now. Need to make it a command line arg
     tuple = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2],
-                   neighborhood_wait=args[3])
+                   neighborhood_wait=args[3], probability_change_machine=25)
     print(f"makespan = {round(tuple[0].makespan)}\n\n"
           f"number of iterations TS performed = {tuple[1]}")
 
@@ -106,5 +107,5 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    sys.argv[1:] = ["-t", 6, "-s", 10, "-n", 8, "-w", 0.1, "./data/data_set1"]
+    sys.argv[1:] = ["-t", 10, "-s", 100, "-n", 150, "-w", 0.1, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))
