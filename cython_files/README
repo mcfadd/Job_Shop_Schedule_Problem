@@ -1,0 +1,12 @@
+This directory contains 2 cython .pyx files:
+
+1. makespan_compiled.pyx
+2. generate_neighbor_compiled.pyx
+
+To manually compile them to c-extensions run,
+
+`python setup.py build --inplace`
+
+For more info on this see:
+https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#basic-setup-py
+
