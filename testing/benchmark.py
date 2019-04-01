@@ -1,6 +1,6 @@
 from data_set import Data
 import tabu_search
-import feasible_solution_factory
+import solution_factory
 import time, sys, getopt
 import statistics
 
@@ -98,9 +98,9 @@ def main(args):
                               f'{args[4]}/jobTasks.csv')
 
     if "data_set1" in args[4]:
-        initial_solution = feasible_solution_factory.get_small_test_solution()
+        initial_solution = solution_factory.get_small_test_solution()
     else:
-        initial_solution = feasible_solution_factory.get_large_test_solution()
+        initial_solution = solution_factory.get_large_test_solution()
 
     print()
     print(f"initial makespan = {round(initial_solution.makespan)}")
@@ -108,7 +108,7 @@ def main(args):
     makespans = []
     iterations = []
     for i in range(args[5]):
-        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3])
+        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3], probability_change_machine=50)
         makespans.append(result[0].makespan)
         iterations.append(result[1])
 
@@ -131,5 +131,5 @@ def main(args):
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
     # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "./data/data_set1"]
-    sys.argv[1:] = ["-t", 6, "-s", 200, "-n", 50, "-w", 60, "-i", 20, "./data/data_set2"]
+    sys.argv[1:] = ["-t", 10, "-s", 200, "-n", 200, "-w", 0.1, "-i", 3, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))

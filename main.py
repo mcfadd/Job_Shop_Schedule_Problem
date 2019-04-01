@@ -1,5 +1,5 @@
 from tabu_search import search
-from feasible_solution_factory import *
+from solution_factory import *
 import time, sys, getopt
 
 
