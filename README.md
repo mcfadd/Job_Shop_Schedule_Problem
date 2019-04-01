@@ -72,37 +72,13 @@ To calculate the make span of a feasible solution we calculate the max of (total
 
 To produce a schedule for each machine given a feasible solution, we iterate over the solution and add each Job-Task to a queue for the machine specified in the operation.
 
-## Program
-### Requirements
+## Usage
 
-First make sure you have the following packages installed:
+**Reuirements**: python 3
 
-Python 3.6  
-python3-dev   
-pip  
-gcc
-
-These can be installed with apt, yum, brew, etc.
-
-To install the other requirements do the following:
-
-1. clone repository
-2. (optional) create virtual env
-2. cd to the project directory
-3. run `pip install -r requirements`
-
-### Build
-
-In the `cython_files` directory exists two .pyx files:
-
-1. makespan_compiled.pyx
-2. generate_neighbor.pyx
-
-These files are compiled by [Cython](https://cython.org/), and are compiled to C-extensions.  
-To build the C-extensions cd to the `cython_files` directory and run `python setup.py build --inplace`.  
-For more information on building cython source code see the [link](https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#basic-setup-py).
-
-### Usage
+1. clone or download repository
+2. open a terminal and cd to the directory where the clone is
+3. run one of the following
 
 main:
 ```bash

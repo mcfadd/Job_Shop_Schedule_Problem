@@ -1,5 +1,4 @@
 import csv
-import numpy as np
 
 
 class Task:
@@ -97,11 +96,10 @@ class Data:
     This static class contains all of the data that is read in from the csv files.
     """
 
-    # uninitialized static fields
-    sequence_dependency_matrix = np.empty((0, 0))
+    sequence_dependency_matrix = []
     dependency_matrix_index_encoding = {}
     jobs = {}
-    machine_speeds = np.empty((0, 0))
+    machine_speeds = []
 
     @staticmethod
     def read_job_tasks_file(job_tasks_file):
@@ -142,7 +140,7 @@ class Data:
                 # append task to associated job.tasks list
                 Data.jobs[tmp_task.get_job_id()]._tasks.append(tmp_task)
 
-                # add mapping (job_id, task_id) : index to dependencyMatrixIndexEncoding dictionary
+                # add mapping task : index to dependencyMatrixIndexEncoding dictionary
                 Data.dependency_matrix_index_encoding[(tmp_task.get_job_id(), tmp_task.get_task_id())] = index
                 index += 1
 
@@ -157,9 +155,8 @@ class Data:
         with open(seq_dep_matrix_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
-            Data.sequence_dependency_matrix = np.array(
-                [[int(x) for x in row[1:]]
-                 for row in csv.reader(fin)], dtype=np.intc)
+            for row in csv.reader(fin):
+                Data.sequence_dependency_matrix.append([int(x) for x in row[1:]])
 
     @staticmethod
     def read_machine_speeds_file(machine_speeds_file):
@@ -174,17 +171,33 @@ class Data:
         with open(machine_speeds_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
-            Data.machine_speeds = np.array([int(row[1]) for row in csv.reader(fin)], dtype=np.float)
+            for row in csv.reader(fin):
+                Data.machine_speeds.append(int(row[1]))
 
-    # get_setup_time has been moved inside compute_machine_makespans()
+    @staticmethod
+    def get_setup_time(prev_task, cur_task):
+        """
+        Gets the set up time required before processing cur_task after prev_task is complete.
+        The set up time is encoded in Data.sequence_dependency_matrix.
+
+        :param prev_task: The previous task.
+        :param cur_task: The current task.
+        :return: set up time required before processing cur_task after prev_task is complete.
+        """
+        return Data.sequence_dependency_matrix[Data.dependency_matrix_index_encoding[cur_task]][
+            Data.dependency_matrix_index_encoding[prev_task]]
 
     @staticmethod
     def get_job(job_id):
         return Data.jobs[job_id]
 
     @staticmethod
+    def get_machine_speed(machine_id):
+        return Data.machine_speeds[machine_id]
+
+    @staticmethod
     def get_number_of_machines():
-        return Data.machine_speeds.shape[0]
+        return len(Data.machine_speeds)
 
     @staticmethod
     def get_number_of_jobs():
@@ -192,7 +205,7 @@ class Data:
 
     @staticmethod
     def get_number_of_tasks():
-        return Data.sequence_dependency_matrix.shape[0]
+        return len(Data.dependency_matrix_index_encoding)
 
     @staticmethod
     def print_data():
@@ -204,7 +217,9 @@ class Data:
                 task.pprint()
 
         print("\nsequence_dependency_matrix:\n")
-        print(Data.sequence_dependency_matrix)
+        for row in Data.sequence_dependency_matrix:
+            print("  ", end="")
+            print(row)
 
         print("\ndependency_matrixIndex_encoding:\n")
         print("  (jobId, taskId) : index\n")
@@ -214,9 +229,9 @@ class Data:
 
         print("\nmachine_speeds:\n")
         print("  machine : speed\n")
-        for machine, speed in np.ndenumerate(Data.machine_speeds):
+        for machine, speed in enumerate(Data.machine_speeds):
             print("  ", end="")
-            print(f"{machine[0]} : {speed}")
+            print(f"{machine} : {speed}")
 
     @staticmethod
     def read_data_from_files(seq_dep_matrix_file, machine_speeds_file, job_tasks_file):

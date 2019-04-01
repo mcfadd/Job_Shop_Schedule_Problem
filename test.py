@@ -1,7 +1,6 @@
 from data_set import Operation
-from solution import *
-from data_set import Data
-from structs.data_structs import SolutionSet
+from makespan import *
+from tabu_search import SolutionSet
 import unittest
 
 """
@@ -15,8 +14,8 @@ This Unit Test contains test cases that do the following:
 6. test SolutionSet remove method
 
 """
-Data.read_data_from_files('../data/data_set1/sequenceDependencyMatrix.csv', '../data/data_set1/machineRunSpeed.csv',
-                          '../data/data_set1/jobTasks.csv')
+Data.read_data_from_files('data/data_set1/sequenceDependencyMatrix.csv', 'data/data_set1/machineRunSpeed.csv',
+                          'data/data_set1/jobTasks.csv')
 
 
 class Test(unittest.TestCase):
