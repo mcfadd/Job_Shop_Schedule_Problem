@@ -57,39 +57,39 @@ class Job:
         return len(self._tasks)
 
 
-class Operation:
-
-    def __init__(self, task, machine):
-        """
-        Constructs an Operation object composed of a task and a machine for the task to run on.
-
-        :param task: The Task this Operation will perform.
-        :param machine: The machine this Operation will perform it's task on.
-        """
-        self._task = task
-        self._machine = machine
-
-    def get_task(self):
-        return self._task
-
-    def get_machine(self):
-        return self._machine
-
-    def set_machine(self, machine_id):
-        self._machine = machine_id
-
-    def get_usable_machines(self):
-        return self.get_task().get_usable_machines()
-
-    def __eq__(self, other_operation):
-        return (self.get_machine() == other_operation.get_machine()
-                and self.get_task() == other_operation.get_task())
-
-    def pprint(self):
-        print(f"[{self._task.get_job_id()}, "
-              f"{self._task.get_task_id()}, "
-              f"{self._task.get_sequence()}, "
-              f"{self._machine}]")
+# class Operation:
+#
+#     def __init__(self, task, machine):
+#         """
+#         Constructs an Operation object composed of a task and a machine for the task to run on.
+#
+#         :param task: The Task this Operation will perform.
+#         :param machine: The machine this Operation will perform it's task on.
+#         """
+#         self._task = task
+#         self._machine = machine
+#
+#     def get_task(self):
+#         return self._task
+#
+#     def get_machine(self):
+#         return self._machine
+#
+#     def set_machine(self, machine_id):
+#         self._machine = machine_id
+#
+#     def get_usable_machines(self):
+#         return self.get_task().get_usable_machines()
+#
+#     def __eq__(self, other_operation):
+#         return (self.get_machine() == other_operation.get_machine()
+#                 and self.get_task() == other_operation.get_task())
+#
+#     def pprint(self):
+#         print(f"[{self._task.get_job_id()}, "
+#               f"{self._task.get_task_id()}, "
+#               f"{self._task.get_sequence()}, "
+#               f"{self._machine}]")
 
 
 class Data:
@@ -127,7 +127,7 @@ class Data:
                     int(row[0]),
                     int(row[1]),
                     int(row[2]),
-                    [int(x) for x in row[3][1:-1].split(' ')],
+                    np.array([int(x) for x in row[3][1:-1].split(' ')], dtype=np.intc),
                     int(row[4])
                 )
                 # create & append new job if we encounter job_id that has not been seen

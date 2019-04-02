@@ -1,8 +1,9 @@
-from data_set import Operation
 from solution import *
 from data_set import Data
 from structs.data_structs import SolutionSet
+from cython_files.makespan_compiled import InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 import unittest
+import numpy as np
 
 """
 This Unit Test contains test cases that do the following: 
@@ -21,54 +22,41 @@ Data.read_data_from_files('../data/data_set1/sequenceDependencyMatrix.csv', '../
 
 class Test(unittest.TestCase):
 
-    def test_operation_equality(self):
-        self.assertEqual(Operation(task=Data.get_job(0).get_task(0), machine=0),
-                         Operation(task=Data.get_job(0).get_task(0), machine=0),
-                         "These two Operations should be equal")
-
-        self.assertNotEqual(Operation(task=Data.get_job(0).get_task(0), machine=0),
-                            Operation(task=Data.get_job(0).get_task(1), machine=0),
-                            "These two Operations should not be equal")
-
-        self.assertNotEqual(Operation(task=Data.get_job(0).get_task(0), machine=0),
-                            Operation(task=Data.get_job(0).get_task(0), machine=1),
-                            "These two Operations should not be equal")
-
     def test_solution_equality(self):
-        self.assertEqual(Solution([[0, 0, 0, 1, 10],
-                                   [0, 1, 1, 0, 5],
-                                   [1, 0, 0, 1, 8],
-                                   [2, 0, 0, 0, 8],
-                                   [1, 1, 1, 0, 5]]),
-                         Solution([[0, 0, 0, 1, 10],
-                                   [0, 1, 1, 0, 5],
-                                   [1, 0, 0, 1, 8],
-                                   [2, 0, 0, 0, 8],
-                                   [1, 1, 1, 0, 5]]),
+        self.assertEqual(Solution(np.array([[0, 0, 0, 1, 10],
+                                            [0, 1, 1, 0, 5],
+                                            [1, 0, 0, 1, 8],
+                                            [2, 0, 0, 0, 8],
+                                            [1, 1, 1, 0, 5]], dtype=np.intc)),
+                         Solution(np.array([[0, 0, 0, 1, 10],
+                                            [0, 1, 1, 0, 5],
+                                            [1, 0, 0, 1, 8],
+                                            [2, 0, 0, 0, 8],
+                                            [1, 1, 1, 0, 5]], dtype=np.intc)),
                          "These two Solutions should be equal"
                          )
 
-        self.assertNotEqual(Solution([[0, 0, 0, 1, 10],
-                                      [0, 1, 1, 0, 5],
-                                      [1, 0, 0, 1, 8],
-                                      [2, 0, 0, 0, 8],
-                                      [1, 1, 1, 0, 5]]),
-                            Solution([[0, 0, 0, 1, 10],
-                                      [2, 0, 0, 0, 8],
-                                      [0, 1, 1, 0, 5],
-                                      [1, 0, 0, 1, 8],
-                                      [1, 1, 1, 0, 5]]),
+        self.assertNotEqual(Solution(np.array([[0, 0, 0, 1, 10],
+                                               [0, 1, 1, 0, 5],
+                                               [1, 0, 0, 1, 8],
+                                               [2, 0, 0, 0, 8],
+                                               [1, 1, 1, 0, 5]], dtype=np.intc)),
+                            Solution(np.array([[0, 0, 0, 1, 10],
+                                               [2, 0, 0, 0, 8],
+                                               [0, 1, 1, 0, 5],
+                                               [1, 0, 0, 1, 8],
+                                               [1, 1, 1, 0, 5]], dtype=np.intc)),
                             "These two Solutions should not be equal"
                             )
 
     def test_infeasible_solution(self):
         try:
 
-            Solution([[0, 1, 1, 0, 5],
+            Solution(np.array([[0, 1, 1, 0, 5],
                       [0, 0, 0, 1, 10],
                       [1, 0, 0, 1, 8],
                       [2, 0, 0, 0, 8],
-                      [1, 1, 1, 0, 5]])
+                      [1, 1, 1, 0, 5]], dtype=np.intc))
 
             self.assertTrue(False, "Failed to raise InfeasibleSolutionException")
 
@@ -78,10 +66,10 @@ class Test(unittest.TestCase):
     def test_incomplete_solution(self):
         try:
 
-            Solution([[0, 0, 0, 1, 10],
+            Solution(np.array([[0, 0, 0, 1, 10],
                       [1, 0, 0, 1, 8],
                       [2, 0, 0, 0, 8],
-                      [1, 1, 1, 0, 5]])
+                      [1, 1, 1, 0, 5]], dtype=np.intc))
 
             self.assertTrue(False, "Failed to raise IncompleteSolutionException")
 
@@ -91,26 +79,26 @@ class Test(unittest.TestCase):
     def test_solution_set_add(self):
         solution_set = SolutionSet()
 
-        solution = Solution([[0, 0, 0, 1, 10],
-                             [0, 1, 1, 0, 5],
-                             [1, 0, 0, 1, 8],
-                             [2, 0, 0, 0, 8],
-                             [1, 1, 1, 0, 5]])
+        solution = Solution(np.array([[0, 0, 0, 1, 10],
+                                      [0, 1, 1, 0, 5],
+                                      [1, 0, 0, 1, 8],
+                                      [2, 0, 0, 0, 8],
+                                      [1, 1, 1, 0, 5]], dtype=np.intc))
 
         solution_set.add(solution)
 
         # make sure Solution was added
         self.assertTrue(solution_set.contains(solution))
 
-        solution_set.add(solution)
+        solution_set.add(Solution(np.copy(solution.operation_list_view)))
 
         # make sure duplicate Solution was not added
         self.assertEqual(solution_set.size, 1)
-        solution = Solution([[0, 0, 0, 1, 10],
-                             [2, 0, 0, 0, 8],
-                             [0, 1, 1, 0, 5],
-                             [1, 0, 0, 1, 8],
-                             [1, 1, 1, 0, 5]])
+        solution = Solution(np.array([[0, 0, 0, 1, 10],
+                                      [2, 0, 0, 0, 8],
+                                      [0, 1, 1, 0, 5],
+                                      [1, 0, 0, 1, 8],
+                                      [1, 1, 1, 0, 5]], dtype=np.intc))
 
         solution_set.add(solution)
 
@@ -121,11 +109,11 @@ class Test(unittest.TestCase):
     def test_solution_set_remove(self):
         solution_set = SolutionSet()
 
-        solution = Solution([[0, 0, 0, 1, 10],
-                             [0, 1, 1, 0, 5],
-                             [1, 0, 0, 1, 8],
-                             [2, 0, 0, 0, 8],
-                             [1, 1, 1, 0, 5]])
+        solution = Solution(np.array([[0, 0, 0, 1, 10],
+                                      [0, 1, 1, 0, 5],
+                                      [1, 0, 0, 1, 8],
+                                      [2, 0, 0, 0, 8],
+                                      [1, 1, 1, 0, 5]], dtype=np.intc))
 
         solution_set.add(solution)
 
@@ -137,8 +125,6 @@ class Test(unittest.TestCase):
         # make sure solution was removed
         self.assertFalse(solution_set.contains(solution))
         self.assertEqual(solution_set.size, 0)
-
-        self.assertFalse(solution_set.remove(solution))
 
 
 if __name__ == '__main__':

@@ -5,7 +5,8 @@ import time, sys, getopt
 
 def print_help_and_exit():
     print("usage:\n")
-    print(" " * 2, "python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait> <data>")
+    print(" " * 2,
+          "python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait> <data>")
     print()
     print("args:\n")
     print("[-h]".center(10), "prints this help message")
@@ -91,21 +92,24 @@ def main(args):
 
     initial_solution = generate_feasible_solution()
 
-    print("\nInitial Solution:")
+    print()
+    print("Initial Solution:")
     print(f"makespan = {round(initial_solution.makespan)}")
+    print()
+    print("...searching...", end="\n")
 
-    print("\nTabu Search Result:")
-    print("...searching...")
     # Note probability_change_machine is hard coded right now. Need to make it a command line arg
-    tuple = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2],
-                   neighborhood_wait=args[3], probability_change_machine=25)
-    print(f"makespan = {round(tuple[0].makespan)}\n\n"
-          f"number of iterations TS performed = {tuple[1]}")
+    result = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2],
+                    neighborhood_wait=args[3], probability_change_machine=80)
+
+    print("Tabu Search Result:")
+    print(f"iterations TS performed = {result[1]}")
+    result[0].pprint()
 
     print(f"\nDuration {time.time() - start_time} seconds")
 
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    sys.argv[1:] = ["-t", 10, "-s", 100, "-n", 150, "-w", 0.1, "./data/data_set2"]
+    sys.argv[1:] = ["-t", 1, "-s", 100, "-n", 150, "-w", 1, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))

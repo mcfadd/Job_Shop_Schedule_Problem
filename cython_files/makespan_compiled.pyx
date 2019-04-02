@@ -7,11 +7,11 @@ cimport numpy as np
 class InfeasibleSolutionException(Exception):
     pass
 
-#@cython.boundscheck(False)
-#@cython.wraparound(False)
+@cython.boundscheck(False)
+@cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def compute_machine_makespans(int[:, :] operation_list):
+cpdef double[::1] compute_machine_makespans(int[:, :] operation_list):
     """
     Computes a list of all machine's make span times given a list of operations, where an operation
     is a list of integers in the form [job_id, task_id, sequence, machine, pieces].
@@ -73,4 +73,4 @@ def compute_machine_makespans(int[:, :] operation_list):
         machine_jobs_memory[machine] = job_id
         machine_tasks_memory[machine] = task_id
 
-    return np.array(machine_makespan_memory)
+    return machine_makespan_memory

@@ -108,7 +108,7 @@ def main(args):
     makespans = []
     iterations = []
     for i in range(args[5]):
-        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3], probability_change_machine=50)
+        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3], probability_change_machine=80)
         makespans.append(result[0].makespan)
         iterations.append(result[1])
 
@@ -130,6 +130,6 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "./data/data_set1"]
-    sys.argv[1:] = ["-t", 10, "-s", 200, "-n", 200, "-w", 0.1, "-i", 3, "./data/data_set2"]
+    # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "../data/data_set1"]
+    sys.argv[1:] = ["-t", 10, "-s", 100, "-n", 200, "-w", 0.1, "-i", 3, "../data/data_set2"]
     main(parse_args(sys.argv[1:]))
