@@ -44,6 +44,9 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_list):
     # memory for keeping track of all job's latest end time that was processed
     cdef double * job_end_memory = <double *> malloc(sizeof(double) * num_jobs)
 
+    if machine_jobs_memory == NULL or machine_tasks_memory == NULL or job_seq_memory == NULL or job_end_memory == NULL:
+        abort()
+
     cdef Py_ssize_t row, i
     cdef int job_id, task_id, sequence, machine, pieces, setup, cur_task_index, prev_task_index
     cdef double wait
@@ -83,5 +86,10 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_list):
         job_end_memory[job_id] = machine_makespan_memory[machine]
         machine_jobs_memory[machine] = job_id
         machine_tasks_memory[machine] = task_id
+
+    free(machine_jobs_memory)
+    free(machine_tasks_memory)
+    free(job_seq_memory)
+    free(job_end_memory)
 
     return machine_makespan_memory
