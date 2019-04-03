@@ -13,27 +13,27 @@ class Solution:
     and the max make span time.
     """
 
-    def __init__(self, operation_list_view):
+    def __init__(self, operation_2d_array):
         """
         The constructor for this solution checks if the operation list is feasible,
         computes the list of machine make span times, and the max make span time.
 
-        :param operation_list_view: The memory view of a 2D numpy array
+        :param operation_2d_array: 2D numpy array encoding a list of operations
         :raise InfeasibleSolutionException if solution is infeasible
         :raise IncompleteSolutionException if solution does not contain
         """
 
-        if operation_list_view.shape[0] != Data.get_number_of_tasks():
+        if operation_2d_array.shape[0] != Data.get_number_of_tasks():
             raise IncompleteSolutionException("Incomplete operation list")
 
-        self.machine_makespans = makespan.compute_machine_makespans(operation_list_view)
+        self.machine_makespans = makespan.compute_machine_makespans(operation_2d_array)
         self.makespan = max(self.machine_makespans)
-        self.operation_list_view = operation_list_view
+        self.operation_2d_array = operation_2d_array
 
     def __eq__(self, other_solution):
         return self.makespan == other_solution.makespan and np.array_equal(
             self.machine_makespans, other_solution.machine_makespans) and np.array_equal(
-            self.operation_list_view, other_solution.operation_list_view)
+            self.operation_2d_array, other_solution.operation_2d_array)
 
     def pprint(self):
         """
@@ -41,10 +41,9 @@ class Solution:
 
         :return: None
         """
-        array = np.asarray(self.operation_list_view)
         print(f"makespan = {self.makespan}\n"
               f"operation_list =\n"
-              f"{array}")
+              f"{self.operation_2d_array}")
 
     # def create_schedule(self):
     # TODO complete this function.

@@ -18,11 +18,12 @@ def generate_neighbor(solution, int probability_change_machine):
     :param probability_change_machine: The probability of changing a chosen operations machine.
     :return: A feasible solution that is a neighbor of the solution parameter.
     """
-    cdef const int[:, ::1] operation_list = solution.operation_list_view
+    cdef int[:, :, ::1] usable_machines_ndarray = Data.usable_machines_matrix
+    cdef const int[:, ::1] operation_list = solution.operation_2d_array
     cdef int[:, ::1] result_operation_list = np.copy(operation_list)
     cdef int[::1] operation, usable_machines
-    cdef Py_ssize_t random_index, lower_index, upper_index, placement_index, min_machine_makespan
-    cdef int job_id, sequence, machine
+    cdef Py_ssize_t random_index, lower_index, upper_index, placement_index, min_machine_makespan, i
+    cdef int job_id, sequence
     cdef double[::1] makespans
     lower_index = 0
     upper_index = 0
@@ -63,13 +64,15 @@ def generate_neighbor(solution, int probability_change_machine):
 
     if np.random.randint(0, 100) < probability_change_machine:
 
-        usable_machines = Data.get_job(operation[0]).get_task(operation[1]).get_usable_machines()
+        usable_machines = usable_machines_ndarray[operation[0], operation[1]]
+        #usable_machines = Data.get_job(operation[0]).get_task(operation[1]).get_usable_machines()
         min_machine_makespan = usable_machines[0]
 
         makespans = solution.machine_makespans
-        for machine in usable_machines:
-            if makespans[machine] < makespans[min_machine_makespan]:
-                min_machine_makespan = machine
+        i = 0
+        for i in range(usable_machines.shape[0]):
+            if makespans[usable_machines[i]] < makespans[min_machine_makespan]:
+                min_machine_makespan = usable_machines[i]
 
         operation[3] = min_machine_makespan
 
@@ -77,5 +80,5 @@ def generate_neighbor(solution, int probability_change_machine):
     #print("place", placement_index)
     #print(lower_index, upper_index)
 
-    result_operation_list = np.insert(result_operation_list, placement_index, operation, axis=0)
-    return Solution(result_operation_list)
+    #result_operation_list = np.insert(result_operation_list, placement_index, operation, axis=0)
+    return Solution(np.insert(result_operation_list, placement_index, operation, axis=0))

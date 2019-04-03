@@ -1,9 +1,10 @@
-from solution import *
-from data_set import Data
-from structs.data_structs import SolutionSet
-from cython_files.makespan_compiled import InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 import unittest
-import numpy as np
+
+from cython_files.makespan_compiled import \
+    InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
+
+from solution import *
+from structs.data_structs import SolutionSet
 
 """
 This Unit Test contains test cases that do the following: 
@@ -53,10 +54,10 @@ class Test(unittest.TestCase):
         try:
 
             Solution(np.array([[0, 1, 1, 0, 5],
-                      [0, 0, 0, 1, 10],
-                      [1, 0, 0, 1, 8],
-                      [2, 0, 0, 0, 8],
-                      [1, 1, 1, 0, 5]], dtype=np.intc))
+                               [0, 0, 0, 1, 10],
+                               [1, 0, 0, 1, 8],
+                               [2, 0, 0, 0, 8],
+                               [1, 1, 1, 0, 5]], dtype=np.intc))
 
             self.assertTrue(False, "Failed to raise InfeasibleSolutionException")
 
@@ -67,9 +68,9 @@ class Test(unittest.TestCase):
         try:
 
             Solution(np.array([[0, 0, 0, 1, 10],
-                      [1, 0, 0, 1, 8],
-                      [2, 0, 0, 0, 8],
-                      [1, 1, 1, 0, 5]], dtype=np.intc))
+                               [1, 0, 0, 1, 8],
+                               [2, 0, 0, 0, 8],
+                               [1, 1, 1, 0, 5]], dtype=np.intc))
 
             self.assertTrue(False, "Failed to raise IncompleteSolutionException")
 
@@ -90,7 +91,7 @@ class Test(unittest.TestCase):
         # make sure Solution was added
         self.assertTrue(solution_set.contains(solution))
 
-        solution_set.add(Solution(np.copy(solution.operation_list_view)))
+        solution_set.add(Solution(np.copy(solution.operation_2d_array)))
 
         # make sure duplicate Solution was not added
         self.assertEqual(solution_set.size, 1)

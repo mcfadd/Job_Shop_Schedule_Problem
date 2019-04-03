@@ -16,6 +16,9 @@ op_np_array = solution_factory.get_large_test_operation_np_array()
 outer_iters = 10
 inner_iters = 1000
 
+print("outer_iterations =", outer_iters)
+print("inner iterations =", inner_iters)
+
 make = 0
 times = []
 
@@ -28,7 +31,7 @@ for i in range(outer_iters):
     times.append(time.time() - start_time)
 
 print("compute_machine_makespans()")
-print("avg time =", statistics.mean(times), "makespan =", make)
+print("avg time =", statistics.mean(times), "makespan =", max(make))
 print()
 
 times = []
@@ -38,11 +41,13 @@ for i in range(outer_iters):
 
     start_time = time.time()
     for j in range(inner_iters):
-        sol = generate_neighbor_compiled.generate_neighbor(inital_sol, 0)
+        sol = generate_neighbor_compiled.generate_neighbor(inital_sol, 100)
 
     times.append(time.time() - start_time)
 
 
 print("generate_neighbor()")
 print("avg time =", statistics.mean(times))
+#inital_sol.pprint()
+#sol.pprint()
 

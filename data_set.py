@@ -99,7 +99,8 @@ class Data:
 
     # uninitialized static fields
     sequence_dependency_matrix = np.empty((0, 0))
-    dependency_matrix_index_encoding = {}
+    dependency_matrix_index_encoding = np.empty((0, 0))
+    usable_machines_matrix = np.empty((0, 0, 0))
     jobs = {}
     machine_speeds = np.empty((0, 0))
 
@@ -117,7 +118,6 @@ class Data:
         :return: None
         """
         prev_job_id = -1  # record previously seen job
-        index = 0  # used for mapping (job_id, task_id) : index
         with open(job_tasks_file) as fin:
             # skip headers (i.e. first row in csv file)
             next(fin)
@@ -141,10 +141,6 @@ class Data:
 
                 # append task to associated job.tasks list
                 Data.jobs[tmp_task.get_job_id()]._tasks.append(tmp_task)
-
-                # add mapping (job_id, task_id) : index to dependencyMatrixIndexEncoding dictionary
-                Data.dependency_matrix_index_encoding[(tmp_task.get_job_id(), tmp_task.get_task_id())] = index
-                index += 1
 
     @staticmethod
     def read_sequence_dependency_matrix_file(seq_dep_matrix_file):
@@ -176,7 +172,17 @@ class Data:
             next(fin)
             Data.machine_speeds = np.array([int(row[1]) for row in csv.reader(fin)], dtype=np.float)
 
-    # get_setup_time has been moved inside compute_machine_makespans()
+    @staticmethod
+    def create_sequence_dependency_matrix_encoding():
+        max_tasks_for_a_job = max([x.get_number_of_tasks() for x in Data.jobs.values()])
+        Data.dependency_matrix_index_encoding = np.full((Data.get_number_of_jobs(), max_tasks_for_a_job), -1, dtype=np.intc)
+        Data.usable_machines_matrix = np.full((Data.get_number_of_jobs(), max_tasks_for_a_job, Data.get_number_of_machines()), -1, dtype=np.intc)
+        index = 0
+        for job in Data.jobs.values():
+            for task in job.get_tasks():
+                Data.dependency_matrix_index_encoding[job.get_job_id(), task.get_task_id()] = index
+                Data.usable_machines_matrix[job.get_job_id(), task.get_task_id()] = np.resize(task.get_usable_machines(), Data.get_number_of_machines())
+                index += 1
 
     @staticmethod
     def get_job(job_id):
@@ -206,11 +212,11 @@ class Data:
         print("\nsequence_dependency_matrix:\n")
         print(Data.sequence_dependency_matrix)
 
-        print("\ndependency_matrixIndex_encoding:\n")
-        print("  (jobId, taskId) : index\n")
-        for key in Data.dependency_matrix_index_encoding:
-            print("  ", end="")
-            print(f"({key[0]}, {key[1]}) : {Data.dependency_matrix_index_encoding[key]}")
+        print("\ndependency_matrix_index_encoding:\n")
+        print(Data.dependency_matrix_index_encoding)
+
+        print("\nusable_machines_matrix:\n")
+        print(Data.usable_machines_matrix)
 
         print("\nmachine_speeds:\n")
         print("  machine : speed\n")
@@ -223,3 +229,4 @@ class Data:
         Data.read_sequence_dependency_matrix_file(seq_dep_matrix_file)
         Data.read_machine_speeds_file(machine_speeds_file)
         Data.read_job_tasks_file(job_tasks_file)
+        Data.create_sequence_dependency_matrix_encoding()
