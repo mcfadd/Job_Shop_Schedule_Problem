@@ -82,14 +82,9 @@ python3-dev
 pip  
 gcc
 
-These can be installed with apt, yum, brew, etc.
+(These can be installed with apt, yum, brew, etc.)
 
-To install the other requirements do the following:
-
-1. clone repository
-2. (optional) create virtual env
-2. cd to the project directory
-3. run `pip install -r requirements`
+To install the other requirements, run `pip install -r requirements.txt`
 
 ### Build
 
@@ -98,7 +93,7 @@ In the `cython_files` directory exists two .pyx files:
 1. makespan_compiled.pyx
 2. generate_neighbor.pyx
 
-These files are compiled by [Cython](https://cython.org/), and are compiled to C-extensions.  
+These files are compiled to shared object files (.so) by [Cython](https://cython.org/).  
 To build the C-extensions cd to the `cython_files` directory and run `python setup.py build --inplace`.  
 For more information on building cython source code see the [link](https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#basic-setup-py).
 
@@ -133,14 +128,14 @@ python benchmark.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <
 
 `python main.py -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
 
-**Note**
+**Important Note**
 
 Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id)  
 (see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data) for reference)
 
 ## Program Design
 
-Below is a basic high-level flow digram describing the design.
+Below is a basic high-level flow digram describing the design of the program.
 
 ![Flow Diagram](diagrams/Flow_Diagram.png)  
 

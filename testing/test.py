@@ -4,7 +4,7 @@ from cython_files.makespan_compiled import \
     InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 
 from solution import *
-from structs.data_structs import SolutionSet
+from tabu.structures import SolutionSet
 
 """
 This Unit Test contains test cases that do the following: 
@@ -17,8 +17,8 @@ This Unit Test contains test cases that do the following:
 6. test SolutionSet remove method
 
 """
-Data.read_data_from_files('../data/data_set1/sequenceDependencyMatrix.csv', '../data/data_set1/machineRunSpeed.csv',
-                          '../data/data_set1/jobTasks.csv')
+Data.initialize_data('../data/data_set1/sequenceDependencyMatrix.csv', '../data/data_set1/machineRunSpeed.csv',
+                     '../data/data_set1/jobTasks.csv')
 
 
 class Test(unittest.TestCase):
@@ -37,6 +37,7 @@ class Test(unittest.TestCase):
                          "These two Solutions should be equal"
                          )
 
+    def test_solution_inequality(self):
         self.assertNotEqual(Solution(np.array([[0, 0, 0, 1, 10],
                                                [0, 1, 1, 0, 5],
                                                [1, 0, 0, 1, 8],

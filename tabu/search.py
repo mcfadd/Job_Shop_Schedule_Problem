@@ -1,6 +1,8 @@
-from structs import SolutionSet, TabuList
 import time
+
 import cython_files.generate_neighbor_compiled as neighbor_generator
+
+from tabu import SolutionSet, TabuList
 
 
 # TODO we may want to produce a neighborhood with makespans < solution.makespan
@@ -40,6 +42,7 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     stop_time = time.time() + search_time
     iterations = 0
 
+    tabu_list.enqueue(solution)
     while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution, probability_change_machine)
 

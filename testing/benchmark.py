@@ -1,8 +1,11 @@
-from data_set import Data
-import tabu_search
-import solution_factory
-import time, sys, getopt
+import getopt
 import statistics
+import sys
+import time
+
+import solution_factory
+from data import Data
+from tabu import search
 
 
 def print_help_and_exit():
@@ -53,29 +56,29 @@ def parse_args(argv):
 
         opts, args = getopt.getopt(argv, "ht:s:n:w:i:", ["help", "time=", "tabu=", "neighborhood=", "wait=", "iters="])
 
-    except getopt.GetoptError:
-        print_help_and_exit()
+        for opt, arg in opts:
+            if opt in ('-h', "--help"):
+                print_help_and_exit()
+            elif opt in ("-t", "--time"):
+                tabu_search_time = float(arg)
+            elif opt in ("-s", "--tabu"):
+                tabu_list_size = int(arg)
+            elif opt in ("-n", "--neighborhood"):
+                neighborhood_size = int(arg)
+            elif opt in ("-w", "--wait"):
+                neighborhood_wait = float(arg)
+            elif opt in ("-i", "--iters"):
+                iters = int(arg)
 
-    for opt, arg in opts:
-        if opt in ('-h', "--help"):
+        # check if data directory was passed in
+        if len(args) == 1:
+            data_directory = args[0]
+
+        # check if all parameters were initialized
+        if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None or iters is None:
             print_help_and_exit()
-        elif opt in ("-t", "--time"):
-            tabu_search_time = float(arg)
-        elif opt in ("-s", "--tabu"):
-            tabu_list_size = int(arg)
-        elif opt in ("-n", "--neighborhood"):
-            neighborhood_size = int(arg)
-        elif opt in ("-w", "--wait"):
-            neighborhood_wait = float(arg)
-        elif opt in ("-i", "--iters"):
-            iters = int(arg)
 
-    # check if data directory was passed in
-    if len(args) == 1:
-        data_directory = args[0]
-
-    # check if all parameters were initialized
-    if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None or iters is None:
+    except getopt.GetoptError:
         print_help_and_exit()
 
     print(f"search time = {tabu_search_time} seconds\n"
@@ -93,9 +96,9 @@ def main(args):
 
     # read csv files
     # make sure the path to the data directory is correct and it contains the csv files!
-    Data.read_data_from_files(f'{args[4]}/sequenceDependencyMatrix.csv',
-                              f'{args[4]}/machineRunSpeed.csv',
-                              f'{args[4]}/jobTasks.csv')
+    Data.initialize_data(f'{args[4]}/sequenceDependencyMatrix.csv',
+                         f'{args[4]}/machineRunSpeed.csv',
+                         f'{args[4]}/jobTasks.csv')
 
     if "data_set1" in args[4]:
         initial_solution = solution_factory.get_small_test_solution()
@@ -108,7 +111,7 @@ def main(args):
     makespans = []
     iterations = []
     for i in range(args[5]):
-        result = tabu_search.search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3], probability_change_machine=80)
+        result = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2], neighborhood_wait=args[3], probability_change_machine=80)
         makespans.append(result[0].makespan)
         iterations.append(result[1])
 
@@ -130,6 +133,6 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    # sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 5, "../data/data_set1"]
-    sys.argv[1:] = ["-t", 6, "-s", 100, "-n", 200, "-w", 0.1, "-i", 10, "../data/data_set2"]
+    sys.argv[1:] = ["-t", 2, "-s", 10, "-n", 8, "-w", 0.01, "-i", 2, "../data/data_set1"]
+    # sys.argv[1:] = ["-t", 2, "-s", 100, "-n", 200, "-w", 0.1, "-i", 2, "../data/data_set2"]
     main(parse_args(sys.argv[1:]))

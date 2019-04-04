@@ -1,8 +1,8 @@
 from distutils.core import setup
-from Cython.Build import cythonize
 from distutils.extension import Extension
-import numpy
 
+import numpy
+from Cython.Build import cythonize
 
 ext_modules = [Extension("makespan_compiled",
                          ["makespan_compiled.pyx"],

@@ -1,7 +1,9 @@
 import random
-from data_set import Data
-from solution import Solution
+
 import numpy as np
+
+from data import Data
+from solution import Solution
 
 
 def generate_feasible_solution():
@@ -13,7 +15,7 @@ def generate_feasible_solution():
 
     operation_list = []
     available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
-                 Data.jobs.values()}
+                 Data.jobs}
 
     while 0 < len(available):
         rand_job_id = random.choice(list(available.keys()))
@@ -32,11 +34,11 @@ def generate_feasible_solution():
 
 
 def get_small_test_solution():
-    return Solution([[0, 0, 0, 0, 10],
+    return Solution(np.array([[0, 0, 0, 0, 10],
                      [0, 1, 1, 1, 5],
                      [1, 0, 0, 1, 8],
                      [2, 0, 0, 0, 8],
-                     [1, 1, 1, 0, 5]])
+                     [1, 1, 1, 0, 5]], dtype=np.intc))
 
 
 def get_large_test_solution():

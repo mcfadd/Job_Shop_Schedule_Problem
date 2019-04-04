@@ -1,6 +1,9 @@
-from tabu_search import search
+import getopt
+import sys
+import time
+
 from solution_factory import *
-import time, sys, getopt
+from tabu.search import search
 
 
 def print_help_and_exit():
@@ -49,27 +52,27 @@ def parse_args(argv):
 
         opts, args = getopt.getopt(argv, "ht:s:n:w:", ["help", "time=", "tabu=", "neighborhood=", "wait="])
 
-    except getopt.GetoptError:
-        print_help_and_exit()
+        for opt, arg in opts:
+            if opt in ('-h', "--help"):
+                print_help_and_exit()
+            elif opt in ("-t", "--time"):
+                tabu_search_time = float(arg)
+            elif opt in ("-s", "--tabu"):
+                tabu_list_size = int(arg)
+            elif opt in ("-n", "--neighborhood"):
+                neighborhood_size = int(arg)
+            elif opt in ("-w", "--wait"):
+                neighborhood_wait = float(arg)
 
-    for opt, arg in opts:
-        if opt in ('-h', "--help"):
+        # check if data directory was passed in
+        if len(args) == 1:
+            data_directory = args[0]
+
+        # check if all parameters were initialized
+        if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None:
             print_help_and_exit()
-        elif opt in ("-t", "--time"):
-            tabu_search_time = float(arg)
-        elif opt in ("-s", "--tabu"):
-            tabu_list_size = int(arg)
-        elif opt in ("-n", "--neighborhood"):
-            neighborhood_size = int(arg)
-        elif opt in ("-w", "--wait"):
-            neighborhood_wait = float(arg)
 
-    # check if data directory was passed in
-    if len(args) == 1:
-        data_directory = args[0]
-
-    # check if all parameters were initialized
-    if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None:
+    except getopt.GetoptError:
         print_help_and_exit()
 
     print(f"search time = {tabu_search_time} seconds\n"
@@ -86,9 +89,9 @@ def main(args):
 
     # read csv files
     # make sure the path to the data directory is correct and it contains the csv files!
-    Data.read_data_from_files(f'{args[4]}/sequenceDependencyMatrix.csv',
-                              f'{args[4]}/machineRunSpeed.csv',
-                              f'{args[4]}/jobTasks.csv')
+    Data.initialize_data(f'{args[4]}/sequenceDependencyMatrix.csv',
+                         f'{args[4]}/machineRunSpeed.csv',
+                         f'{args[4]}/jobTasks.csv')
 
     initial_solution = generate_feasible_solution()
 
@@ -111,5 +114,5 @@ def main(args):
 
 if __name__ == '__main__':
     # uncomment this if you don't want to pass command line args
-    sys.argv[1:] = ["-t", 1, "-s", 100, "-n", 150, "-w", 1, "./data/data_set2"]
+    sys.argv[1:] = ["-t", 60, "-s", 100, "-n", 150, "-w", 0.1, "./data/data_set2"]
     main(parse_args(sys.argv[1:]))

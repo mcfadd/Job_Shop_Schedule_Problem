@@ -1,6 +1,7 @@
-from data_set import Data
 import cython_files.makespan_compiled as makespan
 import numpy as np
+
+from data import Data
 
 
 class IncompleteSolutionException(Exception):
@@ -9,7 +10,7 @@ class IncompleteSolutionException(Exception):
 
 class Solution:
     """
-    This class represents a solution which is composed of a list of operations, a list of machine make span times,
+    This class represents a solution which is composed of a 2d array of operations, a 1d array memory view of machine make span times,
     and the max make span time.
     """
 
@@ -23,7 +24,7 @@ class Solution:
         :raise IncompleteSolutionException if solution does not contain
         """
 
-        if operation_2d_array.shape[0] != Data.get_number_of_tasks():
+        if operation_2d_array.shape[0] != Data.total_number_of_tasks:
             raise IncompleteSolutionException("Incomplete operation list")
 
         self.machine_makespans = makespan.compute_machine_makespans(operation_2d_array)
@@ -37,7 +38,7 @@ class Solution:
 
     def pprint(self):
         """
-        Prints this Solution in a pretty way. Mainly used for testing purposes
+        Prints this Solution in a pretty way.
 
         :return: None
         """
@@ -47,6 +48,6 @@ class Solution:
 
     # def create_schedule(self):
     # TODO complete this function.
-    #  Need to iterate over self.operation_list and create a schedule for each machine.
+    #  Need to iterate over self.operation_2d_array and create a schedule for each machine.
     #  The setup time, start time, end time, and wait time are needed for each operation.
-    #  We may want to create a separate schedule class that takes an operation_list as argument.
+    #  We may want to create a separate class for producing the schedules.
