@@ -1,4 +1,4 @@
-import cython
+cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport abort, malloc, free

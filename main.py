@@ -1,118 +1,69 @@
-import getopt
-import sys
 import time
+from progressbar import Bar, ETA, ProgressBar, RotatingMarker
+import multiprocessing as mp
+import sys
+import tabu
+import benchmark
+import solution
+from data import Data
+from parser import parser
 
-from solution_factory import *
-from tabu.search import search
 
-
-def print_help_and_exit():
-    print("usage:\n")
-    print(" " * 2,
-          "python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait> <data>")
+def progress_bar(seconds):
+    widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
+    for i in range(seconds):
+        time.sleep(.97)
+        pbar.update(i + 1)
+    pbar.finish()
     print()
-    print("args:\n")
-    print("[-h]".center(10), "prints this help message")
-    print("-t".center(10), "runtime in seconds for tabu search")
-    print("-s".center(10), "tabu list size")
-    print("-n".center(10), "neighborhood size")
-    print("-w".center(10), "max time in seconds to wait for generating a neighborhood")
-    print("data".center(10), "directory containing the files: jobTasks.csv")
-    print(" " * 42, "machineRunSpeed.csv")
-    print(" " * 42, "sequenceDependencyMatrix.csv")
-    print("example:\n")
-    print(" " * 2, "python main.py -t 600 -s 100 -n 150 -w 1 ./data/data_set2")
-    sys.exit()
-
-
-def parse_args(argv):
-    """
-    This function parses all of the command line arguments.
-    If the user does not provide all of the necessary arguments then a help message is printed.
-
-    Parses the following arguments:
-        [-h | --help]
-        (-t | --time=)          time in seconds for tabu search to run
-        (-s | --tabu=)          tabu list size
-        (-n | --neighborhood=)  neighborhood size
-        (-w | --wait=)          max time in seconds to wait for generating a neighborhood
-        data                    directory that contains the csv files
-
-    :param argv: a list of command line arguments to parse
-    :return: parsed arguments in the order (time, tabu, neighborhoood, wait, data)
-    """
-
-    tabu_search_time = None
-    tabu_list_size = None
-    neighborhood_size = None
-    neighborhood_wait = None
-    data_directory = None
-
-    try:
-
-        opts, args = getopt.getopt(argv, "ht:s:n:w:", ["help", "time=", "tabu=", "neighborhood=", "wait="])
-
-        for opt, arg in opts:
-            if opt in ('-h', "--help"):
-                print_help_and_exit()
-            elif opt in ("-t", "--time"):
-                tabu_search_time = float(arg)
-            elif opt in ("-s", "--tabu"):
-                tabu_list_size = int(arg)
-            elif opt in ("-n", "--neighborhood"):
-                neighborhood_size = int(arg)
-            elif opt in ("-w", "--wait"):
-                neighborhood_wait = float(arg)
-
-        # check if data directory was passed in
-        if len(args) == 1:
-            data_directory = args[0]
-
-        # check if all parameters were initialized
-        if tabu_search_time is None or tabu_list_size is None or neighborhood_size is None or neighborhood_wait is None or data_directory is None:
-            print_help_and_exit()
-
-    except getopt.GetoptError:
-        print_help_and_exit()
-
-    print(f"search time = {tabu_search_time} seconds\n"
-          f"tabu list size = {tabu_list_size}\n"
-          f"neighborhood size = {neighborhood_size}\n"
-          f"neighborhood wait time = {neighborhood_wait} seconds\n"
-          f"data directory = {data_directory}")
-
-    return tabu_search_time, tabu_list_size, neighborhood_size, neighborhood_wait, data_directory
 
 
 def main(args):
-    start_time = time.time()
+    print(f"Parameters:\n"
+          f"runtime = {args.runtime} seconds\n"
+          f"tabu list size = {args.tabu_list_size}\n"
+          f"neighborhood size = {args.neighborhood_size}\n"
+          f"neighborhood wait time = {args.neighborhood_wait} seconds\n"
+          f"probability of changing an operation's machine = {args.probability_change_machine}\n"
+          f"data directory = {args.data}")
 
-    # read csv files
-    # make sure the path to the data directory is correct and it contains the csv files!
-    Data.initialize_data(f'{args[4]}/sequenceDependencyMatrix.csv',
-                         f'{args[4]}/machineRunSpeed.csv',
-                         f'{args[4]}/jobTasks.csv')
+    Data.initialize_data(f'{args.data}/sequenceDependencyMatrix.csv',
+                         f'{args.data}/machineRunSpeed.csv',
+                         f'{args.data}/jobTasks.csv')
 
-    initial_solution = generate_feasible_solution()
+    initial_solution = solution.generate_feasible_solution()
 
     print()
     print("Initial Solution:")
     print(f"makespan = {round(initial_solution.makespan)}")
     print()
-    print("...searching...", end="\n")
 
-    # Note probability_change_machine is hard coded right now. Need to make it a command line arg
-    result = search(initial_solution, search_time=args[0], tabu_size=args[1], neighborhood_size=args[2],
-                    neighborhood_wait=args[3], probability_change_machine=80)
+    result = tabu.search(initial_solution=initial_solution,
+                         search_time=args.runtime,
+                         tabu_size=args.tabu_list_size,
+                         neighborhood_size=args.neighborhood_size,
+                         neighborhood_wait=args.neighborhood_wait,
+                         probability_change_machine=args.probability_change_machine)
 
     print("Tabu Search Result:")
-    print(f"iterations TS performed = {result[1]}")
-    result[0].pprint()
-
-    print(f"\nDuration {time.time() - start_time} seconds")
+    result.pprint()
 
 
 if __name__ == '__main__':
-    # uncomment this if you don't want to pass command line args
-    sys.argv[1:] = ["-t", 60, "-s", 100, "-n", 150, "-w", 0.1, "./data/data_set2"]
-    main(parse_args(sys.argv[1:]))
+
+    # sys.argv[1:] = ["-pb", "-b", "benchmark/initial_benchmark_solution.pkl", "2", "-rt", "5", "-ts", "100", "-ns",
+    #                 "150", "-p", "1", "-o", "benchmark", "data/data_set2"]
+
+    arguments = parser.parse_args(sys.argv[1:])
+    if not arguments.benchmark:
+        arguments.iterations = 1
+        func = main
+    else:
+        func = benchmark.run
+
+    if arguments.progress_bar:
+        mp.set_start_method('spawn')
+        mp.Process(target=progress_bar, args=[arguments.iterations * arguments.runtime]).start()
+
+    func(arguments)

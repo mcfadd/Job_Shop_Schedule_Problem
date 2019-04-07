@@ -5,6 +5,7 @@ from cython_files.makespan_compiled import \
 
 from solution import *
 from tabu.structures import SolutionSet
+from data import Data
 
 """
 This Unit Test contains test cases that do the following: 

@@ -1,4 +1,4 @@
-import cython
+cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport rand, RAND_MAX
@@ -9,7 +9,7 @@ from data import Data
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def generate_neighbor(solution, int probability_change_machine):
+def generate_neighbor(solution, double probability_change_machine):
     """
     This function generates a feasible solution that is a neighbor of the solution parameter.
 
@@ -61,7 +61,7 @@ def generate_neighbor(solution, int probability_change_machine):
     while placement_index == random_index:
         placement_index = np.random.randint(lower_index, upper_index + 1)
 
-    if np.random.randint(0, 100) < probability_change_machine:
+    if np.random.random_sample() < probability_change_machine:
 
         i = dependency_matrix_index_encoding[operation[0], operation[1]]
         usable_machines = usable_machines_matrix[i]

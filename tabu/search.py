@@ -19,12 +19,13 @@ def generate_neighborhood(size, wait, solution, probability_change_machine):
     stop_time = time.time() + wait
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
-            # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
-            result.add(neighbor_generator.generate_neighbor(solution, probability_change_machine))
+        # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
+        result.add(neighbor_generator.generate_neighbor(solution, probability_change_machine))
     return result
 
 
-def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine=0):
+def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine=0,
+           benchmark=False):
     """
     This function performs Tabu search for a number of iterations given an initial feasible solution.
 
@@ -41,6 +42,8 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     tabu_list = TabuList()
     stop_time = time.time() + search_time
     iterations = 0
+    neighborhood_sizes = []
+    makespans = []
 
     tabu_list.enqueue(solution)
     while time.time() < stop_time:
@@ -59,6 +62,12 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
         if tabu_list.solutions.size >= tabu_size:
             tabu_list.dequeue()
 
-        iterations += 1
+        if benchmark:
+            iterations += 1
+            neighborhood_sizes.append(neighborhood.size)
+            makespans.append(solution.makespan)
 
-    return best_solution, iterations
+    if benchmark:
+        return best_solution, iterations, neighborhood_sizes, makespans
+    else:
+        return best_solution
