@@ -55,8 +55,8 @@ parser.add_argument('-b', nargs=2, type=str, required=False, metavar=("solution_
                     help="Runs a benchmark of the program. Tabu Search is ran N times starting with an initial solution, then a report of the results is put in the output directory. "
                          "solution_file contains the pickled initial solution to start the search from.",
                     action=CheckBenchmarkArgs)
-parser.add_argument('-o', type=str, default=None,
-                    help="Directory where output is placed. If not specified then output is printed to screen",
+parser.add_argument('-o', type=str, default="~/jsp_output",
+                    help="Directory where output is placed. (default = ~/jsp_output)",
                     metavar="output", dest="output_dir")
 parser.add_argument('-rt', type=int, required=True, help="Runtime in seconds for tabu search",
                     metavar="runtime", dest="runtime")

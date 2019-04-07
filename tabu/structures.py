@@ -10,9 +10,10 @@ class TabuList:
     This class is a set ADT that provides enqueue and dequeue behaviors.
     """
 
-    def __init__(self):
-        self.head = self.tail = None        # use linked list to keep FIFO property
+    def __init__(self, head):
+        self.head = self.tail = Node(data_val=head)        # use linked list to keep FIFO property
         self.solutions = SolutionSet()
+        self.solutions.add(head)
 
     def enqueue(self, solution):
         """
@@ -22,16 +23,10 @@ class TabuList:
         :return: True if the solution was added.
         """
 
-        if self.solutions.add(solution):
-            new_node = Node(data_val=solution)
-            if self.head is None:
-                self.head = self.tail = new_node
-            else:
-                self.tail.next_node = new_node
-                self.tail = new_node
-            return True
-
-        return False
+        self.solutions.add(solution)
+        new_node = Node(data_val=solution)
+        self.tail.next_node = new_node
+        self.tail = new_node
 
     def dequeue(self):
         """
@@ -40,13 +35,9 @@ class TabuList:
         :return: True if a solution was dequeued.
         """
 
-        if self.solutions.size > 0:
-            head_node = self.head
-            self.head = self.head.next_node
-            self.solutions.remove(head_node.data_val)
-            return True
-
-        return False
+        head_node = self.head
+        self.head = self.head.next_node
+        self.solutions.remove(head_node.data_val)
 
 
 class SolutionSet:
@@ -65,17 +56,12 @@ class SolutionSet:
         :param solution: The solution to add.
         :return: True if solution was added.
         """
-        result = False
         if solution.makespan not in self.solutions:
             self.solutions[solution.makespan] = [solution]
             self.size += 1
-            result = True
         elif solution not in self.solutions[solution.makespan]:
             self.solutions[solution.makespan].append(solution)
             self.size += 1
-            result = True
-
-        return result
 
     def remove(self, solution):
         """
@@ -84,13 +70,12 @@ class SolutionSet:
         :param solution: The solution to remove.
         :return: None
         """
-        self.solutions[solution.makespan].remove(solution)
-        self.size -= 1
-
-        if len(self.solutions[solution.makespan]) == 0:
+        if len(self.solutions[solution.makespan]) == 1:
             del self.solutions[solution.makespan]
+        else:
+            self.solutions[solution.makespan].remove(solution)
 
-        return
+        self.size -= 1
 
     def contains(self, solution):
         """

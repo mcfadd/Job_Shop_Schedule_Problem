@@ -2,3 +2,4 @@ Cython==0.29.6
 lxml==4.3.3
 numpy==1.16.2
 progressbar==2.5
+plotly==3.1.0

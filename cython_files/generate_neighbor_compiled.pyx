@@ -62,18 +62,8 @@ def generate_neighbor(solution, double probability_change_machine):
         placement_index = np.random.randint(lower_index, upper_index + 1)
 
     if np.random.random_sample() < probability_change_machine:
-
         i = dependency_matrix_index_encoding[operation[0], operation[1]]
-        usable_machines = usable_machines_matrix[i]
-        min_machine_makespan = usable_machines[0]
-
-        makespans = solution.machine_makespans
-        i = 0
-        for i in range(usable_machines.shape[0]):
-            if makespans[usable_machines[i]] < makespans[min_machine_makespan]:
-                min_machine_makespan = usable_machines[i]
-
-        operation[3] = min_machine_makespan
+        operation[3] = np.random.choice(usable_machines_matrix[i])
 
     #print("rand", random_index)
     #print("place", placement_index)

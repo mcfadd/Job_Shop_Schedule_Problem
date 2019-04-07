@@ -13,7 +13,7 @@ def progress_bar(seconds):
     widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
     for i in range(seconds):
-        time.sleep(.97)
+        time.sleep(.95)
         pbar.update(i + 1)
     pbar.finish()
     print()
@@ -51,10 +51,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-
-    # sys.argv[1:] = ["-pb", "-b", "benchmark/initial_benchmark_solution.pkl", "2", "-rt", "5", "-ts", "100", "-ns",
-    #                 "150", "-p", "1", "-o", "benchmark", "data/data_set2"]
-
     arguments = parser.parse_args(sys.argv[1:])
     if not arguments.benchmark:
         arguments.iterations = 1

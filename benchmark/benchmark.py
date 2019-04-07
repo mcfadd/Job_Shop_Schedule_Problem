@@ -1,8 +1,13 @@
 import datetime
+import os
 import statistics
+import webbrowser
 
-from data import Data
+import plotly.graph_objs as go
+from plotly.offline import plot
+
 import tabu
+from data import Data
 
 
 def run(args):
@@ -20,11 +25,11 @@ def run(args):
         f"  neighborhood wait time = {args.neighborhood_wait} seconds\n" \
         f"  probability of changing an operation's machine = {args.probability_change_machine}\n" \
         f"  data directory = {args.data}\n" \
+        f"  output directory = {args.output_dir}\n" \
         f"  iterations = {args.iterations}\n" \
         f"  initial makespan = {round(args.initial_solution.makespan)}\n\n"
 
-    if args.output_dir is None:
-        print(setup_parameters)
+    print(setup_parameters)
 
     result_makespans = []
     iterations = []
@@ -44,29 +49,64 @@ def run(args):
         neighborhood_sizes.append(result[2])
         makespans.append(result[3])
 
-    benchmark_results = "Benchmark results:\n\n" \
-                        " makespan:\n" \
-        f"  min = {round(min(result_makespans))}\n" \
-        f"  median = {round(statistics.median(result_makespans))}\n" \
-        f"  max = {round(max(result_makespans))}\n" \
-        f"  stdev = {round(statistics.stdev(result_makespans))}\n" \
-        f"  var = {round(statistics.variance(result_makespans))}\n" \
-        f"  mean = {round(statistics.mean(result_makespans))}\n\n" \
-                        " iterations:\n" \
-        f"  min = {min(iterations)}\n" \
-        f"  median = {statistics.median(iterations)}\n" \
-        f"  max = {max(iterations)}\n" \
-        f"  stdev = {statistics.stdev(iterations)}\n" \
-        f"  var = {statistics.variance(iterations)}\n" \
-        f"  mean = {statistics.mean(iterations)}\n\n"
+    # output results
+    now = datetime.datetime.now()
+    directory = args.output_dir + "/benchmark_run_{}/".format(now.strftime("%Y-%m-%d_%H:%M"))
+    os.mkdir(directory)
+    # TODO make a template for the html
+    index = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+                    <html>
+                        <head>
+                            <meta content="text/html; charset=ISO-8859-1"
+                                http-equiv="content-type">
+                            <title>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</title>
+                        </head>
+                        <body>
+                        <h2>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</h2>
+                        <b>Parameters:</b><br>
+                        search time = {args.runtime} seconds<br>
+                        tabu list size = {args.tabu_list_size}<br>
+                        neighborhood size = {args.neighborhood_size}<br>
+                        neighborhood wait time = {args.neighborhood_wait} seconds<br>
+                        probability of changing an operation's machine = {args.probability_change_machine}<br>
+                        data directory = {args.data}<br>
+                        output directory = {args.output_dir}<br>
+                        iterations = {args.iterations}<br>
+                        initial makespan = {round(args.initial_solution.makespan)}<br><br>
+                        <b>Benchmark results:</b><br>
+                        makespan:<br>
+                        min = {round(min(result_makespans))}<br>
+                        median = {round(statistics.median(result_makespans))}<br>
+                        max = {round(max(result_makespans))}<br>
+                        stdev = {round(statistics.stdev(result_makespans))}<br>
+                        var = {round(statistics.variance(result_makespans))}<br>
+                        mean = {round(statistics.mean(result_makespans))}<br><br>
+                        iterations:<br>
+                        min = {min(iterations)}<br>
+                        median = {statistics.median(iterations)}<br>
+                        max = {max(iterations)}<br>
+                        stdev = {statistics.stdev(iterations)}<br>
+                        var = {statistics.variance(iterations)}<br>
+                        mean = {statistics.mean(iterations)}<br><br>
+                        <b>Plots:</b><br>
+                        <a href="./makespans.html">makespans vs iterations</a><br>
+                        <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a>
+                        </body>
+                    </html>'''
 
-    # f"  neighborhood_sizes:\n{neighborhood_sizes}\n" \
-    # f"  makespans:\n {makespans}\n\n" \
+    # create plots for makespans vs iterations and neighborhood sizes vs iterations
+    makespans_traces = []
+    neighborhood_sizes_traces = []
+    for i in range(len(iterations)):
+        x_axis = list(range(iterations[i]))
+        makespans_traces.append(go.Scatter(x=x_axis, y=makespans[i]))
+        neighborhood_sizes_traces.append(go.Scatter(x=x_axis, y=neighborhood_sizes[i]))
 
-    if args.output_dir is not None:
-        now = datetime.datetime.now()
-        with open(args.output_dir + "/benchmark_results_{}".format(now.strftime("%Y-%m-%d_%H:%M")), 'w') as output_file:
-            output_file.write(setup_parameters)
-            output_file.write(benchmark_results)
-    else:
-        print(benchmark_results)
+    plot(makespans_traces, filename=directory + "makespans.html", auto_open=False)
+    plot(neighborhood_sizes_traces, filename=directory + "neighborhood_sizes.html", auto_open=False)
+
+    # create index.html
+    with open(directory + "index.html", 'w') as output_file:
+        output_file.write(index)
+
+    webbrowser.open("file://" + os.path.abspath(directory + "index.html"))

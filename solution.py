@@ -50,6 +50,10 @@ class Solution:
               f"operation_list =\n"
               f"{self.operation_2d_array}")
 
+    # TODO we may need a way of comparing two solutions other than using their makespans
+    #  because two solutions may have the same makespan but one may be "worse" than the other in terms of wait time.
+    #  In other words, we may need to modify our heuristic function to incorporate more than just makespan.
+
     # def create_schedule(self):
     # TODO complete this function.
     #  Need to iterate over self.operation_2d_array and create a schedule for each machine.
@@ -92,5 +96,6 @@ def generate_feasible_solution():
                 available[rand_job_id] = [task for task in Data.get_job(rand_job_id).get_tasks() if
                                           task.get_sequence() == rand_task.get_sequence() + 1]
 
-        operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine, rand_task.get_pieces()])
+        operation_list.append(
+            [rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine, rand_task.get_pieces()])
     return Solution(np.array(operation_list, dtype=np.intc))

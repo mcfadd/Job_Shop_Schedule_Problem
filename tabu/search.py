@@ -5,7 +5,6 @@ import cython_files.generate_neighbor_compiled as neighbor_generator
 from tabu import SolutionSet, TabuList
 
 
-# TODO we may want to produce a neighborhood with makespans < solution.makespan
 def generate_neighborhood(size, wait, solution, probability_change_machine):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
@@ -39,28 +38,38 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     """
     solution = initial_solution
     best_solution = initial_solution
-    tabu_list = TabuList()
+    tabu_list = TabuList(solution)
     stop_time = time.time() + search_time
     iterations = 0
     neighborhood_sizes = []
     makespans = []
 
-    tabu_list.enqueue(solution)
     while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution, probability_change_machine)
+        update = False
 
-        for makespan in neighborhood.solutions.keys():
-            if makespan < solution.makespan:
-                for neighbor in neighborhood.solutions[makespan]:
-                    if not tabu_list.solutions.contains(neighbor):
-                        solution = neighbor
+        # TODO may want to make sorting the makespans (i.e. keys) more efficient - I'm not sure what the complexity of sorted() is.
+        #  Alternatively we can modify SolutionSet to maintain sorted order when adding.
+        for makespan, lst in sorted(neighborhood.solutions.items()):
+            for neighbor in lst:
+                if not tabu_list.solutions.contains(neighbor):
+                    update = True
+                    solution = neighbor
+                    break
+                elif makespan < solution.makespan:
+                    update = True
+                    solution = neighbor
+                    break
+            if update:
+                break
 
-        if best_solution.makespan > solution.makespan:
-            best_solution = solution
+        if update:
+            if solution.makespan < best_solution.makespan:
+                best_solution = solution
 
-        tabu_list.enqueue(solution)
-        if tabu_list.solutions.size >= tabu_size:
-            tabu_list.dequeue()
+            tabu_list.enqueue(solution)
+            if tabu_list.solutions.size > tabu_size:
+                tabu_list.dequeue()
 
         if benchmark:
             iterations += 1
