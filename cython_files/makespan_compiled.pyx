@@ -67,9 +67,6 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
         machine = operation_2d_array[row, 3]
         pieces = operation_2d_array[row, 4]
 
-        if sequence < job_seq_memory[job_id]:
-            raise InfeasibleSolutionException("Infeasible operation_2d_array")
-
         if machine_jobs_memory[machine] != -1:
             cur_task_index = sequence_dependency_matrix_index_encoding[job_id, task_id]
             prev_task_index = sequence_dependency_matrix_index_encoding[machine_jobs_memory[machine], machine_tasks_memory[machine]]
@@ -77,12 +74,22 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
         else:
             setup = 0
 
-        wait = job_end_memory[job_id] - machine_makespan_memory[machine] if job_end_memory[job_id] > machine_makespan_memory[machine] else 0
+        if setup == -1 or sequence < job_seq_memory[job_id]:
+            raise InfeasibleSolutionException("Infeasible operation_2d_array")
+            #for row in range(operation_2d_array.shape[0]):
+            #    print(list(operation_2d_array[row]))
+            print("cur task = ", (job_id, task_id), "prev task = ", (machine_jobs_memory[machine], machine_tasks_memory[machine]))
+            exit(1)
+
+        if sequence == job_seq_memory[job_id] or job_end_memory[job_id] <= machine_makespan_memory[machine]:
+            wait = 0
+        else:
+            wait = job_end_memory[job_id] - machine_makespan_memory[machine]
 
         # compute total added time and update memory modules
         machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
         job_seq_memory[job_id] = sequence
-        job_end_memory[job_id] = machine_makespan_memory[machine]
+        job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
         machine_jobs_memory[machine] = job_id
         machine_tasks_memory[machine] = task_id
 

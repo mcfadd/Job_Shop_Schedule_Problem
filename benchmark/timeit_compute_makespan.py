@@ -7,9 +7,9 @@ import cython_files.makespan_compiled as makespan
 
 from data import Data
 
-Data.initialize_data("../../data/data_set2/sequenceDependencyMatrix.csv",
-                     "../../data/data_set2/machineRunSpeed.csv",
-                     "../../data/data_set2/jobTasks.csv")
+Data.initialize_data("../data/data_set2/sequenceDependencyMatrix.csv",
+                     "../data/data_set2/machineRunSpeed.csv",
+                     "../data/data_set2/jobTasks.csv")
 
 outer_iters = 10
 inner_iters = 1000

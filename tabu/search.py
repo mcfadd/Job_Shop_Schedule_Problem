@@ -3,8 +3,10 @@ import time
 import cython_files.generate_neighbor_compiled as neighbor_generator
 
 from tabu import SolutionSet, TabuList
+from cython_files.makespan_compiled import InfeasibleSolutionException
 
 
+# TODO need a better way of detecting/preventing creating infeasible neighbors. the try except block is not a proper solution.
 def generate_neighborhood(size, wait, solution, probability_change_machine):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
@@ -19,7 +21,10 @@ def generate_neighborhood(size, wait, solution, probability_change_machine):
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
         # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
-        result.add(neighbor_generator.generate_neighbor(solution, probability_change_machine))
+        try:
+            result.add(neighbor_generator.generate_neighbor(solution, probability_change_machine))
+        except InfeasibleSolutionException:
+            pass
     return result
 
 
@@ -38,7 +43,7 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     """
     solution = initial_solution
     best_solution = initial_solution
-    tabu_list = TabuList(solution)
+    tabu_list = TabuList(solution)  # TODO right now we are making solutions tabu, but we should be making moves to solutions tabu.
     stop_time = time.time() + search_time
     iterations = 0
     neighborhood_sizes = []

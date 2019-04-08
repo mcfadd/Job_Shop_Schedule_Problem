@@ -81,21 +81,39 @@ def generate_feasible_solution():
     """
 
     operation_list = []
+    last_task_scheduled_on_machine = [0] * len(Data.machine_speeds)
     available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
                  Data.jobs}
 
     while 0 < len(available):
+        get_unstuck = 0
         rand_job_id = random.choice(list(available.keys()))
-        rand_task = available[rand_job_id].pop(random.randrange(len(available[rand_job_id])))
+        rand_task = random.choice(available[rand_job_id])
         rand_machine = np.random.choice(rand_task.get_usable_machines())
+
+        # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
+        # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
+        while last_task_scheduled_on_machine[rand_machine] != 0 and \
+                last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id and \
+                last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
+
+            rand_job_id = random.choice(list(available.keys()))
+            rand_task = random.choice(available[rand_job_id])
+            rand_machine = np.random.choice(rand_task.get_usable_machines())
+            get_unstuck += 1
+            if get_unstuck > 50:
+                return generate_feasible_solution()
+
+        available[rand_job_id].remove(rand_task)
 
         if len(available[rand_job_id]) == 0:
             if rand_task.get_sequence() == Data.get_job(rand_job_id).get_max_sequence():
-                available.pop(rand_job_id)
+                del available[rand_job_id]
             else:
                 available[rand_job_id] = [task for task in Data.get_job(rand_job_id).get_tasks() if
                                           task.get_sequence() == rand_task.get_sequence() + 1]
 
+        last_task_scheduled_on_machine[rand_machine] = rand_task
         operation_list.append(
             [rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine, rand_task.get_pieces()])
     return Solution(np.array(operation_list, dtype=np.intc))
