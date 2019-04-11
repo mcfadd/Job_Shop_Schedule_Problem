@@ -1,12 +1,13 @@
 import time
 
 import cython_files.generate_neighbor_compiled as neighbor_generator
-
-from tabu import SolutionSet, TabuList
 from cython_files.makespan_compiled import InfeasibleSolutionException
 
+from tabu import SolutionSet, TabuList
 
-# TODO need a better way of detecting/preventing creating infeasible neighbors. the try except block is not a proper solution.
+
+# TODO generate_neighbor() should not generate infeasible neighbors, but it does in some cases.
+#  The try except block catches these cases.
 def generate_neighborhood(size, wait, solution, probability_change_machine):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
@@ -43,25 +44,28 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     """
     solution = initial_solution
     best_solution = initial_solution
-    tabu_list = TabuList(solution)  # TODO right now we are making solutions tabu, but we should be making moves to solutions tabu.
+    tabu_list = TabuList(solution)
     stop_time = time.time() + search_time
+
+    # variables used for benchmarks
     iterations = 0
     neighborhood_sizes = []
+    tabu_list_sizes = []
     makespans = []
 
     while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution, probability_change_machine)
         update = False
 
-        # TODO may want to make sorting the makespans (i.e. keys) more efficient - I'm not sure what the complexity of sorted() is.
-        #  Alternatively we can modify SolutionSet to maintain sorted order when adding.
-        for makespan, lst in sorted(neighborhood.solutions.items()):
-            for neighbor in lst:
+        # Complexity of sorted() = O(n log n)
+        for makespan, lst in sorted(neighborhood.solutions.items()):  # sort neighbors in increasing order by makespan
+            for neighbor in sorted(lst):  # sort subset of neighbors in increasing order by machine_makespans
                 if not tabu_list.solutions.contains(neighbor):
                     update = True
                     solution = neighbor
                     break
-                elif makespan < solution.makespan:
+                # aspiration criteria
+                elif neighbor < best_solution:  # comparison function compares machine_makespans
                     update = True
                     solution = neighbor
                     break
@@ -69,9 +73,10 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
                 break
 
         if update:
-            if solution.makespan < best_solution.makespan:
+            if solution < best_solution:
                 best_solution = solution
 
+            # update tabu list with seed solution
             tabu_list.enqueue(solution)
             if tabu_list.solutions.size > tabu_size:
                 tabu_list.dequeue()
@@ -80,8 +85,9 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
             iterations += 1
             neighborhood_sizes.append(neighborhood.size)
             makespans.append(solution.makespan)
+            tabu_list_sizes.append(tabu_list.solutions.size)
 
     if benchmark:
-        return best_solution, iterations, neighborhood_sizes, makespans
+        return best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes
     else:
         return best_solution

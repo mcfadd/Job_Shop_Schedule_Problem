@@ -31,14 +31,71 @@ class Solution:
         if operation_2d_array.shape[0] != Data.total_number_of_tasks:
             raise IncompleteSolutionException("Incomplete operation list")
 
-        self.machine_makespans = makespan.compute_machine_makespans(operation_2d_array)
+        result = makespan.compute_machine_makespans(operation_2d_array)
+        self.machine_makespans = result[0]
+        self.machine_waits = result[1]
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
 
     def __eq__(self, other_solution):
+        """
+        Returns True if self is equal to other_solution.
+        :param other_solution: The solution to compare
+        :return: True if self == other_solution
+        """
         return self.makespan == other_solution.makespan and np.array_equal(
             self.machine_makespans, other_solution.machine_makespans) and np.array_equal(
             self.operation_2d_array, other_solution.operation_2d_array)
+
+    def __ne__(self, other_solution):
+        """
+        Returns True if self is not equal to other_solution.
+        :param other_solution: The solution to compare
+        :return: True if self != other_solution
+        """
+        return self.makespan != other_solution.makespan or not np.array_equal(
+            self.machine_makespans, other_solution.machine_makespans) or not np.array_equal(
+            self.operation_2d_array, other_solution.operation_2d_array)
+
+    def __lt__(self, other_solution):
+        """
+        Returns True if self is "better" than other_solution.
+        better is defined as having a lower makespan or machine_makespans if the makespans are equal.
+        :param other_solution: The solution to compare
+        :return: True if self has a lower makespan than other_solution
+        """
+        if self.makespan < other_solution.makespan:
+            return True
+        else:
+            self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
+            other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
+            for i in range(len(self_machine_makespans_sorted)):
+                if self_machine_makespans_sorted[i] < other_machine_makespans_sorted[i]:
+                    return True
+                elif self_machine_makespans_sorted[i] > other_machine_makespans_sorted[i]:
+                    return False
+
+        return False
+
+    def __gt__(self, other_solution):
+        """
+        Returns True if self is "worse" than other_solution.
+        worse is defined as having a greater makespan or machine_makespans if the makespans are equal.
+        :param other_solution: The solution to compare
+        :return: True if self has a greater makespan than other_solution
+        """
+        if self.makespan > other_solution.makespan:
+            return True
+        else:
+            self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
+            other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
+            for i in range(len(self_machine_makespans_sorted)):
+                if self_machine_makespans_sorted[i] > other_machine_makespans_sorted[i]:
+                    return True
+                elif self_machine_makespans_sorted[i] < other_machine_makespans_sorted[i]:
+                    return False
+
+        return False
 
     def pprint(self):
         """
@@ -47,12 +104,10 @@ class Solution:
         :return: None
         """
         print(f"makespan = {self.makespan}\n"
+              f"machine_makespans = {list(self.machine_makespans)}\n"
+              f"machine_waits = {list(self.machine_waits)}\n"
               f"operation_list =\n"
               f"{self.operation_2d_array}")
-
-    # TODO we may need a way of comparing two solutions other than using their makespans
-    #  because two solutions may have the same makespan but one may be "worse" than the other in terms of wait time.
-    #  In other words, we may need to modify our heuristic function to incorporate more than just makespan.
 
     # def create_schedule(self):
     # TODO complete this function.
@@ -70,6 +125,7 @@ def pickle_to_file(solution, file):
     :return: None
     """
     solution.machine_makespans = np.asarray(solution.machine_makespans)  # need to convert memory view to np array
+    solution.machine_waits = np.asarray(solution.machine_waits)
     pickle.dump(solution, file, protocol=-1)
 
 

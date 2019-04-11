@@ -11,7 +11,7 @@ class InfeasibleSolutionException(Exception):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
+def compute_machine_makespans(int[:, ::1] operation_2d_array):
     """
     Computes a 1d array of all the machine's makespan times given a 2d array of operations, where an operation
     is a 1d array of integers in the form [job_id, task_id, sequence, machine, pieces].
@@ -31,6 +31,9 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
     # memory for keeping track of all machine's make span time
     cdef double[::1] machine_makespan_memory = np.zeros(num_machines)
 
+    # memory for keeping track of all machine's wait time
+    cdef double[::1] machine_waitime_memory = np.zeros(num_machines)
+
     # memory for keeping track of all machine's latest job that was processed
     cdef int * machine_jobs_memory = <int *> malloc(sizeof(int) * num_machines)
 
@@ -39,6 +42,9 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
 
     # memory for keeping track of all job's latest task's sequence that was processed
     cdef int * job_seq_memory = <int *> malloc(sizeof(int) * num_jobs)
+
+    # memory for keeping track of all job's latest end time that was processed
+    cdef double * prev_job_end_memory = <double *> malloc(sizeof(double) * num_jobs)
 
     # memory for keeping track of all job's latest end time that was processed
     cdef double * job_end_memory = <double *> malloc(sizeof(double) * num_jobs)
@@ -58,6 +64,7 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
     for i in range(num_jobs):
         job_seq_memory[i] = 0
         job_end_memory[i] = 0.0
+        prev_job_end_memory[i] = 0.0
 
     for row in range(operation_2d_array.shape[0]):
 
@@ -74,22 +81,22 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
         else:
             setup = 0
 
-        if setup == -1 or sequence < job_seq_memory[job_id]:
+        if setup < 0 or sequence < job_seq_memory[job_id]:
             raise InfeasibleSolutionException("Infeasible operation_2d_array")
-            #for row in range(operation_2d_array.shape[0]):
-            #    print(list(operation_2d_array[row]))
-            print("cur task = ", (job_id, task_id), "prev task = ", (machine_jobs_memory[machine], machine_tasks_memory[machine]))
-            exit(1)
 
-        if sequence == job_seq_memory[job_id] or job_end_memory[job_id] <= machine_makespan_memory[machine]:
+        if job_seq_memory[job_id] < sequence:
+            prev_job_end_memory[job_id] = job_end_memory[job_id]
+
+        if prev_job_end_memory[job_id] <= machine_makespan_memory[machine]:
             wait = 0
         else:
-            wait = job_end_memory[job_id] - machine_makespan_memory[machine]
+            wait = prev_job_end_memory[job_id] - machine_makespan_memory[machine]
 
         # compute total added time and update memory modules
         machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
-        job_seq_memory[job_id] = sequence
+        machine_waitime_memory[machine] += wait
         job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
+        job_seq_memory[job_id] = sequence
         machine_jobs_memory[machine] = job_id
         machine_tasks_memory[machine] = task_id
 
@@ -98,5 +105,6 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
     free(machine_tasks_memory)
     free(job_seq_memory)
     free(job_end_memory)
+    free(prev_job_end_memory)
 
-    return machine_makespan_memory
+    return machine_makespan_memory, machine_waitime_memory

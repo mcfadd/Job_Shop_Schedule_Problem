@@ -34,6 +34,7 @@ def run(args):
     result_makespans = []
     iterations = []
     neighborhood_sizes = []
+    tabu_list_sizes = []
     makespans = []
     for i in range(args.iterations):
         result = tabu.search(initial_solution=args.initial_solution,
@@ -48,13 +49,14 @@ def run(args):
         iterations.append(result[1])
         neighborhood_sizes.append(result[2])
         makespans.append(result[3])
+        tabu_list_sizes.append(result[4])
 
     # output results
     now = datetime.datetime.now()
     directory = args.output_dir + "/benchmark_run_{}/".format(now.strftime("%Y-%m-%d_%H:%M"))
     os.mkdir(directory)
     # TODO make a template for the html
-    index = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+    index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
                     <html>
                         <head>
                             <meta content="text/html; charset=ISO-8859-1"
@@ -90,23 +92,27 @@ def run(args):
                         mean = {statistics.mean(iterations)}<br><br>
                         <b>Plots:</b><br>
                         <a href="./makespans.html">makespans vs iterations</a><br>
-                        <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a>
+                        <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
+                        <a href="./tabu_list_sizes.html">tabu list sizes vs iterations</a><br>
                         </body>
                     </html>'''
 
     # create plots for makespans vs iterations and neighborhood sizes vs iterations
     makespans_traces = []
     neighborhood_sizes_traces = []
+    tabu_list_sizes_traces = []
     for i in range(len(iterations)):
         x_axis = list(range(iterations[i]))
         makespans_traces.append(go.Scatter(x=x_axis, y=makespans[i]))
         neighborhood_sizes_traces.append(go.Scatter(x=x_axis, y=neighborhood_sizes[i]))
+        tabu_list_sizes_traces.append(go.Scatter(x=x_axis, y=tabu_list_sizes[i]))
 
     plot(makespans_traces, filename=directory + "makespans.html", auto_open=False)
     plot(neighborhood_sizes_traces, filename=directory + "neighborhood_sizes.html", auto_open=False)
+    plot(tabu_list_sizes_traces, filename=directory + "tabu_list_sizes.html", auto_open=False)
 
     # create index.html
     with open(directory + "index.html", 'w') as output_file:
-        output_file.write(index)
+        output_file.write(index_text)
 
     webbrowser.open("file://" + os.path.abspath(directory + "index.html"))

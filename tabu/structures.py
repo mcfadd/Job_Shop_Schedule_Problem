@@ -20,7 +20,7 @@ class TabuList:
         Adds a solution to the end of this TabuList.
 
         :param solution: The solution to add.
-        :return: True if the solution was added.
+        :return: None
         """
 
         self.solutions.add(solution)
@@ -32,12 +32,13 @@ class TabuList:
         """
         Removes the solution at the beginning of this TabuList
 
-        :return: True if a solution was dequeued.
+        :return: Solution that was dequeued
         """
 
         head_node = self.head
         self.head = self.head.next_node
         self.solutions.remove(head_node.data_val)
+        return head_node.data_val
 
 
 class SolutionSet:
