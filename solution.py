@@ -29,11 +29,9 @@ class Solution:
         """
 
         if operation_2d_array.shape[0] != Data.total_number_of_tasks:
-            raise IncompleteSolutionException("Incomplete operation list")
+            raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. Should be {Data.total_number_of_tasks}")
 
-        result = makespan.compute_machine_makespans(operation_2d_array)
-        self.machine_makespans = result[0]
-        self.machine_waits = result[1]
+        self.machine_makespans = makespan.compute_machine_makespans(operation_2d_array)
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
 
@@ -105,7 +103,6 @@ class Solution:
         """
         print(f"makespan = {self.makespan}\n"
               f"machine_makespans = {list(self.machine_makespans)}\n"
-              f"machine_waits = {list(self.machine_waits)}\n"
               f"operation_list =\n"
               f"{self.operation_2d_array}")
 

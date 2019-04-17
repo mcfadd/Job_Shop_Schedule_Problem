@@ -11,7 +11,7 @@ class InfeasibleSolutionException(Exception):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def compute_machine_makespans(int[:, ::1] operation_2d_array):
+cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
     """
     Computes a 1d array of all the machine's makespan times given a 2d array of operations, where an operation
     is a 1d array of integers in the form [job_id, task_id, sequence, machine, pieces].
@@ -30,9 +30,6 @@ def compute_machine_makespans(int[:, ::1] operation_2d_array):
 
     # memory for keeping track of all machine's make span time
     cdef double[::1] machine_makespan_memory = np.zeros(num_machines)
-
-    # memory for keeping track of all machine's wait time
-    cdef double[::1] machine_waitime_memory = np.zeros(num_machines)
 
     # memory for keeping track of all machine's latest job that was processed
     cdef int * machine_jobs_memory = <int *> malloc(sizeof(int) * num_machines)
@@ -94,7 +91,6 @@ def compute_machine_makespans(int[:, ::1] operation_2d_array):
 
         # compute total added time and update memory modules
         machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
-        machine_waitime_memory[machine] += wait
         job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
         job_seq_memory[job_id] = sequence
         machine_jobs_memory[machine] = job_id
@@ -107,4 +103,4 @@ def compute_machine_makespans(int[:, ::1] operation_2d_array):
     free(job_end_memory)
     free(prev_job_end_memory)
 
-    return machine_makespan_memory, machine_waitime_memory
+    return machine_makespan_memory

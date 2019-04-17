@@ -67,8 +67,8 @@ parser.add_argument('-ns', type=int, required=True, help="Neighborhood size", me
 parser.add_argument('-nw', type=float, default=0.1,
                     help="Maximum time in seconds to wait while generating a neighborhood. (default = 0.1)",
                     metavar="neighborhood_wait", dest="neighborhood_wait")
-parser.add_argument('-p', type=float, default=0.5,
-                    help="Probability of changing an operation's machine when generating a neighbor. (default = 0.1)",
+parser.add_argument('-p', type=float, default=0.8,
+                    help="Probability of changing an operation's machine when generating a neighbor. (default = 0.8)",
                     metavar="prob_change_machine", dest="probability_change_machine")
 parser.add_argument('data', type=str,
                     help="Directory containing the files: jobTasks.csv, machineRunSpeed.csv, sequenceDependencyMatrix.csv",

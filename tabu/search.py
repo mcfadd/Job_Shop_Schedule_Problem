@@ -4,6 +4,8 @@ import cython_files.generate_neighbor_compiled as neighbor_generator
 from cython_files.makespan_compiled import InfeasibleSolutionException
 
 from tabu import SolutionSet, TabuList
+import numpy as np
+import random
 
 
 # TODO generate_neighbor() should not generate infeasible neighbors, but it does in some cases.
@@ -29,7 +31,7 @@ def generate_neighborhood(size, wait, solution, probability_change_machine):
     return result
 
 
-def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine=0,
+def search(initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine,
            benchmark=False):
     """
     This function performs Tabu search for a number of iterations given an initial feasible solution.
@@ -40,12 +42,17 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
     :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
     :param probability_change_machine: The probability of changing a chosen operations machine.
+    :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
     :return best_solution: The best solution found while performing Tabu search.
     """
     solution = initial_solution
     best_solution = initial_solution
-    tabu_list = TabuList(solution)
+    tabu_list = TabuList()
     stop_time = time.time() + search_time
+
+    lacking_machine_makespans = solution.machine_makespans
+    counter = 0
+    reset_threshold = 50
 
     # variables used for benchmarks
     iterations = 0
@@ -55,12 +62,20 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
 
     while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, solution, probability_change_machine)
+        sorted_neighborhood = sorted(neighborhood.solutions.items())
         update = False
 
         # Complexity of sorted() = O(n log n)
-        for makespan, lst in sorted(neighborhood.solutions.items()):  # sort neighbors in increasing order by makespan
+        for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
             for neighbor in sorted(lst):  # sort subset of neighbors in increasing order by machine_makespans
                 if not tabu_list.solutions.contains(neighbor):
+
+                    # add seed solution to tabu list if adopted neighbor is worse than solution
+                    if solution < neighbor:
+                        tabu_list.enqueue(solution)
+                        if tabu_list.solutions.size > tabu_size:
+                            tabu_list.dequeue()
+
                     update = True
                     solution = neighbor
                     break
@@ -72,14 +87,17 @@ def search(initial_solution, search_time, tabu_size, neighborhood_size, neighbor
             if update:
                 break
 
-        if update:
-            if solution < best_solution:
-                best_solution = solution
+        if solution < best_solution:
+            best_solution = solution
 
-            # update tabu list with seed solution
-            tabu_list.enqueue(solution)
-            if tabu_list.solutions.size > tabu_size:
-                tabu_list.dequeue()
+        # if solution is not being improved after a number of iterations, force a move to a worse one
+        counter += 1
+        if counter > reset_threshold:
+            counter = 0
+            if np.array_equal(lacking_machine_makespans, solution.machine_makespans):
+                solution = random.choice(sorted_neighborhood[random.randint(10, 25)][1])
+
+            lacking_machine_makespans = solution.machine_makespans
 
         if benchmark:
             iterations += 1
