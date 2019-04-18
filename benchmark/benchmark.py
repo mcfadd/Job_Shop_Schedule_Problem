@@ -7,15 +7,10 @@ import plotly.graph_objs as go
 from plotly.offline import plot
 
 import tabu
-from data import Data
 
 
 def run(args):
     print("Running Benchmark")
-    # read csv files and construct static data
-    Data.initialize_data(f'{args.data}/sequenceDependencyMatrix.csv',
-                         f'{args.data}/machineRunSpeed.csv',
-                         f'{args.data}/jobTasks.csv')
 
     setup_parameters = f"\n" \
         f"Parameters:\n\n" \
@@ -26,30 +21,19 @@ def run(args):
         f"  probability of changing an operation's machine = {args.probability_change_machine}\n" \
         f"  data directory = {args.data}\n" \
         f"  output directory = {args.output_dir}\n" \
-        f"  iterations = {args.iterations}\n" \
-        f"  initial makespan = {round(args.initial_solution.makespan)}\n\n"
+        f"  number of processes = {args.num_processes}\n" \
+        f"  initial makespan = {round(args.initial_solution.makespan) if args.initial_solution is not None else None}\n\n"
 
     print(setup_parameters)
 
-    result_makespans = []
-    iterations = []
-    neighborhood_sizes = []
-    tabu_list_sizes = []
-    makespans = []
-    for i in range(args.iterations):
-        result = tabu.search(initial_solution=args.initial_solution,
-                             search_time=args.runtime,
-                             tabu_size=args.tabu_list_size,
-                             neighborhood_size=args.neighborhood_size,
-                             neighborhood_wait=args.neighborhood_wait,
-                             probability_change_machine=args.probability_change_machine,
-                             benchmark=True)
+    ts_manager = tabu.TabuSearchManager(args)
+    ts_manager.start(verbose=args.verbose)
 
-        result_makespans.append(result[0].makespan)
-        iterations.append(result[1])
-        neighborhood_sizes.append(result[2])
-        makespans.append(result[3])
-        tabu_list_sizes.append(result[4])
+    result_makespans = ts_manager.benchmark_best_makespan_found
+    iterations = ts_manager.benchmark_iterations
+    neighborhood_sizes = ts_manager.benchmark_neighborhood_sizes
+    tabu_list_sizes = ts_manager.benchmark_tabu_list_sizes
+    makespans = ts_manager.benchmark_makespans
 
     # output results
     now = datetime.datetime.now()
@@ -73,8 +57,8 @@ def run(args):
                         probability of changing an operation's machine = {args.probability_change_machine}<br>
                         data directory = {args.data}<br>
                         output directory = {args.output_dir}<br>
-                        iterations = {args.iterations}<br>
-                        initial makespan = {round(args.initial_solution.makespan)}<br><br>
+                        number of processes = {args.num_processes}<br>
+                        initial makespan = {round(args.initial_solution.makespan) if args.initial_solution is not None else None}<br><br>
                         <b>Benchmark results:</b><br>
                         makespan:<br>
                         min = {round(min(result_makespans))}<br>

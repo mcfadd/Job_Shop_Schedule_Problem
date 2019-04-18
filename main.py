@@ -4,7 +4,6 @@ import multiprocessing as mp
 import sys
 import tabu
 import benchmark
-import solution
 from data import Data
 from parser import parser
 
@@ -21,6 +20,7 @@ def progress_bar(seconds):
 
 def main(args):
     print(f"Parameters:\n"
+          f"number of processes = {args.num_processes}\n"
           f"runtime = {args.runtime} seconds\n"
           f"tabu list size = {args.tabu_list_size}\n"
           f"neighborhood size = {args.neighborhood_size}\n"
@@ -28,38 +28,27 @@ def main(args):
           f"probability of changing an operation's machine = {args.probability_change_machine}\n"
           f"data directory = {args.data}")
 
-    Data.initialize_data(f'{args.data}/sequenceDependencyMatrix.csv',
-                         f'{args.data}/machineRunSpeed.csv',
-                         f'{args.data}/jobTasks.csv')
+    ts_manager = tabu.TabuSearchManager(args)
+    ts_manager.start(verbose=args.verbose)
 
-    initial_solution = solution.generate_feasible_solution()
-
+    print("Tabu Search Makespan Results:")
+    print([solution.makespan for solution in ts_manager.all_solutions])
     print()
-    print("Initial Solution:")
-    print(f"makespan = {round(initial_solution.makespan)}")
-    print()
-
-    result = tabu.search(initial_solution=initial_solution,
-                         search_time=args.runtime,
-                         tabu_size=args.tabu_list_size,
-                         neighborhood_size=args.neighborhood_size,
-                         neighborhood_wait=args.neighborhood_wait,
-                         probability_change_machine=args.probability_change_machine)
-
-    print("Tabu Search Result:")
-    result.pprint()
+    print("Best Solution Found:")
+    ts_manager.best_solution.pprint()
 
 
 if __name__ == '__main__':
+    mp.set_start_method('fork')
     arguments = parser.parse_args(sys.argv[1:])
-    if not arguments.benchmark:
-        arguments.iterations = 1
-        func = main
-    else:
-        func = benchmark.run
+    Data.initialize_data(f'{arguments.data}/sequenceDependencyMatrix.csv',
+                         f'{arguments.data}/machineRunSpeed.csv',
+                         f'{arguments.data}/jobTasks.csv')
 
     if arguments.progress_bar:
-        mp.set_start_method('spawn')
-        mp.Process(target=progress_bar, args=[arguments.iterations * arguments.runtime]).start()
+        mp.Process(target=progress_bar, args=[arguments.runtime]).start()
 
-    func(arguments)
+    if arguments.benchmark:
+        benchmark.run(arguments)
+    else:
+        main(arguments)

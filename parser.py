@@ -28,20 +28,20 @@ class CheckBenchmarkArgs(argparse.Action):
     def __call__(self, parser_obj, namespace, values, option_string=None):
         try:
 
-            if not os.path.exists(values[0]):
-                print_message_and_usage("solution file does not exist!: " + values[0])
+            if os.path.exists(values[0]):
 
-            with open(values[0], 'rb') as fin:
-                sol = pickle.load(fin)
-                if not isinstance(sol, solution.Solution):
-                    print_message_and_usage("solution file must contain a pickled Solution object!")
+                with open(values[0], 'rb') as fin:
+                    sol = pickle.load(fin)
+                    if not isinstance(sol, solution.Solution):
+                        print_message_and_usage("solution file must contain a pickled Solution object!")
+
+                namespace.initial_solution = sol
+
+            else:
+                namespace.initial_solution = None
 
             namespace.benchmark = True
-            namespace.initial_solution = sol
-            namespace.iterations = int(values[1])
 
-        except ValueError:
-            print_message_and_usage("N must be and integer value!: " + values[1])
         except pickle.UnpicklingError:
             print_message_and_usage("solution file must contain a pickled Solution object!")
 
@@ -50,14 +50,19 @@ class CheckBenchmarkArgs(argparse.Action):
 parser = argparse.ArgumentParser()
 parser.add_argument('-pb', default=False, required=False,
                     help="Spawns a progress bar.", dest="progress_bar", action='store_true')
-parser.add_argument('-b', nargs=2, type=str, required=False, metavar=("solution_file", "N"), default=False,
+parser.add_argument('-b', nargs=1, type=str, required=False, metavar="solution_file", default=False,
                     dest="benchmark",
-                    help="Runs a benchmark of the program. Tabu Search is ran N times starting with an initial solution, then a report of the results is put in the output directory. "
+                    help="Runs a benchmark of the program starting with an initial solution, then a report of the results is put in the output directory. "
                          "solution_file contains the pickled initial solution to start the search from.",
                     action=CheckBenchmarkArgs)
+parser.add_argument('-v', default=False, required=False, dest="verbose", action='store_true',
+                    help="Runs in verbose mode.")
 parser.add_argument('-o', type=str, default="~/jsp_output",
                     help="Directory where output is placed. (default = ~/jsp_output)",
                     metavar="output", dest="output_dir")
+parser.add_argument('-np', type=int, default=4,
+                    help="Number of processes to spawn. (default = 4)",
+                    metavar="num_processes", dest="num_processes")
 parser.add_argument('-rt', type=int, required=True, help="Runtime in seconds for tabu search",
                     metavar="runtime", dest="runtime")
 parser.add_argument('-ts', type=int, required=True, help="Tabu list size", metavar="tabu_list_size",

@@ -13,5 +13,4 @@ sol = solution.Solution(sol.operation_2d_array)
 # sol = solution.generate_feasible_solution()
 
 print(sol.makespan)
-with open('./initial_benchmark_solution.pkl', 'wb') as fout:
-    solution.pickle_to_file(sol, fout)
+solution.pickle_to_file(sol, './initial_benchmark_solution.pkl')

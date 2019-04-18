@@ -10,9 +10,10 @@ class TabuList:
     This class is a set ADT that provides enqueue and dequeue behaviors.
     """
 
-    def __init__(self):
-        self.head = self.tail = Node()        # use linked list to keep FIFO property
+    def __init__(self, initial_solution):
+        self.head = self.tail = Node(data_val=initial_solution)        # use linked list to keep FIFO property
         self.solutions = SolutionSet()
+        self.solutions.add(initial_solution)
 
     def enqueue(self, solution):
         """
@@ -103,6 +104,3 @@ class SolutionSet:
         for lst in self.solutions.values():
             for sol in lst:
                 sol.pprint()
-
-
-

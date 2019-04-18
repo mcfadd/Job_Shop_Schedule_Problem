@@ -113,17 +113,17 @@ class Solution:
     #  We may want to create a separate class for producing the schedules.
 
 
-def pickle_to_file(solution, file):
+def pickle_to_file(solution, file_name):
     """
     Serializes a solution to a binary file using pickle.
 
     :param solution: Solution to serialize
-    :param file: File to serialize to
+    :param file_name: File name to serialize to
     :return: None
     """
     solution.machine_makespans = np.asarray(solution.machine_makespans)  # need to convert memory view to np array
-    solution.machine_waits = np.asarray(solution.machine_waits)
-    pickle.dump(solution, file, protocol=-1)
+    with open(file_name, 'wb') as file:
+        pickle.dump(solution, file, protocol=-1)
 
 
 def generate_feasible_solution():
