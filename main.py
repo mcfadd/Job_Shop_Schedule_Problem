@@ -1,11 +1,10 @@
 import time
 from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 import multiprocessing as mp
-import sys
 import tabu
 import benchmark
 from data import Data
-from parser import parser
+import parser
 
 
 def progress_bar(seconds):
@@ -26,7 +25,8 @@ def main(args):
           f"neighborhood size = {args.neighborhood_size}\n"
           f"neighborhood wait time = {args.neighborhood_wait} seconds\n"
           f"probability of changing an operation's machine = {args.probability_change_machine}\n"
-          f"data directory = {args.data}")
+          f"data directory = {args.data}\n"
+          f"output directory = {args.output_dir}")
 
     ts_manager = tabu.TabuSearchManager(args)
     ts_manager.start(verbose=args.verbose)
@@ -36,11 +36,14 @@ def main(args):
     print()
     print("Best Solution Found:")
     ts_manager.best_solution.pprint()
+    print()
+    print(f"Schedule.xlsx placed in {args.output_dir}")
+    ts_manager.best_solution.create_schedule(args.output_dir)
 
 
 if __name__ == '__main__':
     mp.set_start_method('fork')
-    arguments = parser.parse_args(sys.argv[1:])
+    arguments = parser.parse_args()
     Data.initialize_data(f'{arguments.data}/sequenceDependencyMatrix.csv',
                          f'{arguments.data}/machineRunSpeed.csv',
                          f'{arguments.data}/jobTasks.csv')

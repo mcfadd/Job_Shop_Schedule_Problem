@@ -5,6 +5,7 @@ import cython_files.makespan_compiled as makespan
 import numpy as np
 
 from data import Data
+import xlsxwriter
 
 
 class IncompleteSolutionException(Exception):
@@ -106,11 +107,110 @@ class Solution:
               f"operation_list =\n"
               f"{self.operation_2d_array}")
 
-    # def create_schedule(self):
-    # TODO complete this function.
-    #  Need to iterate over self.operation_2d_array and create a schedule for each machine.
-    #  The setup time, start time, end time, and wait time are needed for each operation.
-    #  We may want to create a separate class for producing the schedules.
+    def create_schedule(self, output_dir):
+        """
+        Creates an excel file called 'Schedule.xlsx' in the output_dir directory that contains the schedule for each machine.
+        The machine schedules have the following headers, Job_Task, Start, and End, which correspond to
+        the Job_Task being processed, it's start, and it's end time on that machine.
+
+        :param output_dir: The directory to place Schedule.xlsx in
+        :return: None
+        """
+        # get all the necessary data from the static Data class
+        machine_speeds = Data.machine_speeds
+        sequence_dependency_matrix = Data.sequence_dependency_matrix
+        sequence_dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+        num_jobs = sequence_dependency_matrix.shape[0]
+        num_machines = machine_speeds.shape[0]
+
+        # create an excel workbook and worksheet in output directory
+        workbook = xlsxwriter.Workbook(f'{output_dir}/Schedule.xlsx')
+        colored = workbook.add_format({'bg_color': '#E7E6E6'})
+        worksheet = workbook.add_worksheet('Schedule')
+
+        col = 0
+
+        # Write headers to excel worksheet and format cells
+        for i in range(num_machines):
+            worksheet.set_column(col, col, 10)
+            worksheet.write(0, col, f'Machine {i}')
+            worksheet.write_row(1, col, ["Total =", self.machine_makespans[i], "minutes"])
+            worksheet.write_row(2, col, ["Job_Task", "Start", "End"])
+            worksheet.set_column(col + 3, col + 3, 2, colored)
+            col += 4
+
+        worksheet.set_row(2, 20, cell_format=colored)
+
+        # get the operation matrix
+        operation_2d_array = self.operation_2d_array
+
+        # all of the row entries (i.e. Job_Task, Start, End) start at row 3 in the excel file
+        machine_current_row = [3] * num_machines
+
+        # memory for keeping track of all machine's make span times
+        machine_makespan_memory = [0] * num_machines
+
+        # memory for keeping track of all machine's latest (job, task) that was processed
+        machine_jobs_memory = [(-1, -1)] * num_machines
+
+        # memory for keeping track of all job's latest task's sequence that was processed
+        job_seq_memory = [0] * num_jobs
+
+        # memory for keeping track of all job's previous sequence end time (used for calculating wait times)
+        prev_job_seq_end_memory = [0] * num_jobs
+
+        # memory for keeping track of all job's latest end time (used for updating prev_job_seq_end_memory)
+        job_end_memory = [0] * num_jobs
+
+        for row in range(operation_2d_array.shape[0]):
+
+            job_id = operation_2d_array[row, 0]
+            task_id = operation_2d_array[row, 1]
+            sequence = operation_2d_array[row, 2]
+            machine = operation_2d_array[row, 3]
+            pieces = operation_2d_array[row, 4]
+
+            # get the setup time for the current operation
+            if machine_jobs_memory[machine] != (-1, -1):
+                cur_task_index = sequence_dependency_matrix_index_encoding[job_id, task_id]
+                prev_task_index = sequence_dependency_matrix_index_encoding[machine_jobs_memory[machine]]
+                setup = sequence_dependency_matrix[cur_task_index, prev_task_index]
+            else:
+                setup = 0
+
+            # update previous job sequence end t if a new sequence if
+            if job_seq_memory[job_id] < sequence:
+                prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
+
+            if prev_job_seq_end_memory[job_id] <= machine_makespan_memory[machine]:
+                wait = 0
+            else:
+                wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
+
+            # write Job_Task setup
+            worksheet.write_row(machine_current_row[machine], machine * 4, [f"{job_id}_{task_id} setup",
+                                                                            machine_makespan_memory[machine] + wait,
+                                                                            machine_makespan_memory[
+                                                                                machine] + wait + setup])
+
+            # write Job_Task run
+            worksheet.write_row(machine_current_row[machine] + 1, machine * 4, [f"{job_id}_{task_id} run",
+                                                                                machine_makespan_memory[
+                                                                                    machine] + wait + setup,
+                                                                                machine_makespan_memory[
+                                                                                    machine] + wait + setup + pieces /
+                                                                                machine_speeds[machine]])
+
+            # compute total added time and update memory modules
+            machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
+            job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
+            job_seq_memory[job_id] = sequence
+            machine_jobs_memory[machine] = (job_id, task_id)
+
+            # increment current row for machine by 2
+            machine_current_row[machine] += 2
+
+        workbook.close()
 
 
 def pickle_to_file(solution, file_name):

@@ -54,7 +54,7 @@ def search(tabu_id, initial_solution, search_time, tabu_size, neighborhood_size,
 
     lacking_machine_makespans = seed_solution.machine_makespans
     counter = 0
-    reset_threshold = 100
+    reset_threshold = 40
 
     # variables used for benchmarks
     iterations = 0
