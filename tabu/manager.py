@@ -29,11 +29,12 @@ class TabuSearchManager:
         if arguments_namespace.benchmark:
             self.is_benchmark = True
             self.benchmark_initial_solution = arguments_namespace.initial_solution
-            self.benchmark_best_makespan_found = []
+            self.benchmark_best_solutions_found = []
             self.benchmark_makespans = []
             self.benchmark_iterations = []
             self.benchmark_neighborhood_sizes = []
             self.benchmark_tabu_list_sizes = []
+            self.benchmark_min_makespan_coorinates = []
         else:
             self.is_benchmark = False
 
@@ -59,7 +60,7 @@ class TabuSearchManager:
             print([round(x.makespan) for x in self.initial_solutions])
             print()
 
-        # create child processes
+        # create child processes to run tabu search
         processes = []
         for tabu_id, initial_solution in enumerate(self.initial_solutions):
             processes.append(mp.Process(target=search, args=[tabu_id,
@@ -93,15 +94,18 @@ class TabuSearchManager:
             with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{tabu_id}", 'rb') as file:
                 if self.is_benchmark:
                     results = pickle.load(file)
-                    self.benchmark_best_makespan_found.append(results[0].makespan)
+                    self.benchmark_best_solutions_found.append(results[0])
                     self.benchmark_iterations.append(results[1])
                     self.benchmark_neighborhood_sizes.append(results[2])
                     self.benchmark_makespans.append(results[3])
                     self.benchmark_tabu_list_sizes.append(results[4])
+                    self.benchmark_min_makespan_coorinates.append(results[5])
                 else:
                     self.all_solutions.append(pickle.load(file))
 
-        if not self.is_benchmark:
+        if self.is_benchmark:
+            self.best_solution = min(self.benchmark_best_solutions_found)
+        else:
             self.best_solution = min(self.all_solutions)
 
         # remove temporary directory

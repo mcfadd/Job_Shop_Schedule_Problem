@@ -29,16 +29,19 @@ def run(args):
     ts_manager = tabu.TabuSearchManager(args)
     ts_manager.start(verbose=args.verbose)
 
-    result_makespans = ts_manager.benchmark_best_makespan_found
-    iterations = ts_manager.benchmark_iterations
-    neighborhood_sizes = ts_manager.benchmark_neighborhood_sizes
-    tabu_list_sizes = ts_manager.benchmark_tabu_list_sizes
+    best_solution = ts_manager.best_solution
+    # best_solutions_list = ts_manager.benchmark_best_solutions_found
+    iterations_list = ts_manager.benchmark_iterations
+    neighborhood_sizes_list = ts_manager.benchmark_neighborhood_sizes
+    tabu_list_sizes_list = ts_manager.benchmark_tabu_list_sizes
     makespans = ts_manager.benchmark_makespans
+    min_makespan_coorinates = ts_manager.benchmark_min_makespan_coorinates
+    best_makespans_list = [p[1] for p in min_makespan_coorinates]
 
     # output results
     now = datetime.datetime.now()
-    directory = args.output_dir + "/benchmark_run_{}/".format(now.strftime("%Y-%m-%d_%H:%M"))
-    os.mkdir(directory)
+    output_directory = args.output_dir + "/benchmark_run_{}/".format(now.strftime("%Y-%m-%d_%H:%M"))
+    os.mkdir(output_directory)
     # TODO make a template for the html
     index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
                     <html>
@@ -59,21 +62,21 @@ def run(args):
                         output directory = {args.output_dir}<br>
                         number of processes = {args.num_processes}<br>
                         initial makespan = {round(args.initial_solution.makespan) if args.initial_solution is not None else None}<br><br>
-                        <b>Benchmark results:</b><br>
+                        <b>Results:</b><br>
                         makespan:<br>
-                        min = {round(min(result_makespans))}<br>
-                        median = {round(statistics.median(result_makespans))}<br>
-                        max = {round(max(result_makespans))}<br>
-                        stdev = {round(statistics.stdev(result_makespans))}<br>
-                        var = {round(statistics.variance(result_makespans))}<br>
-                        mean = {round(statistics.mean(result_makespans))}<br><br>
+                        min = {round(min(best_makespans_list))}<br>
+                        median = {round(statistics.median(best_makespans_list))}<br>
+                        max = {round(max(best_makespans_list))}<br>
+                        stdev = {round(statistics.stdev(best_makespans_list))}<br>
+                        var = {round(statistics.variance(best_makespans_list))}<br>
+                        mean = {round(statistics.mean(best_makespans_list))}<br><br>
                         iterations:<br>
-                        min = {min(iterations)}<br>
-                        median = {statistics.median(iterations)}<br>
-                        max = {max(iterations)}<br>
-                        stdev = {statistics.stdev(iterations)}<br>
-                        var = {statistics.variance(iterations)}<br>
-                        mean = {statistics.mean(iterations)}<br><br>
+                        min = {min(iterations_list)}<br>
+                        median = {statistics.median(iterations_list)}<br>
+                        max = {max(iterations_list)}<br>
+                        stdev = {statistics.stdev(iterations_list)}<br>
+                        var = {statistics.variance(iterations_list)}<br>
+                        mean = {statistics.mean(iterations_list)}<br><br>
                         <b>Plots:</b><br>
                         <a href="./makespans.html">makespans vs iterations</a><br>
                         <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
@@ -81,22 +84,36 @@ def run(args):
                         </body>
                     </html>'''
 
-    # create plots for makespans vs iterations and neighborhood sizes vs iterations
+    # create traces for plots
     makespans_traces = []
     neighborhood_sizes_traces = []
     tabu_list_sizes_traces = []
-    for i in range(len(iterations)):
-        x_axis = list(range(iterations[i]))
-        makespans_traces.append(go.Scatter(x=x_axis, y=makespans[i]))
-        neighborhood_sizes_traces.append(go.Scatter(x=x_axis, y=neighborhood_sizes[i]))
-        tabu_list_sizes_traces.append(go.Scatter(x=x_axis, y=tabu_list_sizes[i]))
+    makespans_traces.append(go.Scatter(x=[p[0] for p in min_makespan_coorinates], y=best_makespans_list, mode='markers', name='best makespans'))
+    for i in range(len(iterations_list)):
+        x_axis = list(range(iterations_list[i]))
+        makespans_traces.append(go.Scatter(x=x_axis, y=makespans[i], name=f'tabu search {i}'))
+        neighborhood_sizes_traces.append(go.Scatter(x=x_axis, y=neighborhood_sizes_list[i]))
+        tabu_list_sizes_traces.append(go.Scatter(x=x_axis, y=tabu_list_sizes_list[i]))
 
-    plot(makespans_traces, filename=directory + "makespans.html", auto_open=False)
-    plot(neighborhood_sizes_traces, filename=directory + "neighborhood_sizes.html", auto_open=False)
-    plot(tabu_list_sizes_traces, filename=directory + "tabu_list_sizes.html", auto_open=False)
+    # create layouts for plots
+    makespans_layout = dict(title='Makespans vs Iterations', xaxis=dict(title='Iteration'), yaxis=dict(title='Makespans (minutes)'))
+    nh_sizes_layout = dict(title='Neighborhood sizes vs Iterations', xaxis=dict(title='Iteration'), yaxis=dict(title='Size of Neighborhood'))
+    tl_sizes_layout = dict(title='Tabu list sizes vs Iterations', xaxis=dict(title='Iteration'), yaxis=dict(title='Size of Tabu list'))
+
+    # create plots
+    plot(dict(data=makespans_traces, layout=makespans_layout), filename=output_directory + "makespans.html", auto_open=False)
+    plot(dict(data=neighborhood_sizes_traces, layout=nh_sizes_layout), filename=output_directory + "neighborhood_sizes.html", auto_open=False)
+    plot(dict(data=tabu_list_sizes_traces, layout=tl_sizes_layout), filename=output_directory + "tabu_list_sizes.html", auto_open=False)
 
     # create index.html
-    with open(directory + "index.html", 'w') as output_file:
+    with open(output_directory + "index.html", 'w') as output_file:
         output_file.write(index_text)
 
-    webbrowser.open("file://" + os.path.abspath(directory + "index.html"))
+    # open in web brower
+    webbrowser.open("file://" + os.path.abspath(output_directory + "index.html"))
+
+    # pickle best solution
+    best_solution.pickle_to_file(os.path.abspath(output_directory + "best_solution.pkl"))
+
+    # create schedule
+    best_solution.create_schedule(os.path.abspath(output_directory))

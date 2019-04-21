@@ -33,11 +33,12 @@ def generate_neighborhood(size, wait, seed_solution, probability_change_machine)
     return result
 
 
-def search(tabu_id, initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine,
+def search(process_id, initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine,
            benchmark=False):
     """
     This function performs Tabu search for a number of iterations given an initial feasible solution.
 
+    :param process_id: An int id of the search process (used by tabu.manager).
     :param initial_solution: The initial solution to start the Tabu search from.
     :param search_time: The time that Tabu search will run in seconds.
     :param tabu_size: The size of the Tabu list.
@@ -52,50 +53,63 @@ def search(tabu_id, initial_solution, search_time, tabu_size, neighborhood_size,
     tabu_list = TabuList(initial_solution)
     stop_time = time.time() + search_time
 
-    lacking_machine_makespans = seed_solution.machine_makespans
+    # if the seed solution is not improved after reset_threshold iterations a move to a worse solution is made to try to get out of local minima
+    lacking_solution = seed_solution
     counter = 0
-    reset_threshold = 40
+    reset_threshold = 50
 
     # variables used for benchmarks
     iterations = 0
     neighborhood_sizes = []
     tabu_list_sizes = []
     makespans = []
+    minimum_makespan_iteration = 0
 
     while time.time() < stop_time:
         neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, seed_solution, probability_change_machine)
         sorted_neighborhood = sorted(neighborhood.solutions.items())
-        update = False
+        break_boolean = False
 
         # Complexity of sorted() = O(n log n)
         for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
-            for neighbor in sorted(lst):  # sort subset of neighbors in increasing order by machine_makespans
+            for neighbor in sorted(lst):  # sort subset of neighbors with the same makespans by machine_makespans
                 if not tabu_list.solutions.contains(neighbor):
+                    # if new seed solution is not better than current seed solution add it to the tabu list
+                    if not neighbor < seed_solution:
+                        tabu_list.enqueue(seed_solution)
+                        if tabu_list.solutions.size > tabu_size:
+                            tabu_list.dequeue()
+
                     seed_solution = neighbor
-                    tabu_list.enqueue(seed_solution)
-                    if tabu_list.solutions.size > tabu_size:
-                        tabu_list.dequeue()
-                    update = True
+                    break_boolean = True
                     break
                 # aspiration criteria
-                elif neighbor < best_solution:  # comparison function compares machine_makespans
-                    update = True
-                    seed_solution = neighbor
-                    break
-            if update:
+                # elif neighbor < best_solution:  # comparison function compares machine_makespans
+                #     if new seed solution is not better than current seed solution add it to the tabu list
+                    # if not neighbor < seed_solution:
+                    #     tabu_list.enqueue(seed_solution)
+                    #     if tabu_list.solutions.size > tabu_size:
+                    #         tabu_list.dequeue()
+                    #
+                    # seed_solution = neighbor
+                    # update = True
+                    # break
+            if break_boolean:
                 break
 
         if seed_solution < best_solution:
             best_solution = seed_solution
+            if benchmark:
+                minimum_makespan_iteration = iterations
 
         # if solution is not being improved after a number of iterations, force a move to a worse one
         counter += 1
         if counter > reset_threshold:
             counter = 0
-            if np.array_equal(lacking_machine_makespans, seed_solution.machine_makespans):
+            if not lacking_solution > seed_solution:
                 seed_solution = random.choice(sorted_neighborhood[random.randint(10, 25)][1])
 
-            lacking_machine_makespans = seed_solution.machine_makespans
+            lacking_solution = seed_solution
 
         if benchmark:
             iterations += 1
@@ -105,8 +119,8 @@ def search(tabu_id, initial_solution, search_time, tabu_size, neighborhood_size,
 
     # pickle results to file in tmp directory
     best_solution.machine_makespans = np.asarray(best_solution.machine_makespans)  # need to convert memory view to np array
-    with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{tabu_id}", 'wb') as file:
+    with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{process_id}", 'wb') as file:
         if benchmark:
-            pickle.dump([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes], file, protocol=-1)
+            pickle.dump([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes, (minimum_makespan_iteration, best_solution.makespan)], file, protocol=-1)
         else:
             pickle.dump(best_solution, file, protocol=-1)

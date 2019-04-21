@@ -132,23 +132,29 @@ class Solution:
 
         # Write headers to excel worksheet and format cells
         for i in range(num_machines):
-            worksheet.set_column(col, col, 10)
+            worksheet.set_column(col, col, 12)
             worksheet.write(0, col, f'Machine {i}')
-            worksheet.write_row(1, col, ["Total =", self.machine_makespans[i], "minutes"])
-            worksheet.write_row(2, col, ["Job_Task", "Start", "End"])
+            worksheet.write_row(1, col, ["Makespan =", self.machine_makespans[i], "minutes"])
+            worksheet.write_row(4, col, ["Job_Task", "Start", "End"])
             worksheet.set_column(col + 3, col + 3, 2, colored)
             col += 4
 
-        worksheet.set_row(2, 20, cell_format=colored)
+        worksheet.set_row(4, 16, cell_format=colored)
 
         # get the operation matrix
         operation_2d_array = self.operation_2d_array
 
         # all of the row entries (i.e. Job_Task, Start, End) start at row 3 in the excel file
-        machine_current_row = [3] * num_machines
+        machine_current_row = [5] * num_machines
 
         # memory for keeping track of all machine's make span times
         machine_makespan_memory = [0] * num_machines
+
+        # memory for keeping track of total wait time on a machine
+        machine_waitime_memory = [0] * num_machines
+
+        # memory for keeping track of total setup time on a machine
+        machine_setup_time_memory = [0] * num_machines
 
         # memory for keeping track of all machine's latest (job, task) that was processed
         machine_jobs_memory = [(-1, -1)] * num_machines
@@ -203,6 +209,8 @@ class Solution:
 
             # compute total added time and update memory modules
             machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
+            machine_waitime_memory[machine] += wait
+            machine_setup_time_memory[machine] += setup
             job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
             job_seq_memory[job_id] = sequence
             machine_jobs_memory[machine] = (job_id, task_id)
@@ -210,20 +218,25 @@ class Solution:
             # increment current row for machine by 2
             machine_current_row[machine] += 2
 
+        col = 0
+        for i in range(num_machines):
+            worksheet.write_row(2, col, ["Total Wait =", machine_waitime_memory[i], "minutes"])
+            worksheet.write_row(3, col, ["Total Setup =", machine_setup_time_memory[i], "minutes"])
+            col += 4
+
         workbook.close()
 
-
-def pickle_to_file(solution, file_name):
-    """
-    Serializes a solution to a binary file using pickle.
-
-    :param solution: Solution to serialize
-    :param file_name: File name to serialize to
-    :return: None
-    """
-    solution.machine_makespans = np.asarray(solution.machine_makespans)  # need to convert memory view to np array
-    with open(file_name, 'wb') as file:
-        pickle.dump(solution, file, protocol=-1)
+    def pickle_to_file(self, file_name):
+        """
+        Serializes a solution to a binary file using pickle.
+    
+        :param self: Solution to serialize
+        :param file_name: File name to serialize to
+        :return: None
+        """
+        self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
+        with open(file_name, 'wb') as file:
+            pickle.dump(self, file, protocol=-1)
 
 
 def generate_feasible_solution():

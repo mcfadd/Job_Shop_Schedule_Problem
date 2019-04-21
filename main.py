@@ -11,7 +11,7 @@ def progress_bar(seconds):
     widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
     for i in range(seconds):
-        time.sleep(.97)
+        time.sleep(.99)
         pbar.update(i)
     pbar.finish()
     print()
