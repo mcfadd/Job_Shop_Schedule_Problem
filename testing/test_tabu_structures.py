@@ -1,9 +1,10 @@
 import unittest
 
-import solution
-from tabu.structures import SolutionSet, TabuList
-from data import Data
 import numpy as np
+
+import solution
+from data import Data
+from tabu.structures import SolutionSet, TabuList
 
 """
 This Unit Test contains test cases that do the following: 

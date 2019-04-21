@@ -1,13 +1,21 @@
-import time
-from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 import multiprocessing as mp
-import tabu
+import time
+
+from progressbar import Bar, ETA, ProgressBar, RotatingMarker
+
 import benchmark
-from data import Data
 import parser
+import tabu
+from data import Data
 
 
 def progress_bar(seconds):
+    """
+    Runs a progress bar for a duration that prints to stdout.
+
+    :param seconds: Duration to run the process bar for in seconds
+    :return:
+    """
     widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
     for i in range(seconds):

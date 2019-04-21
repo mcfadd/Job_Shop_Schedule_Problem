@@ -1,12 +1,12 @@
+import pickle
 import unittest
 
+import numpy as np
 from cython_files.makespan_compiled import \
     InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 
 import solution
 from data import Data
-import numpy as np
-import pickle
 
 """
 This Unit Test contains test cases that do the following: 
@@ -104,8 +104,7 @@ class Test(unittest.TestCase):
     def test_pickle_to_file(self):
 
         solution_obj = solution.generate_feasible_solution()
-        with open('./test_solution.pkl', 'wb') as fout:
-            solution.pickle_to_file(solution_obj, fout)
+        solution_obj.pickle_to_file('./test_solution.pkl')
 
         with open('./test_solution.pkl', 'rb') as fin:
             solution_obj_pickled = pickle.load(fin)

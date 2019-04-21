@@ -1,6 +1,8 @@
 import numpy as np
+
 from data import Data
 from solution import Solution
+
 '''
 This file contains three solutions for the small problem instance in the data folder.
 They should be small enough to draw out by hand to verify the machine makespans are correct.

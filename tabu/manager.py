@@ -1,14 +1,20 @@
-import os
-import shutil
-import solution
 import multiprocessing as mp
-from tabu.search import search
+import os
 import pickle
+import shutil
+
+import solution
+from tabu.search import search
 
 
 class TabuSearchManager:
-
     def __init__(self, arguments_namespace):
+        """
+        This class starts, then collects the results from the tabu search processes.
+        The processes are started with the arguments in arguments_namespace when self.start() is called.
+
+        :param arguments_namespace: Arguments for tabu search processes
+        """
 
         # get required arguments for tabu search
         self.tabu_search_runtime = arguments_namespace.runtime
@@ -29,7 +35,6 @@ class TabuSearchManager:
         if arguments_namespace.benchmark:
             self.is_benchmark = True
             self.benchmark_initial_solution = arguments_namespace.initial_solution
-            self.benchmark_best_solutions_found = []
             self.benchmark_makespans = []
             self.benchmark_iterations = []
             self.benchmark_neighborhood_sizes = []
@@ -39,6 +44,14 @@ class TabuSearchManager:
             self.is_benchmark = False
 
     def start(self, verbose=False):
+        """
+        This function first generates random initial solutions if a benchmark initial solution is not given,
+        then it forks a number of child processes equal to self.number_processes that run tabu search.
+        The parent process waits for the children to finish, then collects their pickled results from a temporary directory.
+
+        :param verbose:
+        :return:
+        """
         parent_process_id = os.getpid()
 
         # remove temporary directory if it exists
@@ -94,7 +107,7 @@ class TabuSearchManager:
             with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{tabu_id}", 'rb') as file:
                 if self.is_benchmark:
                     results = pickle.load(file)
-                    self.benchmark_best_solutions_found.append(results[0])
+                    self.all_solutions.append(results[0])
                     self.benchmark_iterations.append(results[1])
                     self.benchmark_neighborhood_sizes.append(results[2])
                     self.benchmark_makespans.append(results[3])
@@ -103,10 +116,7 @@ class TabuSearchManager:
                 else:
                     self.all_solutions.append(pickle.load(file))
 
-        if self.is_benchmark:
-            self.best_solution = min(self.benchmark_best_solutions_found)
-        else:
-            self.best_solution = min(self.all_solutions)
+        self.best_solution = min(self.all_solutions)
 
         # remove temporary directory
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")

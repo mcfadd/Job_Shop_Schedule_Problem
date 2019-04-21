@@ -30,7 +30,6 @@ def run(args):
     ts_manager.start(verbose=args.verbose)
 
     best_solution = ts_manager.best_solution
-    # best_solutions_list = ts_manager.benchmark_best_solutions_found
     iterations_list = ts_manager.benchmark_iterations
     neighborhood_sizes_list = ts_manager.benchmark_neighborhood_sizes
     tabu_list_sizes_list = ts_manager.benchmark_tabu_list_sizes

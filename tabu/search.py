@@ -1,25 +1,25 @@
+import os
+import pickle
+import random
 import time
 
 import cython_files.generate_neighbor_compiled as neighbor_generator
+import numpy as np
 from cython_files.makespan_compiled import InfeasibleSolutionException
 
 from tabu.structures import SolutionSet, TabuList
-import numpy as np
-import random
-import pickle
-import os
 
 
 # TODO generate_neighbor() should not generate infeasible neighbors, but it does in some cases.
 #  The try except block catches these cases.
 def generate_neighborhood(size, wait, seed_solution, probability_change_machine):
     """
-    This function generates a neighborhood of feasible solutions that are neighbors of the solution parameter.
+    This function generates a neighborhood of feasible solutions that are neighbors of the seed solution parameter.
 
     :param size: The size of the neighborhood to generate.
     :param wait: The maximum time spent to generate a neighborhood.
-    :param seed_solution: The solution to generate a neighborhood for.
-    :param probability_change_machine: The probability of changing a chosen operations machine.
+    :param seed_solution: The solution to generate a neighborhood of.
+    :param probability_change_machine: The probability of changing a chosen operations machine while generating a neighbor.
     :return: SolutionSet of neighboring solutions.
     """
     stop_time = time.time() + wait
@@ -36,9 +36,10 @@ def generate_neighborhood(size, wait, seed_solution, probability_change_machine)
 def search(process_id, initial_solution, search_time, tabu_size, neighborhood_size, neighborhood_wait, probability_change_machine,
            benchmark=False):
     """
-    This function performs Tabu search for a number of iterations given an initial feasible solution.
+    This function performs Tabu search for a given duration starting with an initial solution.
+    The best solution found is pickled to a file called 'solution_<process_id>' in a temporary directory for TabuSearchManager.
 
-    :param process_id: An int id of the search process (used by tabu.manager).
+    :param process_id: An integer id of the tabu search process (used by tabu.manager).
     :param initial_solution: The initial solution to start the Tabu search from.
     :param search_time: The time that Tabu search will run in seconds.
     :param tabu_size: The size of the Tabu list.
@@ -46,7 +47,7 @@ def search(process_id, initial_solution, search_time, tabu_size, neighborhood_si
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
     :param probability_change_machine: The probability of changing a chosen operations machine.
     :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
-    :return best_solution: The best solution found while performing Tabu search.
+    :return None.
     """
     seed_solution = initial_solution
     best_solution = initial_solution

@@ -3,9 +3,9 @@ import random
 
 import cython_files.makespan_compiled as makespan
 import numpy as np
+import xlsxwriter
 
 from data import Data
-import xlsxwriter
 
 
 class IncompleteSolutionException(Exception):
@@ -228,7 +228,7 @@ class Solution:
 
     def pickle_to_file(self, file_name):
         """
-        Serializes a solution to a binary file using pickle.
+        Serializes self to a binary file using pickle.
     
         :param self: Solution to serialize
         :param file_name: File name to serialize to
