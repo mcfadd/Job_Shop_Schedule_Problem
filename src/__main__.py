@@ -3,9 +3,9 @@ import time
 
 from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
-import benchmark
-import parser
 import tabu
+import parser
+import benchmark
 from data import Data
 
 

@@ -11,7 +11,7 @@ output=$scriptPath/benchmark_results
 data=$scriptPath/data/data_set2
 
 # run benchmark with progress bar
-#/usr/bin/env python $scriptPath/main.py -pb -b na -np 6 -rt 240 -ts 100 -ns 250 -p 0.8 -nw 0.2 -o $output $data
+#/usr/bin/env python $scriptPath/src -pb -b na -np 6 -rt 240 -ts 100 -ns 250 -p 0.8 -nw 0.2 -o $output $data
 
 # run main without progress bar
-/usr/bin/env python $scriptPath/main.py -v -np 4 -rt 10 -ts 100 -ns 200 -p 0.8 -nw 0.1 $data
+/usr/bin/env python $scriptPath/src -v -np 4 -rt 300 -ts 100 -ns 200 -p 0.8 -nw 0.1 $data

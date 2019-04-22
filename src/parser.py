@@ -3,7 +3,7 @@ import os
 import pickle
 import sys
 
-import solution
+from solution import Solution
 
 
 def print_message_and_usage(parser_obj, message):
@@ -33,7 +33,7 @@ class CheckBenchmarkArgs(argparse.Action):
 
                 with open(values[0], 'rb') as fin:
                     sol = pickle.load(fin)
-                    if not isinstance(sol, solution.Solution):
+                    if not isinstance(sol, Solution):
                         print_message_and_usage(parser_obj, "solution file must contain a pickled Solution object!")
 
                 namespace.initial_solution = sol

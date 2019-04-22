@@ -5,7 +5,7 @@ import time
 
 import cython_files.generate_neighbor_compiled as neighbor_generator
 from cython_files.makespan_compiled import InfeasibleSolutionException
-from data import Data
+from src.data import Data
 
 Data.initialize_data("../data/data_set2/sequenceDependencyMatrix.csv",
                      "../data/data_set2/machineRunSpeed.csv",

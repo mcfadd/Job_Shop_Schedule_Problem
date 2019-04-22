@@ -3,9 +3,9 @@ import pickle
 import statistics
 import time
 
-import cython_files.makespan_compiled as makespan
+import src.cython_files.makespan_compiled as makespan
 
-from data import Data
+import src.data.Data as Data
 
 Data.initialize_data("../data/data_set2/sequenceDependencyMatrix.csv",
                      "../data/data_set2/machineRunSpeed.csv",

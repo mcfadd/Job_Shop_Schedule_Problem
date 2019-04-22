@@ -3,22 +3,21 @@ import numpy as np
 cimport numpy as np
 from libc.stdlib cimport rand, RAND_MAX
 from solution import Solution
-from data import Data
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-def generate_neighbor(solution, double probability_change_machine):
+cpdef generate_neighbor(solution, double probability_change_machine, int[:, ::1] dependency_matrix_index_encoding, int[:, ::1] usable_machines_matrix):
     """
     This function generates a feasible solution that is a neighbor of the solution parameter.
 
     :param solution: The solution to generate a neighbor of.
     :param probability_change_machine: The probability of changing a chosen operation's machine.
+    :param dependency_matrix_index_encoding: dependency matrix index encoding from static Data.
+    :param usable_machines_matrix: usable machines matrix from static Data.
     :return: A neighbor of the solution parameter.
     """
-    cdef int[:, ::1] dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
-    cdef int[:, ::1] usable_machines_matrix = Data.usable_machines_matrix
     cdef int[:, ::1] result_operation_2d_array = np.copy(solution.operation_2d_array)
     cdef int[::1] operation, usable_machines
     cdef Py_ssize_t random_index, lower_index, upper_index, placement_index, min_machine_makespan, i
@@ -61,12 +60,9 @@ def generate_neighbor(solution, double probability_change_machine):
     while placement_index == random_index:
         placement_index = np.random.randint(lower_index, upper_index + 1)
 
+    # randomly change operation's machine if probability condition is met
     if np.random.random_sample() < probability_change_machine:
         i = dependency_matrix_index_encoding[operation[0], operation[1]]
         operation[3] = np.random.choice(usable_machines_matrix[i])
-
-    #print("rand", random_index)
-    #print("place", placement_index)
-    #print(lower_index, upper_index)
 
     return Solution(np.insert(result_operation_2d_array, placement_index, operation, axis=0))

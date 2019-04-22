@@ -1,7 +1,7 @@
 import pickle
 
-import solution
-from data import Data
+from src import solution
+from src.data import Data
 
 Data.initialize_data("../data/data_set2/sequenceDependencyMatrix.csv",
                      "../data/data_set2/machineRunSpeed.csv",

@@ -126,7 +126,7 @@ python benchmark.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <
 
 **Example**  
 
-`python main.py -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
+`python src -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
 
 **Important Note**
 

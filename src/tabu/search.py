@@ -3,11 +3,12 @@ import pickle
 import random
 import time
 
-import cython_files.generate_neighbor_compiled as neighbor_generator
 import numpy as np
+import cython_files.generate_neighbor_compiled as neighbor_generator
 from cython_files.makespan_compiled import InfeasibleSolutionException
 
 from tabu.structures import SolutionSet, TabuList
+from data import Data
 
 
 # TODO generate_neighbor() should not generate infeasible neighbors, but it does in some cases.
@@ -22,12 +23,15 @@ def generate_neighborhood(size, wait, seed_solution, probability_change_machine)
     :param probability_change_machine: The probability of changing a chosen operations machine while generating a neighbor.
     :return: SolutionSet of neighboring solutions.
     """
+    dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+    usable_machines_matrix = Data.usable_machines_matrix
     stop_time = time.time() + wait
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
         # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
         try:
-            result.add(neighbor_generator.generate_neighbor(seed_solution, probability_change_machine))
+            result.add(neighbor_generator.generate_neighbor(seed_solution, probability_change_machine,
+                                                            dependency_matrix_index_encoding, usable_machines_matrix))
         except InfeasibleSolutionException:
             pass
     return result

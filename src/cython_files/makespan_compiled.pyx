@@ -2,7 +2,6 @@ cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport abort, malloc, free
-from data import Data
 
 class InfeasibleSolutionException(Exception):
     pass
@@ -11,20 +10,23 @@ class InfeasibleSolutionException(Exception):
 @cython.wraparound(False)
 @cython.nonecheck(False)
 @cython.cdivision(True)
-cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array):
+cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
+                                            const double[::1] machine_speeds,
+                                            const int[:, ::1] sequence_dependency_matrix,
+                                            const int[:, ::1] sequence_dependency_matrix_index_encoding):
     """
     Computes a 1d array of all the machine's makespan times given a 2d array of operations, where an operation
     is a 1d array of integers in the form [job_id, task_id, sequence, machine, pieces].
 
     :param operation_2d_array: The 2d array of operations to compute the machine makespans for.
+    :param machine_speeds: nparray of machine speeds from static Data
+    :param sequence_dependency_matrix: sequence depencency matrix from static Data
+    :param sequence_dependency_matrix_index_encoding: sequence dependency matrix index encoding from static Data
     :return: a 1d array of machine make span times, where makespan[i] = makespan of machine i
     :raise: InfeasibleSolutionException if the solution is infeasible.
 
     Note: to get the actual makespan, take the max of the result.
     """
-    cdef const double[::1] machine_speeds = Data.machine_speeds
-    cdef const int[:, ::1] sequence_dependency_matrix = Data.sequence_dependency_matrix
-    cdef const int[:, ::1] sequence_dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
     cdef int num_jobs = sequence_dependency_matrix.shape[0]
     cdef int num_machines = machine_speeds.shape[0]
 

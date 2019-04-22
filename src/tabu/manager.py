@@ -3,8 +3,8 @@ import os
 import pickle
 import shutil
 
-import solution
-from tabu.search import search
+from solution import generate_feasible_solution
+import tabu.search as tabu_search
 
 
 class TabuSearchManager:
@@ -65,7 +65,7 @@ class TabuSearchManager:
             self.initial_solutions = [self.benchmark_initial_solution] * self.number_processes
         else:
             for _ in range(self.number_processes):
-                self.initial_solutions.append(solution.generate_feasible_solution())
+                self.initial_solutions.append(generate_feasible_solution())
 
         if verbose:
             print()
@@ -76,14 +76,14 @@ class TabuSearchManager:
         # create child processes to run tabu search
         processes = []
         for tabu_id, initial_solution in enumerate(self.initial_solutions):
-            processes.append(mp.Process(target=search, args=[tabu_id,
-                                                             initial_solution,
-                                                             self.tabu_search_runtime,
-                                                             self.tabu_list_size,
-                                                             self.neighborhood_size,
-                                                             self.neighborhood_wait,
-                                                             self.probability_change_machine,
-                                                             self.is_benchmark]))
+            processes.append(mp.Process(target=tabu_search.search, args=[tabu_id,
+                                                                         initial_solution,
+                                                                         self.tabu_search_runtime,
+                                                                         self.tabu_list_size,
+                                                                         self.neighborhood_size,
+                                                                         self.neighborhood_wait,
+                                                                         self.probability_change_machine,
+                                                                         self.is_benchmark]))
 
         # start child processes
         for p in processes:

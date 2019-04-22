@@ -1,7 +1,7 @@
 import numpy as np
 
-from data import Data
-from solution import Solution
+from src.data import Data
+from src.solution import Solution
 
 '''
 This file contains three solutions for the small problem instance in the data folder.
