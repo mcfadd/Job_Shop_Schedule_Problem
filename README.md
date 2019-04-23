@@ -72,13 +72,32 @@ To calculate the make span of a feasible solution we calculate the max of (total
 
 To produce a schedule for each machine given a feasible solution, we iterate over the solution and add each Job-Task to a queue for the machine specified in the operation.
 
-## Usage
+## Program
+### Requirements
 
-**Reuirements**: python 3
+First make sure you have the following packages installed:
 
-1. clone or download repository
-2. open a terminal and cd to the directory where the clone is
-3. run one of the following
+Python 3.6  
+python3-dev   
+pip  
+gcc
+
+(These can be installed with apt, yum, brew, etc.)
+
+To install the other requirements, run `pip install -r requirements.txt`
+
+### Build
+
+In the `cython_files` directory exists two .pyx files:
+
+1. makespan_compiled.pyx
+2. generate_neighbor.pyx
+
+These files are compiled to shared object files (.so) by [Cython](https://cython.org/).  
+To build the C-extensions cd to the `cython_files` directory and run `python setup.py build --inplace`.  
+For more information on building cython source code see the [link](https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#basic-setup-py).
+
+### Usage
 
 main:
 ```bash
@@ -107,16 +126,16 @@ python benchmark.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <
 
 **Example**  
 
-`python main.py -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
+`python src -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
 
-**Note**
+**Important Note**
 
 Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id)  
 (see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data) for reference)
 
 ## Program Design
 
-Below is a basic high-level flow digram describing the design.
+Below is a basic high-level flow digram describing the design of the program.
 
 ![Flow Diagram](diagrams/Flow_Diagram.png)  
 
