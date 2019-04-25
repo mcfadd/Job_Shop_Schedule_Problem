@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import data
 import solution
 """
 This function will generate a child solution using 2 parents as its list of operations
