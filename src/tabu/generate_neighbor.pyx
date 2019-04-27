@@ -1,13 +1,14 @@
+from solution import Solution
 cimport cython
 import numpy as np
 cimport numpy as np
+
 from libc.stdlib cimport rand, RAND_MAX
-from solution import Solution
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-@cython.cdivision(True)
 cpdef generate_neighbor(solution, double probability_change_machine, int[:, ::1] dependency_matrix_index_encoding, int[:, ::1] usable_machines_matrix):
     """
     This function generates a feasible solution that is a neighbor of the solution parameter.

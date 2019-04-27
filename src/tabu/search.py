@@ -4,10 +4,10 @@ import random
 import time
 
 import numpy as np
-import cython_files.generate_neighbor_compiled as neighbor_generator
-from cython_files.makespan_compiled import InfeasibleSolutionException
-
+from solution import InfeasibleSolutionException
+from tabu.generate_neighbor import generate_neighbor
 from tabu.structures import SolutionSet, TabuList
+
 from data import Data
 
 
@@ -30,8 +30,8 @@ def generate_neighborhood(size, wait, seed_solution, probability_change_machine)
     while result.size < size and time.time() < stop_time:
         # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
         try:
-            result.add(neighbor_generator.generate_neighbor(seed_solution, probability_change_machine,
-                                                            dependency_matrix_index_encoding, usable_machines_matrix))
+            result.add(generate_neighbor(seed_solution, probability_change_machine,
+                                                           dependency_matrix_index_encoding, usable_machines_matrix))
         except InfeasibleSolutionException:
             pass
     return result
@@ -88,17 +88,7 @@ def search(process_id, initial_solution, search_time, tabu_size, neighborhood_si
                     seed_solution = neighbor
                     break_boolean = True
                     break
-                # aspiration criteria
-                # elif neighbor < best_solution:  # comparison function compares machine_makespans
-                #     if new seed solution is not better than current seed solution add it to the tabu list
-                    # if not neighbor < seed_solution:
-                    #     tabu_list.enqueue(seed_solution)
-                    #     if tabu_list.solutions.size > tabu_size:
-                    #         tabu_list.dequeue()
-                    #
-                    # seed_solution = neighbor
-                    # update = True
-                    # break
+
             if break_boolean:
                 break
 
@@ -112,7 +102,12 @@ def search(process_id, initial_solution, search_time, tabu_size, neighborhood_si
         if counter > reset_threshold:
             counter = 0
             if not lacking_solution > seed_solution:
-                seed_solution = random.choice(sorted_neighborhood[random.randint(10, 25)][1])
+                # add the seed solution to the tabu list
+                tabu_list.enqueue(seed_solution)
+                if tabu_list.solutions.size > tabu_size:
+                    tabu_list.dequeue()
+                # choose a worse solution
+                seed_solution = random.choice(sorted_neighborhood[random.randint(5, 15)][1])
 
             lacking_solution = seed_solution
 

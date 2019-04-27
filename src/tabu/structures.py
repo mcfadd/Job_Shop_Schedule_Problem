@@ -59,10 +59,10 @@ class SolutionSet:
         """
         if solution.makespan not in self.solutions:
             self.solutions[solution.makespan] = [solution]
-            self.size += 1
-        elif solution not in self.solutions[solution.makespan]:
+        else:
             self.solutions[solution.makespan].append(solution)
-            self.size += 1
+
+        self.size += 1
 
     def remove(self, solution):
         """

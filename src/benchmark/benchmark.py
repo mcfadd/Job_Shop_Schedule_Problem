@@ -50,36 +50,44 @@ def run(args):
                             <title>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</title>
                         </head>
                         <body>
-                        <h2>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</h2>
-                        <b>Parameters:</b><br>
-                        search time = {args.runtime} seconds<br>
-                        tabu list size = {args.tabu_list_size}<br>
-                        neighborhood size = {args.neighborhood_size}<br>
-                        neighborhood wait time = {args.neighborhood_wait} seconds<br>
-                        probability of changing an operation's machine = {args.probability_change_machine}<br>
-                        data directory = {args.data}<br>
-                        output directory = {args.output_dir}<br>
-                        number of processes = {args.num_processes}<br>
-                        initial makespan = {round(args.initial_solution.makespan) if args.initial_solution is not None else None}<br><br>
-                        <b>Results:</b><br>
-                        makespan:<br>
-                        min = {round(min(best_makespans_list))}<br>
-                        median = {round(statistics.median(best_makespans_list))}<br>
-                        max = {round(max(best_makespans_list))}<br>
-                        stdev = {round(statistics.stdev(best_makespans_list))}<br>
-                        var = {round(statistics.variance(best_makespans_list))}<br>
-                        mean = {round(statistics.mean(best_makespans_list))}<br><br>
-                        iterations:<br>
-                        min = {min(iterations_list)}<br>
-                        median = {statistics.median(iterations_list)}<br>
-                        max = {max(iterations_list)}<br>
-                        stdev = {statistics.stdev(iterations_list)}<br>
-                        var = {statistics.variance(iterations_list)}<br>
-                        mean = {statistics.mean(iterations_list)}<br><br>
-                        <b>Plots:</b><br>
-                        <a href="./makespans.html">makespans vs iterations</a><br>
-                        <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
-                        <a href="./tabu_list_sizes.html">tabu list sizes vs iterations</a><br>
+                            <h2>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</h2>
+                            <b>Parameters:</b>
+                            <br>
+                            search time = {args.runtime} seconds<br>
+                            tabu list size = {args.tabu_list_size}<br>
+                            neighborhood size = {args.neighborhood_size}<br>
+                            neighborhood wait time = {args.neighborhood_wait} seconds<br>
+                            probability of changing an operation's machine = {args.probability_change_machine}<br>
+                            data directory = {args.data}<br>
+                            output directory = {args.output_dir}<br>
+                            number of processes = {args.num_processes}<br>
+                            initial makespan = {round(args.initial_solution.makespan) if args.initial_solution is not None else None}<br>
+                            <br>
+                            <b>Results:</b>
+                            <br>
+                            makespans:
+                            <br>
+                            min = {round(min(best_makespans_list))}<br>
+                            median = {round(statistics.median(best_makespans_list))}<br>
+                            max = {round(max(best_makespans_list))}<br>
+                            stdev = {round(statistics.stdev(best_makespans_list))}<br>
+                            var = {round(statistics.variance(best_makespans_list))}<br>
+                            mean = {round(statistics.mean(best_makespans_list))}<br>
+                            <br>
+                            iterations:
+                            <br>
+                            min = {min(iterations_list)}<br>
+                            median = {statistics.median(iterations_list)}<br>
+                            max = {max(iterations_list)}<br>
+                            stdev = {statistics.stdev(iterations_list)}<br>
+                            var = {statistics.variance(iterations_list)}<br>
+                            mean = {statistics.mean(iterations_list)}<br>
+                            <br>
+                            <b>Plots:</b>
+                            <br>
+                            <a href="./makespans.html">makespans vs iterations</a><br>
+                            <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
+                            <a href="./tabu_list_sizes.html">tabu list sizes vs iterations</a><br>
                         </body>
                     </html>'''
 

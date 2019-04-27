@@ -3,8 +3,8 @@ import os
 import pickle
 import shutil
 
-from solution import generate_feasible_solution
 import tabu.search as tabu_search
+from solution import generate_feasible_solution
 
 
 class TabuSearchManager:
@@ -117,6 +117,10 @@ class TabuSearchManager:
                     self.all_solutions.append(pickle.load(file))
 
         self.best_solution = min(self.all_solutions)
+
+        # create population of all solutions found
+        # with open(f"{os.path.dirname(os.path.realpath(__file__))}/test_population.pkl", 'wb') as file:
+        #     pickle.dump(self.all_solutions, file, protocol=-1)
 
         # remove temporary directory
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")

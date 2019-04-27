@@ -1,11 +1,15 @@
 import pickle
 import random
 
-import cython_files.makespan_compiled as makespan
 import numpy as np
 import xlsxwriter
+from solution.makespan import compute_machine_makespans
 
 from data import Data
+
+
+class InfeasibleSolutionException(Exception):
+    pass
 
 
 class IncompleteSolutionException(Exception):
@@ -33,10 +37,10 @@ class Solution:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
                                               f"Should be {Data.total_number_of_tasks}")
 
-        self.machine_makespans = makespan.compute_machine_makespans(operation_2d_array,
-                                                                    Data.machine_speeds,
-                                                                    Data.sequence_dependency_matrix,
-                                                                    Data.dependency_matrix_index_encoding)
+        self.machine_makespans = compute_machine_makespans(operation_2d_array,
+                                                           Data.machine_speeds,
+                                                           Data.sequence_dependency_matrix,
+                                                           Data.dependency_matrix_index_encoding)
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
 

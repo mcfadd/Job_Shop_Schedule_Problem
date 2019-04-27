@@ -90,7 +90,7 @@ To install the other requirements, run `pip install -r requirements.txt`
 
 In the `cython_files` directory exists two .pyx files:
 
-1. makespan_compiled.pyx
+1. makespan.pyx
 2. generate_neighbor.pyx
 
 These files are compiled to shared object files (.so) by [Cython](https://cython.org/).  

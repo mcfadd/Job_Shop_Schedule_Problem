@@ -1,11 +1,11 @@
 import multiprocessing as mp
+import parser
 import time
 
+import benchmark
+import tabu
 from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
-import tabu
-import parser
-import benchmark
 from data import Data
 
 
