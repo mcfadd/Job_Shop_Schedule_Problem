@@ -104,7 +104,7 @@ As of right now the command line program only runs parallel Tabu Search.
 **Important Note:**
 
 Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id).  
-(see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data) for reference)
+(see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2) for reference)
 
 
 When you install JSSP a command called `jssp` is put into your bin.  
@@ -123,7 +123,7 @@ jssp [-h] [-pb] [-b initial_solution.pkl] [-v]
 
 | Arg | Description |
 | --- | --- |
-| -h | prints a help message |
+| -h | Prints a help message |
 | -pb | Spawns a progress bar |
 | -b | Runs a benchmark of the program starting with initial_solution.pkl. <br> To generate random initial solutions use `-b na` |
 | -v | Runs in verbose mode |

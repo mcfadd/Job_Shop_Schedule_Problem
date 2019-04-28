@@ -19,7 +19,7 @@ def spawn_progress_bar(seconds):
     widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
     for i in range(seconds):
-        time.sleep(.96)
+        time.sleep(.98)
         pbar.update(i)
     pbar.finish()
 
@@ -49,7 +49,7 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
 
     print(f"Parameters:\n"
           f"runtime = {runtime} seconds\n"
-          f"output directory = {output_dir}"
+          f"output directory = {output_dir}\n"
           f"number of processes = {num_processes}\n"
           f"tabu_search list size = {tabu_list_size}\n"
           f"neighborhood size = {neighborhood_size}\n"

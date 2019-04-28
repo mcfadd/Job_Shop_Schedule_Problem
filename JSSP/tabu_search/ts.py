@@ -60,7 +60,7 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
     # if the seed solution is not improved after reset_threshold iterations a move to a worse solution is made to try to get out of local minima
     lacking_solution = seed_solution
     counter = 0
-    reset_threshold = 50
+    reset_threshold = 75
 
     # variables used for benchmarks
     iterations = 0
