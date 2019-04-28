@@ -3,26 +3,33 @@ import os
 import pickle
 import shutil
 
-import tabu.search as tabu_search
-from solution import generate_feasible_solution
+from JSSP.solution import generate_feasible_solution
+from .ts import search
 
 
 class TabuSearchManager:
-    def __init__(self, arguments_namespace):
+    def __init__(self, runtime, num_processes=4, tabu_list_size=50, neighborhood_size=300,
+                 neighborhood_wait=0.1, probability_change_machine=0.8, initial_solution=None):
         """
-        This class starts, then collects the results from the tabu search processes.
+        This class starts, then collects the results from the tabu_search search processes.
         The processes are started with the arguments in arguments_namespace when self.start() is called.
 
-        :param arguments_namespace: Arguments for tabu search processes
+        :param runtime: The duration that Tabu search will run in seconds.
+        :param num_processes: The number of Tabu search processes to run in parallel.
+        :param tabu_list_size: The size of the Tabu list.
+        :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
+        :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
+        :param probability_change_machine: The probability of changing a chosen operations machine.
+        :param initial_solution: The initial solution to start the Tabu searches from (defaults to generating random solutions).
         """
 
-        # get required arguments for tabu search
-        self.tabu_search_runtime = arguments_namespace.runtime
-        self.tabu_list_size = arguments_namespace.tabu_list_size
-        self.neighborhood_size = arguments_namespace.neighborhood_size
-        self.neighborhood_wait = arguments_namespace.neighborhood_wait
-        self.probability_change_machine = arguments_namespace.probability_change_machine
-        self.number_processes = arguments_namespace.num_processes
+        # get required arguments for tabu_search search
+        self.number_processes = num_processes
+        self.tabu_search_runtime = runtime
+        self.tabu_list_size = tabu_list_size
+        self.neighborhood_size = neighborhood_size
+        self.neighborhood_wait = neighborhood_wait
+        self.probability_change_machine = probability_change_machine
 
         # uninitialized initial solutions to start TS from
         self.initial_solutions = []
@@ -32,23 +39,20 @@ class TabuSearchManager:
         self.best_solution = None
 
         # benchmark specific arguments and results
-        if arguments_namespace.benchmark:
-            self.is_benchmark = True
-            self.benchmark_initial_solution = arguments_namespace.initial_solution
-            self.benchmark_makespans = []
-            self.benchmark_iterations = []
-            self.benchmark_neighborhood_sizes = []
-            self.benchmark_tabu_list_sizes = []
-            self.benchmark_min_makespan_coorinates = []
-        else:
-            self.is_benchmark = False
+        self.benchmark_initial_solution = initial_solution
+        self.benchmark_makespans = []
+        self.benchmark_iterations = []
+        self.benchmark_neighborhood_sizes = []
+        self.benchmark_tabu_list_sizes = []
+        self.benchmark_min_makespan_coorinates = []
 
-    def start(self, verbose=False):
+    def start(self, benchmark=False, verbose=False):
         """
-        This function first generates random initial solutions if a benchmark initial solution is not given,
-        then it forks a number of child processes equal to self.number_processes that run tabu search.
+        This function first generates random initial solutions if an initial solution is not given,
+        then it forks a number of child processes equal to self.number_processes that run tabu_search search with the fields of this TabuSearchManager.
         The parent process waits for the children to finish, then collects their pickled results from a temporary directory.
 
+        :param benchmark:
         :param verbose:
         :return:
         """
@@ -61,7 +65,7 @@ class TabuSearchManager:
         os.mkdir(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")
 
         # create random initial solutions
-        if self.is_benchmark and self.benchmark_initial_solution is not None:
+        if benchmark and self.benchmark_initial_solution is not None:
             self.initial_solutions = [self.benchmark_initial_solution] * self.number_processes
         else:
             for _ in range(self.number_processes):
@@ -73,17 +77,17 @@ class TabuSearchManager:
             print([round(x.makespan) for x in self.initial_solutions])
             print()
 
-        # create child processes to run tabu search
+        # create child processes to run tabu_search search
         processes = []
         for tabu_id, initial_solution in enumerate(self.initial_solutions):
-            processes.append(mp.Process(target=tabu_search.search, args=[tabu_id,
-                                                                         initial_solution,
-                                                                         self.tabu_search_runtime,
-                                                                         self.tabu_list_size,
-                                                                         self.neighborhood_size,
-                                                                         self.neighborhood_wait,
-                                                                         self.probability_change_machine,
-                                                                         self.is_benchmark]))
+            processes.append(mp.Process(target=search, args=[tabu_id,
+                                                             initial_solution,
+                                                             self.tabu_search_runtime,
+                                                             self.tabu_list_size,
+                                                             self.neighborhood_size,
+                                                             self.neighborhood_wait,
+                                                             self.probability_change_machine,
+                                                             benchmark]))
 
         # start child processes
         for p in processes:
@@ -105,7 +109,7 @@ class TabuSearchManager:
         # get the results from the tmp directory
         for tabu_id in range(self.number_processes):
             with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{tabu_id}", 'rb') as file:
-                if self.is_benchmark:
+                if benchmark:
                     results = pickle.load(file)
                     self.all_solutions.append(results[0])
                     self.benchmark_iterations.append(results[1])

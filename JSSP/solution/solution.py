@@ -3,9 +3,9 @@ import random
 
 import numpy as np
 import xlsxwriter
-from solution.makespan import compute_machine_makespans
 
-from data import Data
+from JSSP.data import Data
+from .makespan import compute_machine_makespans
 
 
 class InfeasibleSolutionException(Exception):

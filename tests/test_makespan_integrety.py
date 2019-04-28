@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.data import Data
-from src.solution import Solution
+from JSSP.data import Data
+from JSSP.solution import Solution
 
 '''
 This file contains three solutions for the small problem instance in the data folder.

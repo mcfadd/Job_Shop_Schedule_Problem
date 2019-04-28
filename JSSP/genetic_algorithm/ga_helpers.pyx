@@ -1,7 +1,7 @@
 cimport cython
 import numpy as np
 cimport numpy as np
-from solution import Solution
+from JSSP.solution import Solution
 
 
 @cython.boundscheck(False)

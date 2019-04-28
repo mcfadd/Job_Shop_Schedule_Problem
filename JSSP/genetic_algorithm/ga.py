@@ -1,23 +1,22 @@
 import random
 import time
 
-import solution
-from src.genetic_algorithm.ga_helpers import cross
+from JSSP import solution
+from JSSP.data import Data
+from .ga_helpers import cross
 
-from data import Data
 
-
-def search(search_time, initial_population, population_size, mutation_probability, verbose=False):
+def search(search_time, initial_population, mutation_probability, verbose=False):
     """
+    This function performs a Genetic Algorithm for a given duration starting with an initial population.
 
-    :param search_time:
-    :param initial_population:
-    :param population_size:
-    :param mutation_probability:
-    :param verbose:
-    :return: best_solution: The best Solution found
+    :param search_time: The duration that the GA search will run in seconds.
+    :param initial_population: The initial population to start the GA from.
+    :param mutation_probability: The probability of mutating chromosome (i.e change an operations machine).
+    :param verbose: If True, extra information such as total number of iterations is printed.
+    :return: best_solution: The best Solution found.
     """
-
+    population_size = len(initial_population)
     assert population_size % 2 == 0, "population size must be even"
 
     best_solution = min(initial_population)

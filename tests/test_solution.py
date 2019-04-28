@@ -2,10 +2,10 @@ import pickle
 import unittest
 
 import numpy as np
-import src.cython_files.makespan_compiled.InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
+import JSSP.cython_files.makespan_compiled.InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 
-import src.solution as solution
-import src.data.Data as Data
+import JSSP.solution as solution
+import JSSP.data.Data as Data
 
 """
 This Unit Test contains test cases that do the following: 

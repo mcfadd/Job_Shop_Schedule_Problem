@@ -84,7 +84,7 @@ gcc
 
 (These can be installed with apt, yum, brew, etc.)
 
-To install the other requirements, run `pip install -r requirements.txt`
+To install the other requirements, run `pip install -r requirements_old.txt`
 
 ### Build
 
@@ -126,7 +126,7 @@ python benchmark.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <
 
 **Example**  
 
-`python src -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
+`python JSSP -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
 
 **Important Note**
 

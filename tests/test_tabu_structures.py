@@ -5,9 +5,9 @@ import numpy as np
 from os.path import dirname
 sys.path.append(dirname(__file__) + "/..")
 
-from src import solution
-from src.data import Data
-from src.tabu.structures import SolutionSet, TabuList
+from JSSP import solution
+from JSSP.data import Data
+from JSSP.tabu_search.structures import SolutionSet, TabuList
 
 """
 This Unit Test contains test cases that do the following: 

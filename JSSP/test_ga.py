@@ -1,8 +1,12 @@
 # from genetic_algorithm.ga_helpers import cross, placement
-import numpy as np
-from data import Data
-import solution
+# import numpy as np
+# from . import solution
 
+import pickle
+import statistics
+
+from .data import Data
+from .genetic_algorithm import search
 
 Data.initialize_data('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
                      '../data/data_set2/jobTasks.csv')
@@ -56,15 +60,10 @@ Data.initialize_data('../data/data_set2/sequenceDependencyMatrix.csv', '../data/
 #
 # print(infeasible_cnt)
 
-
-from src.genetic_algorithm import search
-import statistics
-import pickle
-
 pop_size = 50
 # random_population = [solution.generate_feasible_solution() for _ in range(pop_size)]
 
-with open("/home/mcfadd/Job_Shop_Schedule_Problem/src/test_population.pkl", 'rb') as file:
+with open("/home/mcfadd/Job_Shop_Schedule_Problem/JSSP/test_population.pkl", 'rb') as file:
     random_population = pickle.load(file)
 
 best_sol = min(random_population)
