@@ -6,62 +6,26 @@ import webbrowser
 import plotly.graph_objs as go
 from plotly.offline import plot
 
-from JSSP import tabu_search
 
-
-def run(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1,
-        probability_change_machine=0.8, initial_solution=None, verbose=False):
+def output_benchmark_results(ts_manager, output_dir):
     """
-    Runs a benchmark of the program.
-
-    This function runs Tabu Search in parallel for a certain duration,
-    then puts the following benchmark results into the output directory specified.
+    This function generates an html file containing the following benchmark results
+    obtained from a TabuSearchManager in the output directory specified.
 
         benchmark results:
-        1. min, median, max, mean, stdev, var of best makespans found by each TS.
-        2. min, median, max, mean, stdev, var of total iterations of each TS.
+        1. min, median, max, mean, stdev, var of all the best makespans found by each TS.
+        2. min, median, max, mean, stdev, var of the total iterations of each TS.
         3. makespans vs iterations graph
         4. neighborhood sizes vs iterations graph
-        5. tabu list size vs iterations
-        6. Schedule.xlsx
-        7. best_solution.pkl
+        5. tabu list size vs iterations graph
+        6. Schedule.xlsx - schedule of the best solution found
+        7. best_solution.pkl - pickled Solution object of the best solution found
 
-    :param runtime:
-    :param output_dir:
-    :param num_processes:
-    :param tabu_list_size:
-    :param neighborhood_size:
-    :param neighborhood_wait:
-    :param probability_change_machine:
-    :param initial_solution:
-    :param verbose:
-    :return: 0 if successful
+    :param ts_manager: The TabuSearchManager object to get the results from
+    :param output_dir: The output directory to place the results into
+    :return: None
     """
-    print("Running Benchmark")
-
-    setup_parameters = f"\n" \
-        f"Parameters:\n\n" \
-        f"  search time = {runtime} seconds\n" \
-        f"  tabu_search list size = {tabu_list_size}\n" \
-        f"  neighborhood size = {neighborhood_size}\n" \
-        f"  neighborhood wait time = {neighborhood_wait} seconds\n" \
-        f"  probability of changing an operation's machine = {probability_change_machine}\n" \
-        f"  output directory = {output_dir}\n" \
-        f"  number of processes = {num_processes}\n" \
-        f"  initial makespan = {round(initial_solution.makespan) if initial_solution is not None else None}\n\n"
-
-    print(setup_parameters)
-
-    ts_manager = tabu_search.TabuSearchManager(runtime,
-                                               num_processes,
-                                               tabu_list_size,
-                                               neighborhood_size,
-                                               neighborhood_wait,
-                                               probability_change_machine,
-                                               initial_solution)
-
-    ts_manager.start(benchmark=True, verbose=verbose)
-
+    # get numerical results from ts_manager
     best_solution = ts_manager.best_solution
     iterations_list = ts_manager.benchmark_iterations
     neighborhood_sizes_list = ts_manager.benchmark_neighborhood_sizes
@@ -86,15 +50,15 @@ def run(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_si
                             <h2>Benchmark Results {now.strftime("%Y-%m-%d %H:%M")}</h2>
                             <b>Parameters:</b>
                             <br>
-                            search time = {runtime} seconds<br>
-                            tabu_search list size = {tabu_list_size}<br>
-                            neighborhood size = {neighborhood_size}<br>
-                            neighborhood wait time = {neighborhood_wait} seconds<br>
-                            probability of changing an operation's machine = {probability_change_machine}<br>
+                            search time = {ts_manager.runtime} seconds<br>
+                            tabu_search list size = {ts_manager.tabu_list_size}<br>
+                            neighborhood size = {ts_manager.neighborhood_size}<br>
+                            neighborhood wait time = {ts_manager.neighborhood_wait} seconds<br>
+                            probability of changing an operation's machine = {ts_manager.probability_change_machine}<br>
                             output directory = {output_dir}<br>
-                            number of processes = {num_processes}<br>
+                            number of processes = {ts_manager.num_processes}<br>
                             initial makespan = {round(
-        initial_solution.makespan) if initial_solution is not None else None}<br>
+        ts_manager.initial_solution.makespan) if ts_manager.initial_solution is not None else None}<br>
                             <br>
                             <b>Results:</b>
                             <br>
@@ -121,6 +85,10 @@ def run(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_si
                             <a href="./makespans.html">makespans vs iterations</a><br>
                             <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
                             <a href="./tabu_list_sizes.html">tabu_search list sizes vs iterations</a><br>
+                            <br>
+                            <b>Schedule:</b>
+                            <br>
+                            <a href="file://{os.path.abspath(output_directory + "Schedule.xlsx")}">Schedule.xlsx</a><br>
                         </body>
                     </html>'''
 
@@ -156,13 +124,13 @@ def run(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_si
     with open(output_directory + "index.html", 'w') as output_file:
         output_file.write(index_text)
 
-    # open in web brower
-    webbrowser.open("file://" + os.path.abspath(output_directory + "index.html"))
-
     # pickle best solution
     best_solution.pickle_to_file(os.path.abspath(output_directory + "best_solution.pkl"))
 
-    # create schedule
-    best_solution.create_schedule(os.path.abspath(output_directory))
+    # create Schedule.xlsx
+    ts_manager.best_solution.create_schedule(output_directory)
 
-    return 0
+    print(f"opening file://{os.path.abspath(output_directory)} in browser")
+
+    # open index.html in web browser
+    webbrowser.open("file://" + os.path.abspath(output_directory + "index.html"))

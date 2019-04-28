@@ -79,8 +79,8 @@ def parse_args():
     parser.add_argument('-v', default=False, required=False, dest="verbose", action='store_true',
                         help="Runs in verbose mode.")
 
-    parser.add_argument('-o', type=str, default=f"{os.getenv('HOME')}/jsp_output",
-                        help="Directory where output is placed. (default = ~/jsp_output)",
+    parser.add_argument('-o', type=str, default=f"{os.getenv('HOME')}/jssp_output",
+                        help="Directory where output is placed. (default = ~/jssp_output)",
                         metavar="output", dest="output_dir")
 
     parser.add_argument('-np', type=int, default=4,
@@ -108,11 +108,4 @@ def parse_args():
                         help="Directory containing the files: jobTasks.csv, machineRunSpeed.csv, sequenceDependencyMatrix.csv",
                         action=CheckDataDir)
 
-    # parse command line args
-    arguments = parser.parse_args(sys.argv[1:])
-
-    # check if output directory exists
-    if not os.path.exists(arguments.output_dir) or not os.path.isdir(arguments.output_dir):
-        os.mkdir(arguments.output_dir)
-
-    return arguments
+    return parser.parse_args(sys.argv[1:])

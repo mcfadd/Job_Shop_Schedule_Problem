@@ -24,14 +24,15 @@ class TabuSearchManager:
         """
 
         # get required arguments for tabu_search search
-        self.number_processes = num_processes
-        self.tabu_search_runtime = runtime
+        self.runtime = runtime
+        self.num_processes = num_processes
         self.tabu_list_size = tabu_list_size
         self.neighborhood_size = neighborhood_size
         self.neighborhood_wait = neighborhood_wait
         self.probability_change_machine = probability_change_machine
 
-        # uninitialized initial solutions to start TS from
+        # initial solution to start TS from if not None
+        self.initial_solution = initial_solution
         self.initial_solutions = []
 
         # uninitialized results
@@ -39,7 +40,6 @@ class TabuSearchManager:
         self.best_solution = None
 
         # benchmark specific arguments and results
-        self.benchmark_initial_solution = initial_solution
         self.benchmark_makespans = []
         self.benchmark_iterations = []
         self.benchmark_neighborhood_sizes = []
@@ -64,16 +64,15 @@ class TabuSearchManager:
         # create temporary directory for storing results
         os.mkdir(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")
 
-        # create random initial solutions
-        if benchmark and self.benchmark_initial_solution is not None:
-            self.initial_solutions = [self.benchmark_initial_solution] * self.number_processes
+        if self.initial_solution is not None:
+            self.initial_solutions = [self.initial_solution] * self.num_processes
         else:
-            for _ in range(self.number_processes):
+            # generate random initial solutions
+            for _ in range(self.num_processes):
                 self.initial_solutions.append(generate_feasible_solution())
 
         if verbose:
-            print()
-            print("Initial Solutions makespans:")
+            print("Initial Solution's makespans:")
             print([round(x.makespan) for x in self.initial_solutions])
             print()
 
@@ -82,7 +81,7 @@ class TabuSearchManager:
         for tabu_id, initial_solution in enumerate(self.initial_solutions):
             processes.append(mp.Process(target=search, args=[tabu_id,
                                                              initial_solution,
-                                                             self.tabu_search_runtime,
+                                                             self.runtime,
                                                              self.tabu_list_size,
                                                              self.neighborhood_size,
                                                              self.neighborhood_wait,
@@ -107,7 +106,7 @@ class TabuSearchManager:
             print("collecting results from tmp directory")
 
         # get the results from the tmp directory
-        for tabu_id in range(self.number_processes):
+        for tabu_id in range(self.num_processes):
             with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{tabu_id}", 'rb') as file:
                 if benchmark:
                     results = pickle.load(file)

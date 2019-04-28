@@ -1,6 +1,6 @@
-# Job Shop Schedule Problem (JSP)
+# Job Shop Schedule Problem (JSSP)
 
-This problem was given to us by [Quad Graphics](https://www.quad.com/) in a mathematics course titled *Math 490: Preparation for Industrial Careers: Solving Industrial and Applied Problems in Teams* (sponsered by [PIC Math](https://www.maa.org/programs-and-communities/professional-development/pic-math)) during the Spring 2019 semester.
+This problem was given to us in a mathematics course titled *Math 490 Preparation for Industrial Careers: Solving Industrial and Applied Problems in Teams* (sponsered by [PIC Math](https://www.maa.org/programs-and-communities/professional-development/pic-math)) at The University of Wisconsin - Milwauikee.
 
 **Team**  
 [Matthew McFadden](https://github.com/mcfadd)  
@@ -10,9 +10,9 @@ This problem was given to us by [Quad Graphics](https://www.quad.com/) in a math
 
 ## Problem
 
-The specific JSP problem this program attempts to solve is classified as the 
+The specific JSSP problem this program attempts to solve is classified as the  
 **Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**  
-For more information on JSP see https://en.wikipedia.org/wiki/Job_shop_scheduling.
+For more information see https://en.wikipedia.org/wiki/Job_shop_scheduling.
 
 **Description**
 
@@ -29,7 +29,6 @@ Given m machines with different run speeds and n jobs which have a varying numbe
 * On a machine, there can be no overlap in start and end times for any job task.
 * Tasks within the same job cannot be started unless all other tasks within the same job with a sequence number less than the current task are complete.
 * Each task can only be run on certain machines.
-* The program must produce a schedule in 10 minutes or less.
 
 **Data**  
 * [jobTasks.csv](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2/jobTasks.csv)
@@ -73,65 +72,76 @@ To calculate the make span of a feasible solution we calculate the max of (total
 To produce a schedule for each machine given a feasible solution, we iterate over the solution and add each Job-Task to a queue for the machine specified in the operation.
 
 ## Program
-### Requirements
 
-First make sure you have the following packages installed:
+JSSP is only supported on unix type operating systems.  
+Make sure you have the following packages installed:
 
 Python 3.6  
 python3-dev   
 pip  
 gcc
 
-(These can be installed with apt, yum, brew, etc.)
+(These can be installed with a package manager such as apt, yum, brew, etc.)
 
-To install the other requirements, run `pip install -r requirements_old.txt`
-
-### Build
-
-In the `cython_files` directory exists two .pyx files:
-
-1. makespan.pyx
-2. generate_neighbor.pyx
-
-These files are compiled to shared object files (.so) by [Cython](https://cython.org/).  
-To build the C-extensions cd to the `cython_files` directory and run `python setup.py build --inplace`.  
-For more information on building cython source code see the [link](https://cython.readthedocs.io/en/latest/src/userguide/source_files_and_compilation.html#basic-setup-py).
-
-### Usage
-
-main:
-```bash
-python main.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait>  <data directory>
+### How to Install:
+Clone this repository:
+```
+git clone https://github.com/mcfadd/Job_Shop_Schedule_Problem
+```
+Then navigate to the cloned directory where setup.py is located.  
+Now run the following:
+```
+pip install -r requirements.txt
+python setup.py build_ext
+pip install .
 ```
 
-benchmark:
+### How to Use:
+
+JSSP can be ran from the command line or it can be imported into a python project/ipython notebook (see [Example.ipynb](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/Example.ipynb)).
+As of right now the command line program only runs parallel Tabu Search. 
+
+**Important Note:**
+
+Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id).  
+(see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data) for reference)
+
+
+When you install JSSP a command called `jssp` is put into your bin.  
+Below is the command line usage:
+
 ```bash
-python benchmark.py [-h] -t <runtime> -s <tabu size> -n <neighborhood size> -w <neighborhood wait> -i <benchmark iterations>  <data directory>
+jssp [-h] [-pb] [-b initial_solution.pkl] [-v] 
+        [-o output] [-np num_processes] [-ts tabu_list_size] 
+        [-ns neighborhood_size] [-nw neighborhood_wait] 
+        [-p prob_change_machine] -rt runtime data
 ```
 
 <br>
 
-**Argument Descriptions**  
+#### Arguments  
 
 | Arg | Description |
 | --- | --- |
-| -h | prints a help message |  
-| -t | runtime in seconds for tabu search |
-| -s | tabu list size |  
-| -n | neighborhood size |
-| -w | max time in seconds to wait for generating a neighborhood |  
-| -i | number of tabu searches to benchmark |
-| data_dir | directory containing the files: <br> 1. jobTasks.csv <br> 2. machineRunSpeed.csv <br> 3. sequenceDependencyMatrix.csv|  
+| -h | prints a help message |
+| -pb | Spawns a progress bar |
+| -b | Runs a benchmark of the program starting with initial_solution.pkl. <br> To generate random initial solutions use `-b na` |
+| -v | Runs in verbose mode |
+| -o | Directory where output is placed. <br> (default = ~/jssp_output) |
+| -np | Number of processes to run tabu search search in parallel. <br> (default = 4) |
+| -ts | Tabu list size. <br> (default = 50) |
+| -ns | Neighborhood size. <br> (default = 300) |
+| -nw | Maximum time in seconds to wait while generating a neighborhood. <br> (default = 0.1) |  
+| -p |  Probability of changing an operation's machine when generating a neighbor. <br> (default = 0.8) |
+| -rt | Runtime in seconds |
+| data | Directory containing the csv files: <br> jobTasks.csv <br> machineRunSpeed.csv <br> sequenceDependencyMatrix.csv|  
 
 
 **Example**  
 
-`python JSSP -t 600 -s 200 -n 100 -w 1 ./data/data_set2`
-
-**Important Note**
-
-Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id)  
-(see csv files in [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data) for reference)
+```bash
+jssp -pb -np 4 -rt 300 -ns 350 -nw 0.15 ./data/data_set2
+```
 
 ## Program Design
 

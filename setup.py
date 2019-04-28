@@ -42,7 +42,7 @@ setup(
     python_requires='>=3.6.0',
     url='https://github.com/mcfadd/Job_Shop_Schedule_Problem',
     license='MIT',
-    keywords='Job Shop Schedule',
+    keywords='Job Shop Schedule Problem',
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.6',
@@ -50,7 +50,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
     entry_points={
-        'console_scripts': ['jssp=JSSP.main:command_line_interface'],
+        'console_scripts': ['jssp=JSSP.__main__:start'],
     },
     install_requires=REQUIRED,
     ext_modules=cythonize(ext_modules)
