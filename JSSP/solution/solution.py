@@ -84,6 +84,9 @@ class Solution:
 
         return False
 
+    def __le__(self, other_solution):
+        return self.__lt__(other_solution) or self.__eq__(other_solution)
+
     def __gt__(self, other_solution):
         """
         Returns True if self is "worse" than other_solution.
@@ -103,6 +106,9 @@ class Solution:
                     return False
 
         return False
+
+    def __ge__(self, other_solution):
+        return self.__gt__(other_solution) or self.__eq__(other_solution)
 
     def pprint(self):
         """

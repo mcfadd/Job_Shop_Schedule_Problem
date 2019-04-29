@@ -127,12 +127,12 @@ jssp [-h] [-pb] [-b initial_solution.pkl] [-v]
 | -pb | Spawns a progress bar |
 | -b | Runs a benchmark of the program starting with initial_solution.pkl. <br> To generate random initial solutions use `-b na` |
 | -v | Runs in verbose mode |
-| -o | Directory where output is placed. <br> (default = ~/jssp_output) |
-| -np | Number of processes to run tabu search search in parallel. <br> (default = 4) |
-| -ts | Tabu list size. <br> (default = 50) |
-| -ns | Neighborhood size. <br> (default = 300) |
-| -nw | Maximum time in seconds to wait while generating a neighborhood. <br> (default = 0.1) |  
-| -p |  Probability of changing an operation's machine when generating a neighbor. <br> (default = 0.8) |
+| -o | Directory where output is placed (default = ~/jssp_output) |
+| -np | Number of processes to run tabu search search in parallel (default = 4) |
+| -ts | Tabu list size (default = 50) |
+| -ns | Neighborhood size (default = 300) |
+| -nw | Maximum time in seconds to wait while generating a neighborhood (default = 0.1) |  
+| -p |  Probability of changing an operation's machine when generating a neighbor (default = 0.8) |
 | -rt | Runtime in seconds |
 | data | Directory containing the csv files: <br> jobTasks.csv <br> machineRunSpeed.csv <br> sequenceDependencyMatrix.csv|  
 

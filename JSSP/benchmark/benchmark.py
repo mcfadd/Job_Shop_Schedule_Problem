@@ -51,7 +51,7 @@ def output_benchmark_results(ts_manager, output_dir):
                             <b>Parameters:</b>
                             <br>
                             search time = {ts_manager.runtime} seconds<br>
-                            tabu_search list size = {ts_manager.tabu_list_size}<br>
+                            tabu list size = {ts_manager.tabu_list_size}<br>
                             neighborhood size = {ts_manager.neighborhood_size}<br>
                             neighborhood wait time = {ts_manager.neighborhood_wait} seconds<br>
                             probability of changing an operation's machine = {ts_manager.probability_change_machine}<br>

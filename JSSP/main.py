@@ -51,7 +51,7 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
           f"runtime = {runtime} seconds\n"
           f"output directory = {output_dir}\n"
           f"number of processes = {num_processes}\n"
-          f"tabu_search list size = {tabu_list_size}\n"
+          f"tabu list size = {tabu_list_size}\n"
           f"neighborhood size = {neighborhood_size}\n"
           f"neighborhood wait time = {neighborhood_wait} seconds\n"
           f"probability of changing an operation's machine = {probability_change_machine}\n"
