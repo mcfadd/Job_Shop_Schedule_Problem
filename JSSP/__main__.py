@@ -16,9 +16,9 @@ def start():
     args = parser.parse_args()
 
     # initialize static data from csv files
-    Data.initialize_data(f'{args.data}/sequenceDependencyMatrix.csv',
-                         f'{args.data}/machineRunSpeed.csv',
-                         f'{args.data}/jobTasks.csv')
+    Data.initialize_data_from_csv(f'{args.data}/sequenceDependencyMatrix.csv',
+                                  f'{args.data}/machineRunSpeed.csv',
+                                  f'{args.data}/jobTasks.csv')
 
     # run the main program
     return main(args.runtime,

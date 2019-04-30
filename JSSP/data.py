@@ -1,5 +1,7 @@
 import csv
-
+import os
+import re
+import shutil
 import numpy as np
 
 
@@ -63,7 +65,7 @@ class Job:
 
 class Data:
     """
-    This static class contains all of the data that is read in from the csv files.
+    This static class contains all of the static data that is read in.
     """
 
     # uninitialized static fields
@@ -78,11 +80,38 @@ class Data:
     max_tasks_for_a_job = 0
 
     @staticmethod
-    def initialize_data(seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
+    def initialize_data_from_csv(seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
+        """
+        This function initializes all of the static data from the csv files.
+
+        :param seq_dep_matrix_file: csv file containing the sequence dependency setup times
+        :param machine_speeds_file: csv file containing all of the machine speeds
+        :param job_tasks_file: csv file containg all of the job-tasks
+        :return: None
+        """
         Data.read_job_tasks_file(job_tasks_file)
         Data.read_sequence_dependency_matrix_file(seq_dep_matrix_file)
         Data.read_machine_speeds_file(machine_speeds_file)
         Data._create_dependency_matrix_encoding_and_usable_machines_matrix()
+
+    @staticmethod
+    def initialize_data_from_fjs(input_file):
+        """
+        This function initializes all of the static data from a .fjs file
+
+        :param input_file: The .fjs file to read the data from
+        :return:
+        """
+        tmp_dir = f"{os.path.dirname(os.path.realpath(__file__))}/tmp"
+
+        # convert .fjs to csv then initialize
+        Data.convert_fjs_to_csv(input_file, tmp_dir)
+        Data.initialize_data_from_csv(tmp_dir + '/sequenceDependencyMatrix.csv',
+                                      tmp_dir + '/machineRunSpeed.csv',
+                                      tmp_dir + '/jobTasks.csv')
+
+        # remove temporary directory
+        shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp", ignore_errors=True)
 
     @staticmethod
     def get_job(job_id):
@@ -109,7 +138,7 @@ class Data:
                     int(row[0]),  # job_id
                     int(row[1]),  # task_id
                     int(row[2]),  # seq num
-                    np.array([int(x) for x in row[3][1:-1].split(' ')], dtype=np.intc),  # usable machines
+                    np.array([int(x) for x in row[3][1:-1].strip().split(' ')], dtype=np.intc),  # usable machines
                     int(row[4])  # pieces
                 )
                 # create & append new job if we encounter job_id that has not been seen
@@ -206,3 +235,68 @@ class Data:
         print()
         print("machine_speeds:", Data.machine_speeds.shape, end="\n\n")
         print(Data.machine_speeds)
+
+    @staticmethod
+    def convert_fjs_to_csv(input_file, output_dir):
+        """
+        This function converts a .fjs file into jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
+        then it puts the csv files in the output directory:
+
+        :param input_file: The .fjs file containing a flexible job shop schedule problem instance
+        :param output_dir: The directory to place the csv files into
+        :return: None
+        """
+        total_num_tasks = 0
+
+        # create output directory if it doesn't exist
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+
+        # read .fjs input file and create jobTasks.csv
+        with open(input_file, 'r') as fin:
+            with open(output_dir + '/jobTasks.csv', 'w') as fout:
+                fout.write("Job,Task,Sequence,Usable_Machines,Pieces\n")
+
+                lines = fin.readlines()
+                line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')]
+
+                total_num_mahines = line[1]
+
+                # iterate over jobs
+                for job_id, tasks in enumerate(lines[1:]):
+
+                    # get the tasks data
+                    task_data = [int(s) for s in re.sub(r'\s+', ' ', tasks.strip()).split(' ')]
+                    total_num_tasks += task_data[0]
+                    task_id = 0
+                    sequence = 0
+
+                    # iterate over tasks
+                    i = 1
+                    while i < len(task_data):
+
+                        usable_machines = "["
+                        output_line = f"{job_id},{task_id},{sequence},"
+                        num_usable_machines = task_data[i]
+
+                        for j in range(i + 1, i + num_usable_machines * 2 + 1, 2):
+                            usable_machines += f"{task_data[j] - 1} "
+
+                        output_line += usable_machines[:-1] + "]," + str(task_data[i + 2])
+                        i += num_usable_machines * 2 + 1
+                        task_id += 1
+                        sequence += 1
+                        fout.write(output_line + '\n')
+                        # print(output_line)
+
+        # create machineRunSpeed.csv
+        with open(output_dir + '/machineRunSpeed.csv', 'w') as fout:
+            fout.write("Machine,RunSpeed\n")
+            for i in range(total_num_mahines):
+                fout.write(f"{i},1\n")
+
+        # create sequenceDependencyMatrix.csv
+        with open(output_dir + '/sequenceDependencyMatrix.csv', 'w') as fout:
+            line = "0," * total_num_tasks + "0\n"
+            for _ in range(total_num_tasks + 1):
+                fout.write(line)

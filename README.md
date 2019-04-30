@@ -98,7 +98,7 @@ pip install .
 
 ### How to Use:
 
-JSSP can be ran from the command line or it can be imported into a python project/ipython notebook (see [Example.ipynb](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/Example.ipynb)).
+JSSP can be ran from the command line or it can be imported into a python project/ipython notebook (see [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/examples)).
 As of right now the command line program only runs parallel Tabu Search. 
 
 **Important Note:**

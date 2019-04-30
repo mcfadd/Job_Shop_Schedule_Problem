@@ -7,9 +7,9 @@ from JSSP.solution import Solution
 This file contains three solutions for the small problem instance in the data folder.
 They should be small enough to draw out by hand to verify the machine makespans are correct.
 '''
-Data.initialize_data(f'../data/data_set1/sequenceDependencyMatrix.csv',
-                     f'../data/data_set1/machineRunSpeed.csv',
-                     f'../data/data_set1/jobTasks.csv')
+Data.initialize_data_from_csv(f'../data/data_set1/sequenceDependencyMatrix.csv',
+                              f'../data/data_set1/machineRunSpeed.csv',
+                              f'../data/data_set1/jobTasks.csv')
 
 # machine makespans = [12, 13, 12]
 sol1 = Solution(np.array([[0, 0, 0, 0, 2],

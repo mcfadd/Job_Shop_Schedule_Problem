@@ -20,7 +20,7 @@ This Unit Test contains test cases that do the following:
 8. test that generate_feasible_solution() does not generate infeasible solutions
 9. test pickling a Solution to a file
 """
-Data.initialize_data('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
+Data.initialize_data_from_csv('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
                      '../data/data_set2/jobTasks.csv')
 
 

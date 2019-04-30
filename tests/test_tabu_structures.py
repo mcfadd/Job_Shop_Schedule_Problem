@@ -14,7 +14,7 @@ This Unit Test contains test cases that do the following:
 
 
 """
-Data.initialize_data('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
+Data.initialize_data_from_csv('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
                      '../data/data_set2/jobTasks.csv')
 
 
