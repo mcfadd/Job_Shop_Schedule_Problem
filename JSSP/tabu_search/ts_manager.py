@@ -1,8 +1,15 @@
+import datetime
 import multiprocessing as mp
-import os
 import pickle
 import shutil
+import statistics
+import webbrowser
+import os
 
+import plotly.graph_objs as go
+from plotly.offline import plot
+
+from JSSP.pbar import run_progress_bar
 from JSSP.solution import generate_feasible_solution
 from .ts import search
 
@@ -46,16 +53,21 @@ class TabuSearchManager:
         self.benchmark_tabu_list_sizes = []
         self.benchmark_min_makespan_coorinates = []
 
-    def start(self, benchmark=False, verbose=False):
+    def start(self, benchmark=False, verbose=False, progress_bar=False):
         """
         This function first generates random initial solutions if an initial solution is not given,
         then it forks a number of child processes equal to self.number_processes that run tabu_search search with the fields of this TabuSearchManager.
         The parent process waits for the children to finish, then collects their pickled results from a temporary directory.
 
-        :param benchmark:
-        :param verbose:
-        :return:
+        :param benchmark: If True benchmark data is collected while performing tabu search
+        :param verbose: It True extra information is printed
+        :param progress_bar: If True, a progress bar is spawned
+        :return: None
         """
+
+        if progress_bar:
+            mp.Process(target=run_progress_bar, args=[self.runtime]).start()
+
         parent_process_id = os.getpid()
 
         # remove temporary directory if it exists
@@ -121,9 +133,136 @@ class TabuSearchManager:
 
         self.best_solution = min(self.all_solutions)
 
-        # create population of all solutions found
-        # with open(f"{os.path.dirname(os.path.realpath(__file__))}/test_population.pkl", 'wb') as file:
-        #     pickle.dump(self.all_solutions, file, protocol=-1)
-
         # remove temporary directory
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")
+
+    def output_benchmark_results(self, output_dir, name=None):
+        """
+        This function generates an html file containing the following benchmark results
+        obtained from this TabuSearchManager in the output directory specified.
+
+            benchmark results:
+            1. min, median, max, mean, stdev, var of all the best makespans found by each TS.
+            2. min, median, max, mean, stdev, var of the total iterations of each TS.
+            3. makespans vs iterations graph
+            4. neighborhood sizes vs iterations graph
+            5. tabu list size vs iterations graph
+            6. Schedule.xlsx - schedule of the best solution found
+            7. best_solution.pkl - pickled Solution object of the best solution found
+
+        :param self: This TabuSearchManager
+        :param output_dir: The output directory to place the results into
+        :return: None
+        """
+        # get numerical results from self
+        best_solution = self.best_solution
+        iterations_list = self.benchmark_iterations
+        neighborhood_sizes_list = self.benchmark_neighborhood_sizes
+        tabu_list_sizes_list = self.benchmark_tabu_list_sizes
+        makespans = self.benchmark_makespans
+        min_makespan_coorinates = self.benchmark_min_makespan_coorinates
+        best_makespans_list = [p[1] for p in min_makespan_coorinates]
+
+        if name is None:
+            name = "benchmark_run_{}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))
+
+        # output results
+        output_directory = output_dir + "/" + name
+
+        os.mkdir(output_directory)
+
+        # TODO make a template for the html
+        index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+                        <html>
+                            <head>
+                                <meta content="text/html; charset=ISO-8859-1"
+                                    http-equiv="content-type">
+                                <title>{name}</title>
+                            </head>
+                            <body>
+                                <h2>{name}</h2>
+                                <b>Parameters:</b>
+                                <br>
+                                search time = {self.runtime} seconds<br>
+                                tabu list size = {self.tabu_list_size}<br>
+                                neighborhood size = {self.neighborhood_size}<br>
+                                neighborhood wait time = {self.neighborhood_wait} seconds<br>
+                                probability of changing an operation's machine = {self.probability_change_machine}<br>
+                                number of processes = {self.num_processes}<br>
+                                initial makespan = {round(
+            self.initial_solution.makespan) if self.initial_solution is not None else None}<br>
+                                <br>
+                                <b>Results:</b>
+                                <br>
+                                makespans:
+                                <br>
+                                min = {round(min(best_makespans_list))}<br>
+                                median = {round(statistics.median(best_makespans_list))}<br>
+                                max = {round(max(best_makespans_list))}<br>
+                                stdev = {round(statistics.stdev(best_makespans_list))}<br>
+                                var = {round(statistics.variance(best_makespans_list))}<br>
+                                mean = {round(statistics.mean(best_makespans_list))}<br>
+                                <br>
+                                iterations:
+                                <br>
+                                min = {min(iterations_list)}<br>
+                                median = {statistics.median(iterations_list)}<br>
+                                max = {max(iterations_list)}<br>
+                                stdev = {statistics.stdev(iterations_list)}<br>
+                                var = {statistics.variance(iterations_list)}<br>
+                                mean = {statistics.mean(iterations_list)}<br>
+                                <br>
+                                <b>Plots:</b>
+                                <br>
+                                <a href="./makespans.html">makespans vs iterations</a><br>
+                                <a href="./neighborhood_sizes.html">neighborhood sizes vs iterations</a><br>
+                                <a href="./tabu_list_sizes.html">tabu_search list sizes vs iterations</a><br>
+                                <br>
+                                <b>Schedule:</b>
+                                <br>
+                                <a href="file://{os.path.abspath(output_directory + "Schedule.xlsx")}">Schedule.xlsx</a><br>
+                            </body>
+                        </html>'''
+
+        # create traces for plots
+        makespans_traces = []
+        neighborhood_sizes_traces = []
+        tabu_list_sizes_traces = []
+        makespans_traces.append(go.Scatter(x=[p[0] for p in min_makespan_coorinates], y=best_makespans_list, mode='markers',
+                                           name='best makespans'))
+        for i in range(len(iterations_list)):
+            x_axis = list(range(iterations_list[i]))
+            makespans_traces.append(go.Scatter(x=x_axis, y=makespans[i], name=f'tabu_search search {i}'))
+            neighborhood_sizes_traces.append(go.Scatter(x=x_axis, y=neighborhood_sizes_list[i]))
+            tabu_list_sizes_traces.append(go.Scatter(x=x_axis, y=tabu_list_sizes_list[i]))
+
+        # create layouts for plots
+        makespans_layout = dict(title='Makespans vs Iterations', xaxis=dict(title='Iteration'),
+                                yaxis=dict(title='Makespans (minutes)'))
+        nh_sizes_layout = dict(title='Neighborhood sizes vs Iterations', xaxis=dict(title='Iteration'),
+                               yaxis=dict(title='Size of Neighborhood'))
+        tl_sizes_layout = dict(title='Tabu list sizes vs Iterations', xaxis=dict(title='Iteration'),
+                               yaxis=dict(title='Size of Tabu list'))
+
+        # create plots
+        plot(dict(data=makespans_traces, layout=makespans_layout), filename=output_directory + "/makespans.html",
+             auto_open=False)
+        plot(dict(data=neighborhood_sizes_traces, layout=nh_sizes_layout),
+             filename=output_directory + "/neighborhood_sizes.html", auto_open=False)
+        plot(dict(data=tabu_list_sizes_traces, layout=tl_sizes_layout), filename=output_directory + "/tabu_list_sizes.html",
+             auto_open=False)
+
+        # create index.html
+        with open(output_directory + "/index.html", 'w') as output_file:
+            output_file.write(index_text)
+
+        # pickle best solution
+        best_solution.pickle_to_file(os.path.abspath(output_directory + "/best_solution.pkl"))
+
+        # create Schedule.xlsx
+        self.best_solution.create_schedule(output_directory)
+
+        print(f"opening file://{os.path.abspath(output_directory)} in browser")
+
+        # open index.html in web browser
+        webbrowser.open("file://" + os.path.abspath(output_directory + "/index.html"))

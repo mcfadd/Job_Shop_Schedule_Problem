@@ -1,12 +1,14 @@
+import multiprocessing as mp
 import random
 import time
 
 from JSSP import solution
 from JSSP.data import Data
+from JSSP.pbar import run_progress_bar
 from .ga_helpers import cross
 
 
-def search(search_time, population, mutation_probability, verbose=False):
+def search(search_time, population, mutation_probability, verbose=False, progress_bar=False):
     """
     This function performs a Genetic Algorithm for a given duration starting with an initial population.
 
@@ -14,8 +16,13 @@ def search(search_time, population, mutation_probability, verbose=False):
     :param population: The initial population to start the GA from.
     :param mutation_probability: The probability of mutating chromosome (i.e change an operations machine).
     :param verbose: If True, extra information such as total number of iterations is printed.
+    :param progress_bar: If True, a progress bar is spawned
     :return: best_solution: The best Solution found
     """
+
+    if progress_bar:
+        mp.Process(target=run_progress_bar, args=[search_time]).start()
+
     group_size = 5
 
     best_solution = min(population)

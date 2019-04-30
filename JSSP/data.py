@@ -92,7 +92,7 @@ class Data:
         Data.read_job_tasks_file(job_tasks_file)
         Data.read_sequence_dependency_matrix_file(seq_dep_matrix_file)
         Data.read_machine_speeds_file(machine_speeds_file)
-        Data._create_dependency_matrix_encoding_and_usable_machines_matrix()
+        Data._initialize_derived_data()
 
     @staticmethod
     def initialize_data_from_fjs(input_file):
@@ -114,10 +114,6 @@ class Data:
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp", ignore_errors=True)
 
     @staticmethod
-    def get_job(job_id):
-        return Data.jobs[job_id]
-
-    @staticmethod
     def read_job_tasks_file(job_tasks_file):
         """
         Populates Data.jobs by reading the job_tasks_file csv file.
@@ -128,6 +124,7 @@ class Data:
         :param job_tasks_file: The csv file that contains the job-task data.
         :return: None
         """
+        Data.jobs = []
         prev_job_id = -1  # record previously seen job_id
         with open(job_tasks_file) as fin:
             # skip headers (i.e. first row in csv file)
@@ -153,8 +150,6 @@ class Data:
                 # append task to associated job.tasks list
                 Data.jobs[task.get_job_id()].get_tasks().append(task)
 
-        Data.total_number_of_jobs = len(Data.jobs)
-
     @staticmethod
     def read_sequence_dependency_matrix_file(seq_dep_matrix_file):
         """
@@ -173,8 +168,6 @@ class Data:
                 [[int(x) for x in row[1:]]
                  for row in csv.reader(fin)], dtype=np.intc)
 
-        Data.total_number_of_tasks = Data.sequence_dependency_matrix.shape[0]
-
     @staticmethod
     def read_machine_speeds_file(machine_speeds_file):
         """
@@ -190,16 +183,17 @@ class Data:
             next(fin)
             Data.machine_speeds = np.array([int(row[1]) for row in csv.reader(fin)], dtype=np.float)
 
-        Data.total_number_of_machines = Data.machine_speeds.shape[0]
-
     @staticmethod
-    def _create_dependency_matrix_encoding_and_usable_machines_matrix():
+    def _initialize_derived_data():
         """
-        Populates Data.dependency_matrix_index_encoding and Data.usable_machines_matrix by creating a 2darray and 3darray respectively.
+        Initializes derived data such as Data.dependency_matrix_index_encoding and Data.usable_machines_matrix
 
         :return: None
         """
+        Data.total_number_of_jobs = len(Data.jobs)
+        Data.total_number_of_tasks = Data.sequence_dependency_matrix.shape[0]
         Data.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in Data.jobs])
+        Data.total_number_of_machines = Data.machine_speeds.shape[0]
         Data.dependency_matrix_index_encoding = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1,
                                                         dtype=np.intc)
         Data.usable_machines_matrix = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines),
@@ -211,6 +205,10 @@ class Data:
                 Data.usable_machines_matrix[index] = np.resize(task.get_usable_machines(),
                                                                Data.total_number_of_machines)
                 index += 1
+
+    @staticmethod
+    def get_job(job_id):
+        return Data.jobs[job_id]
 
     @staticmethod
     def print_data():
@@ -239,8 +237,8 @@ class Data:
     @staticmethod
     def convert_fjs_to_csv(input_file, output_dir):
         """
-        This function converts a .fjs file into jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
-        then it puts the csv files in the output directory:
+        This function converts a .fjs file into three csv files, jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
+        then it puts them in the output directory:
 
         :param input_file: The .fjs file containing a flexible job shop schedule problem instance
         :param output_dir: The directory to place the csv files into

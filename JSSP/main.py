@@ -1,27 +1,6 @@
-import multiprocessing as mp
-import time
 import os
 
-from progressbar import Bar, ETA, ProgressBar, RotatingMarker
-
-from . import benchmark
 from . import tabu_search
-
-
-def spawn_progress_bar(seconds):
-    """
-    Runs a progress bar for a certain duration.
-
-    :param seconds: Duration to run the process bar for in seconds
-    :return: None
-    """
-    time.sleep(.5)
-    widgets = [Bar(marker=RotatingMarker()), ' ', ETA()]
-    pbar = ProgressBar(widgets=widgets, maxval=seconds).start()
-    for i in range(seconds):
-        time.sleep(.98)
-        pbar.update(i)
-    pbar.finish()
 
 
 def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1,
@@ -58,9 +37,6 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
           f"initial solution makespan = {round(initial_solution.makespan) if initial_solution is not None else None}\n"
           )
 
-    if progress_bar:
-        mp.Process(target=spawn_progress_bar, args=[runtime]).start()
-
     ts_manager = tabu_search.TabuSearchManager(runtime,
                                                num_processes,
                                                tabu_list_size,
@@ -68,7 +44,8 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
                                                neighborhood_wait,
                                                probability_change_machine,
                                                initial_solution)
-    ts_manager.start(benchmark=is_benchmark, verbose=verbose)
+
+    ts_manager.start(benchmark=is_benchmark, verbose=verbose, progress_bar=progress_bar)
 
     print("Tabu Search Makespan Results:")
     print([solution.makespan for solution in ts_manager.all_solutions])
@@ -83,7 +60,7 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
     if is_benchmark:
         print()
         print("generating benchmark results")
-        benchmark.output_benchmark_results(ts_manager, output_dir)
+        ts_manager.output_benchmark_results(output_dir)
     else:
         print()
         print(f"Schedule.xlsx placed in {output_dir}")
