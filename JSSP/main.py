@@ -4,7 +4,7 @@ from . import tabu_search
 
 
 def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1,
-         probability_change_machine=0.8, initial_solution=None, is_benchmark=False, verbose=False, progress_bar=False):
+         probability_change_machine=0.8, initial_solutions=None, is_benchmark=False, verbose=False, progress_bar=False):
     """
     Runs the main program.
 
@@ -17,7 +17,7 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
     :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
     :param probability_change_machine: The probability of changing a chosen operations machine.
-    :param initial_solution: The initial solution to start the Tabu searches from (defaults to generating random solutions).
+    :param initial_solutions: The initial solutions to start the Tabu searches from (defaults to generating random solutions).
     :param is_benchmark: If True, a benchmark run is performed. See JSSP.benchmark for details
     :param verbose: If True, extra information such as pid of child processes is printed
     :param progress_bar: If True, spawns a progress bar
@@ -34,7 +34,6 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
           f"neighborhood size = {neighborhood_size}\n"
           f"neighborhood wait time = {neighborhood_wait} seconds\n"
           f"probability of changing an operation's machine = {probability_change_machine}\n"
-          f"initial solution makespan = {round(initial_solution.makespan) if initial_solution is not None else None}\n"
           )
 
     ts_manager = tabu_search.TabuSearchManager(runtime,
@@ -43,7 +42,7 @@ def main(runtime, output_dir, num_processes=4, tabu_list_size=50, neighborhood_s
                                                neighborhood_size,
                                                neighborhood_wait,
                                                probability_change_machine,
-                                               initial_solution)
+                                               initial_solutions)
 
     ts_manager.start(benchmark=is_benchmark, verbose=verbose, progress_bar=progress_bar)
 

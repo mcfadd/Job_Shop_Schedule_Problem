@@ -47,6 +47,7 @@ class Solution:
     def __eq__(self, other_solution):
         """
         Returns True if self is equal to other_solution.
+
         :param other_solution: The solution to compare
         :return: True if self == other_solution
         """
@@ -57,6 +58,7 @@ class Solution:
     def __ne__(self, other_solution):
         """
         Returns True if self is not equal to other_solution.
+
         :param other_solution: The solution to compare
         :return: True if self != other_solution
         """
@@ -68,6 +70,7 @@ class Solution:
         """
         Returns True if self is "better" than other_solution.
         better is defined as having a lower makespan or machine_makespans if the makespans are equal.
+
         :param other_solution: The solution to compare
         :return: True if self has a lower makespan than other_solution
         """
@@ -91,6 +94,7 @@ class Solution:
         """
         Returns True if self is "worse" than other_solution.
         worse is defined as having a greater makespan or machine_makespans if the makespans are equal.
+
         :param other_solution: The solution to compare
         :return: True if self has a greater makespan than other_solution
         """
@@ -245,7 +249,7 @@ class Solution:
         Serializes self to a binary file using pickle.
     
         :param self: Solution to serialize
-        :param file_name: File name to serialize to
+        :param file_name: Name of file to serialize to
         :return: None
         """
         self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array

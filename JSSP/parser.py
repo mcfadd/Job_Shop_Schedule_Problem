@@ -49,7 +49,7 @@ class CheckBenchmarkArgs(argparse.Action):
                     if not isinstance(sol, Solution):
                         print_message_and_usage(parser_obj, "solution file must contain a pickled Solution object!")
 
-                namespace.initial_solution = sol
+                namespace.initial_solution = [sol] * namespace.num_processes
 
             else:
                 namespace.initial_solution = None

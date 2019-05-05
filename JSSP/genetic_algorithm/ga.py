@@ -19,10 +19,10 @@ def search(search_time, population, mutation_probability, verbose=False, progres
     :param progress_bar: If True, a progress bar is spawned
     :return: best_solution: The best Solution found
     """
-
     if progress_bar:
         mp.Process(target=run_progress_bar, args=[search_time]).start()
 
+    # use a fixed group size of 5 for tournament style selection
     group_size = 5
 
     best_solution = min(population)
@@ -41,7 +41,7 @@ def search(search_time, population, mutation_probability, verbose=False, progres
         selection_group = [random.randrange(len(population)) for _ in range(group_size)]
 
         # sort the selection_group
-        # TODO make selection_group sort more efficient
+        # TODO make selection_group sort more efficient?
         is_sorted = True
         while is_sorted:
             is_sorted = False
@@ -57,6 +57,7 @@ def search(search_time, population, mutation_probability, verbose=False, progres
         parent2_operation_2d_array = population[selection_group[1]].operation_2d_array
 
         # breed the parents to produce child1 (parent1 cross parent2)
+        # Note mutation happens in cross function
         feasible_child = False
         while not feasible_child:
             # the try except block is because sometimes the crossover operation results in a setup of -1
@@ -72,6 +73,7 @@ def search(search_time, population, mutation_probability, verbose=False, progres
                 if time.time() > stop_time:
                     print("iterations =", iterations)
                     return best_solution
+
         # breed the parents to produce child2 (parent2 cross parent1)
         feasible_child = False
         while not feasible_child:
@@ -87,23 +89,20 @@ def search(search_time, population, mutation_probability, verbose=False, progres
                     print("iterations =", iterations)
                     return best_solution
 
+        # replace worse solutions in selction with children
         population[selection_group[-1]] = child1
         population[selection_group[-2]] = child2
 
         # check for better solution than best_solution
-        if child1 < best_solution:
+        if min(child1, child2) < best_solution:
             if verbose:
                 print("found best solution at iteration", iterations)
-            best_solution = child1
-
-        if child2 < best_solution:
-            if verbose:
-                print("found best solution at iteration", iterations)
-            best_solution = child2
+            best_solution = min(child1, child2)
 
         iterations += 1
 
     if verbose:
         print("total iterations =", iterations)
         print("total number of infeasible solutions generated =", num_infeasible_solutions)
+
     return best_solution

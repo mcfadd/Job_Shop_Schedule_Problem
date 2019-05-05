@@ -10,13 +10,13 @@ import plotly.graph_objs as go
 from plotly.offline import plot
 
 from JSSP.pbar import run_progress_bar
-from JSSP.solution import generate_feasible_solution
+from JSSP import solution
 from .ts import search
 
 
 class TabuSearchManager:
     def __init__(self, runtime, num_processes=4, tabu_list_size=50, neighborhood_size=300,
-                 neighborhood_wait=0.1, probability_change_machine=0.8, initial_solution=None):
+                 neighborhood_wait=0.1, probability_change_machine=0.8, initial_solutions=None):
         """
         This class starts, then collects the results from the tabu_search search processes.
         The processes are started with the arguments in arguments_namespace when self.start() is called.
@@ -27,7 +27,7 @@ class TabuSearchManager:
         :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
         :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
         :param probability_change_machine: The probability of changing a chosen operations machine.
-        :param initial_solution: The initial solution to start the Tabu searches from (defaults to generating random solutions).
+        :param initial_solutions: The initial solution to start the Tabu searches from (if None generates random solutions).
         """
 
         # get required arguments for tabu_search search
@@ -39,8 +39,10 @@ class TabuSearchManager:
         self.probability_change_machine = probability_change_machine
 
         # initial solution to start TS from if not None
-        self.initial_solution = initial_solution
-        self.initial_solutions = []
+        if initial_solutions is not None and not (len(initial_solutions) == 0 or all(isinstance(s, solution.Solution) for s in initial_solutions)):
+            raise TypeError("initial_solutions must be a list of solutions")
+
+        self.initial_solutions = initial_solutions
 
         # uninitialized results
         self.all_solutions = []
@@ -76,12 +78,11 @@ class TabuSearchManager:
         # create temporary directory for storing results
         os.mkdir(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")
 
-        if self.initial_solution is not None:
-            self.initial_solutions = [self.initial_solution] * self.num_processes
-        else:
-            # generate random initial solutions
-            for _ in range(self.num_processes):
-                self.initial_solutions.append(generate_feasible_solution())
+        # create initial solutions
+        if self.initial_solutions is None:
+            self.initial_solutions = [solution.generate_feasible_solution() for _ in range(self.num_processes)]
+        elif len(self.initial_solutions) < self.num_processes:
+            self.initial_solutions += [solution.generate_feasible_solution() for _ in range(abs(self.num_processes - len(self.initial_solutions)))]
 
         if verbose:
             print("Initial Solution's makespans:")
@@ -136,7 +137,7 @@ class TabuSearchManager:
         # remove temporary directory
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp")
 
-    def output_benchmark_results(self, output_dir, name=None):
+    def output_benchmark_results(self, output_dir, name=None, auto_open=True):
         """
         This function generates an html file containing the following benchmark results
         obtained from this TabuSearchManager in the output directory specified.
@@ -169,7 +170,8 @@ class TabuSearchManager:
         # output results
         output_directory = output_dir + "/" + name
 
-        os.mkdir(output_directory)
+        if not os.path.exists(output_directory):
+            os.mkdir(output_directory)
 
         # TODO make a template for the html
         index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -189,8 +191,7 @@ class TabuSearchManager:
                                 neighborhood wait time = {self.neighborhood_wait} seconds<br>
                                 probability of changing an operation's machine = {self.probability_change_machine}<br>
                                 number of processes = {self.num_processes}<br>
-                                initial makespan = {round(
-            self.initial_solution.makespan) if self.initial_solution is not None else None}<br>
+                                best initial makespan = {round(min(self.initial_solutions).makespan)}<br>
                                 <br>
                                 <b>Results:</b>
                                 <br>
@@ -262,7 +263,6 @@ class TabuSearchManager:
         # create Schedule.xlsx
         self.best_solution.create_schedule(output_directory)
 
-        print(f"opening file://{os.path.abspath(output_directory)} in browser")
-
-        # open index.html in web browser
-        webbrowser.open("file://" + os.path.abspath(output_directory + "/index.html"))
+        if auto_open:
+            print(f"opening file://{os.path.abspath(output_directory)} in browser")
+            webbrowser.open("file://" + os.path.abspath(output_directory + "/index.html"))

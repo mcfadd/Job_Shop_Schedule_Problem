@@ -28,7 +28,7 @@ def start():
                 args.neighborhood_size,
                 args.neighborhood_wait,
                 args.probability_change_machine,
-                initial_solution=args.initial_solution if args.benchmark else None,
+                initial_solutions=args.initial_solution if args.benchmark else None,
                 is_benchmark=args.benchmark,
                 verbose=args.verbose,
                 progress_bar=args.progress_bar)

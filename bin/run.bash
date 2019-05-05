@@ -11,7 +11,7 @@ output=$scriptPath/benchmark_results
 data=$scriptPath/data/data_set2
 
 # run benchmark
-/usr/bin/env python $scriptPath/JSSP -pb -b na -np 4 -rt 10 -ts 50 -ns 300 -p 0.8 -nw 0.1 -o $output $data
+#/usr/bin/env python $scriptPath/JSSP -pb -b na -np 4 -rt 10 -ts 50 -ns 300 -p 0.8 -nw 0.1 -o $output $data
 
 # run main
-#/usr/bin/env python $scriptPath/JSSP -pb -np 4 -rt 30 -ts 25 -ns 200 -p 0.8 -nw 0.1 $data
+/usr/bin/env python $scriptPath/JSSP -pb -np 4 -rt 30 -ts 25 -ns 200 -p 0.8 -nw 0.1 $data
