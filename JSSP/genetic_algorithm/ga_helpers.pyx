@@ -7,8 +7,14 @@ from JSSP.solution import Solution
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cpdef int placement(int[::] operation, int[:, ::] parent):
-
+cpdef int _placement(int[::] operation, int[:, ::] parent):
+    """
+    Checks if an operation is already in or belongs above/below a parent's selected block of operations.
+    
+    :param operation: The operation to check placement for.
+    :param parent: The block of operations from the parent solution.
+    :return: -1 or -2 if operation belongs above, 0 if operation is in, or 1 if operation belongs below parent.
+    """
     cdef int result = -2
     cdef Py_ssize_t row_index
     for row_index in range(parent.shape[0]):
@@ -27,11 +33,24 @@ cpdef int placement(int[::] operation, int[:, ::] parent):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cpdef cross(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, int[:, ::1] dependency_matrix_index_encoding, int[:, ::1] usable_machines_matrix):
+cpdef crossover(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, int[:, ::1] dependency_matrix_index_encoding, int[:, ::1] usable_machines_matrix):
+    """
+    Crossover operation for GA.
+    
+    Randomly chooses a contiguous block of operations from parent1, 
+    then fills the remaining operations from parent2 around the block to produce a feasible child solution.
+    
+    :param parent1: The parent to pick a block of operations from
+    :param parent2: The parent to iterate over
+    :param probability_mutate: The probability of mutating a chromosome (i.e change an operation's machine)
+    :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
+    :param usable_machines_matrix: Usable machines matrix from static Data
+    :return: Child Solution
+    """
 
     cdef Py_ssize_t random_x = np.random.randint(0, parent1.shape[0] - 1)
     cdef Py_ssize_t random_y = np.random.randint(random_x, parent1.shape[0])
-    cdef int placement_result
+    cdef int placement
     cdef Py_ssize_t end_toplist_index = 0
     cdef Py_ssize_t end_bottomlist_index = 0
     cdef Py_ssize_t random_opeartion_index, i
@@ -41,9 +60,9 @@ cpdef cross(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, int[
     cdef int[:, ::] result
 
     for row in range(parent2.shape[0]):
-        placement_result = placement(parent2[row], parent1[random_x:random_y])
-        if placement_result != 0:
-            if placement_result < 0:
+        placement = _placement(parent2[row], parent1[random_x:random_y])
+        if placement != 0:
+            if placement < 0:
                 toplist[end_toplist_index] = parent2[row]
                 end_toplist_index += 1
             else:
@@ -68,5 +87,3 @@ cpdef cross(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, int[
         result[random_opeartion_index, 3] = np.random.choice(usable_machines_matrix[i])
 
     return Solution(np.array(result))
-
-

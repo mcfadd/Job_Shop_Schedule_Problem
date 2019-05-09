@@ -89,9 +89,9 @@ class Data:
         :param job_tasks_file: csv file containg all of the job-tasks
         :return: None
         """
-        Data.read_job_tasks_file(job_tasks_file)
-        Data.read_sequence_dependency_matrix_file(seq_dep_matrix_file)
-        Data.read_machine_speeds_file(machine_speeds_file)
+        Data._read_job_tasks_file(job_tasks_file)
+        Data._read_sequence_dependency_matrix_file(seq_dep_matrix_file)
+        Data._read_machine_speeds_file(machine_speeds_file)
         Data._initialize_derived_data()
 
     @staticmethod
@@ -114,14 +114,14 @@ class Data:
         shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp", ignore_errors=True)
 
     @staticmethod
-    def read_job_tasks_file(job_tasks_file):
+    def _read_job_tasks_file(job_tasks_file):
         """
         Populates Data.jobs by reading the job_tasks_file csv file.
 
         Note: this function assumes that all of the jobs in job_tasks_file are in ascending order
-         and are in the same order as in the sequence_dependency_matrix csv file.
+        and are in the same order as in the sequence_dependency_matrix csv file.
 
-        :param job_tasks_file: The csv file that contains the job-task data.
+        :param job_tasks_file: The csv file that contains the job-task data
         :return: None
         """
         Data.jobs = []
@@ -151,14 +151,14 @@ class Data:
                 Data.jobs[task.get_job_id()].get_tasks().append(task)
 
     @staticmethod
-    def read_sequence_dependency_matrix_file(seq_dep_matrix_file):
+    def _read_sequence_dependency_matrix_file(seq_dep_matrix_file):
         """
         Populates Data.sequence_dependency_matrix by reading the seq_dep_matrix_file csv file.
 
         Note: this function assumes that all of the jobs in job_tasks_file are in ascending order
          and are in the same order as in the sequence_dependency_matrix csv file.
 
-        :param seq_dep_matrix_file: The csv file that contains the sequence dependency matrix.
+        :param seq_dep_matrix_file: The csv file that contains the sequence dependency matrix
         :return: None
         """
         with open(seq_dep_matrix_file) as fin:
@@ -169,7 +169,7 @@ class Data:
                  for row in csv.reader(fin)], dtype=np.intc)
 
     @staticmethod
-    def read_machine_speeds_file(machine_speeds_file):
+    def _read_machine_speeds_file(machine_speeds_file):
         """
         Populates Data.machine_speeds by reading the machine_speeds_file csv file.
 
@@ -205,10 +205,6 @@ class Data:
                 Data.usable_machines_matrix[index] = np.resize(task.get_usable_machines(),
                                                                Data.total_number_of_machines)
                 index += 1
-
-    @staticmethod
-    def get_job(job_id):
-        return Data.jobs[job_id]
 
     @staticmethod
     def print_data():

@@ -2,10 +2,9 @@ import pickle
 import unittest
 
 import numpy as np
-import JSSP.cython_files.makespan_compiled.InfeasibleSolutionException  # the error can be ignored as long as makespan_compiled has been built
 
-import JSSP.solution as solution
-import JSSP.data.Data as Data
+from JSSP import solution
+from JSSP.data import Data
 
 """
 This Unit Test contains test cases that do the following: 
@@ -20,11 +19,13 @@ This Unit Test contains test cases that do the following:
 8. test that generate_feasible_solution() does not generate infeasible solutions
 9. test pickling a Solution to a file
 """
-Data.initialize_data_from_csv('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
-                     '../data/data_set2/jobTasks.csv')
+
+Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
+                              '../data/given_data/machineRunSpeed.csv',
+                              '../data/given_data/jobTasks.csv')
 
 
-class Test(unittest.TestCase):
+class TestSolution(unittest.TestCase):
 
     def test_solution_equality(self):
 
@@ -78,7 +79,7 @@ class Test(unittest.TestCase):
 
             self.assertTrue(False, "Failed to raise InfeasibleSolutionException")
 
-        except InfeasibleSolutionException:
+        except solution.InfeasibleSolutionException:
             pass
 
     def test_incomplete_solution(self):
@@ -97,7 +98,7 @@ class Test(unittest.TestCase):
             for i in range(500):
                 solution.generate_feasible_solution()
 
-        except InfeasibleSolutionException:
+        except solution.InfeasibleSolutionException:
             self.assertTrue(False, "Infeasible solution was generated")
 
     def test_pickle_to_file(self):
@@ -110,7 +111,8 @@ class Test(unittest.TestCase):
 
         self.assertEqual(solution_obj, solution_obj_pickled, "The pickled solution should be equal to solution_obj")
         solution_obj.makespan -= 1
-        self.assertNotEqual(solution_obj, solution_obj_pickled, "The pickled solution should not be equal to solution_obj")
+        self.assertNotEqual(solution_obj, solution_obj_pickled,
+                            "The pickled solution should not be equal to solution_obj")
 
 
 if __name__ == '__main__':

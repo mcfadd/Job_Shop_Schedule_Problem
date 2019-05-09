@@ -3,7 +3,8 @@
 This problem was given to us in a mathematics course titled *Math 490 Preparation for Industrial Careers: Solving Industrial and Applied Problems in Teams* (sponsered by [PIC Math](https://www.maa.org/programs-and-communities/professional-development/pic-math)) at The University of Wisconsin - Milwaukee.
 
 The specific JSSP problem this program attempts to solve is classified as the  
-**Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**. For a complete description of the problem see the [Problem Description](https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Job-Shop-Schedule-Problem-Description) wiki.
+**Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**.  
+For a complete description of the problem see the [Problem Description](https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Job-Shop-Schedule-Problem-Description) wiki.
 
 **Team**  
 [Matthew McFadden](https://github.com/mcfadd)  
@@ -36,16 +37,17 @@ pip install .
 
 ### How to Use:
 
-After installation, JSSP can imported into a python project/ipython notebook.  
-See the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/examples) folder for example jupyter notebooks. 
+After installation, JSSP can imported into a python project/notebook.  
+See the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/examples) folder for examples. 
 
-**Important Note:**
+**Important Note**
 
 Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id).  
 (see csv files in the [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2) folder for reference)
   
-**Flexable Job Shop**  
-You can read in a flexable job shop problem from a .fjs file (see [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data) folder) with the following:
+**Flexible Job Shop**
+
+To read in a flexible job shop problem instance from a .fjs file (see [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data) folder) do the following:
 ```python
 from JSSP.data import Data
 

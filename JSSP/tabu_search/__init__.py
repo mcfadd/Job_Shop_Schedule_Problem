@@ -1,1 +1,1 @@
-from .ts_manager import TabuSearchManager
+from .ts import search

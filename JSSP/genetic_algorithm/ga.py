@@ -1,51 +1,47 @@
-import multiprocessing as mp
 import random
+import statistics
 import time
 
 from JSSP import solution
 from JSSP.data import Data
-from JSSP.pbar import run_progress_bar
-from .ga_helpers import cross
+from .ga_helpers import crossover
 
 
-def search(search_time, population, mutation_probability, verbose=False, progress_bar=False):
+def search(runtime, population, mutation_probability, selection_size, benchmark):
     """
-    This function performs a Genetic Algorithm for a given duration starting with an initial population.
+    This function performs a genetic algorithm for a given duration starting with an initial population.
 
-    :param search_time: The duration that the GA search will run in seconds.
-    :param population: The initial population to start the GA from.
-    :param mutation_probability: The probability of mutating chromosome (i.e change an operations machine).
-    :param verbose: If True, extra information such as total number of iterations is printed.
-    :param progress_bar: If True, a progress bar is spawned
+    :param runtime: The duration that the GA search will run in seconds
+    :param population: The initial population to start the GA from
+    :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
+    :param selection_size: The size of the selection group for tournament style selection
+    :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
     :return: best_solution: The best Solution found
     """
-    if progress_bar:
-        mp.Process(target=run_progress_bar, args=[search_time]).start()
-
-    # use a fixed group size of 5 for tournament style selection
-    group_size = 5
 
     best_solution = min(population)
-    stop_time = time.time() + search_time
+    stop_time = time.time() + runtime
 
     dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
     usable_machines_matrix = Data.usable_machines_matrix
 
-    # variables used for verbose mode
+    # variables used for benchmarks
     iterations = 0
-    num_infeasible_solutions = 0
+    best_makespans = []
+    avg_population_makespan = [statistics.mean([sol.makespan for sol in population])]
+    minimum_makespan_iteration = 0
 
     while time.time() < stop_time:
 
         # tournament style selection
-        selection_group = [random.randrange(len(population)) for _ in range(group_size)]
+        selection_group = [random.randrange(len(population)) for _ in range(selection_size)]
 
         # sort the selection_group
-        # TODO make selection_group sort more efficient?
+        # TODO make selection_group sort more efficient
         is_sorted = True
         while is_sorted:
             is_sorted = False
-            for i in range(group_size - 1):
+            for i in range(selection_size - 1):
                 if population[selection_group[i]] > population[selection_group[i + 1]]:
                     tmp = selection_group[i]
                     selection_group[i] = selection_group[i + 1]
@@ -57,52 +53,46 @@ def search(search_time, population, mutation_probability, verbose=False, progres
         parent2_operation_2d_array = population[selection_group[1]].operation_2d_array
 
         # breed the parents to produce child1 (parent1 cross parent2)
-        # Note mutation happens in cross function
+        # Note mutation happens in crossover function
         feasible_child = False
         while not feasible_child:
             # the try except block is because sometimes the crossover operation results in a setup of -1
             # which then produces an infeasible solution. This is due to the sequence dependency setup times matrix.
             try:
-                child1 = cross(parent1_operation_2d_array, parent2_operation_2d_array,
-                               mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
-                # children.append(child1)
+                child1 = crossover(parent1_operation_2d_array, parent2_operation_2d_array,
+                                   mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
                 feasible_child = True
             except solution.InfeasibleSolutionException:
-                if verbose:
-                    num_infeasible_solutions += 1
                 if time.time() > stop_time:
-                    print("iterations =", iterations)
                     return best_solution
 
         # breed the parents to produce child2 (parent2 cross parent1)
         feasible_child = False
         while not feasible_child:
             try:
-                child2 = cross(parent2_operation_2d_array, parent1_operation_2d_array,
-                               mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
-                # children.append(child2)
+                child2 = crossover(parent2_operation_2d_array, parent1_operation_2d_array,
+                                   mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
                 feasible_child = True
             except solution.InfeasibleSolutionException:
-                if verbose:
-                    num_infeasible_solutions += 1
                 if time.time() > stop_time:
-                    print("iterations =", iterations)
                     return best_solution
 
-        # replace worse solutions in selction with children
+        # replace worse solutions in selection with children
         population[selection_group[-1]] = child1
         population[selection_group[-2]] = child2
 
         # check for better solution than best_solution
         if min(child1, child2) < best_solution:
-            if verbose:
-                print("found best solution at iteration", iterations)
             best_solution = min(child1, child2)
+            if benchmark:
+                minimum_makespan_iteration = iterations
 
-        iterations += 1
+        if benchmark:
+            iterations += 1
+            best_makespans.append(best_solution.makespan)
+            avg_population_makespan.append(statistics.mean([sol.makespan for sol in population]))
 
-    if verbose:
-        print("total iterations =", iterations)
-        print("total number of infeasible solutions generated =", num_infeasible_solutions)
-
-    return best_solution
+    if benchmark:
+        return [best_solution, iterations, best_makespans, avg_population_makespan, (minimum_makespan_iteration, best_solution.makespan)]
+    else:
+        return best_solution

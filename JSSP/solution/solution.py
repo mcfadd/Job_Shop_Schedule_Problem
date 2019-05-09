@@ -1,3 +1,4 @@
+import os
 import pickle
 import random
 
@@ -18,19 +19,19 @@ class IncompleteSolutionException(Exception):
 
 class Solution:
     """
-    This class represents a solution which is composed of a 2d array of operations,
+    This class represents a solution which is composed of a 2d array of operations where an operation is a 1d array,
     a 1d array memory view of machine make span times,
-    and the max make span time.
+    and the max make span time (cost).
     """
 
     def __init__(self, operation_2d_array):
         """
-        The constructor for this solution checks if the operation list is feasible,
-        computes the list of machine make span times, and the max make span time.
+        The constructor for this solution checks if operation_2d_array is feasible,
+        then computes the list of machine make span times, and the max make span time.
 
-        :param operation_2d_array: 2D numpy array encoding a list of operations
+        :param operation_2d_array: 2d np array of operations
         :raise InfeasibleSolutionException if solution is infeasible
-        :raise IncompleteSolutionException if solution does not contain
+        :raise IncompleteSolutionException if solution is incomplete
         """
 
         if operation_2d_array.shape[0] != Data.total_number_of_tasks:
@@ -45,34 +46,22 @@ class Solution:
         self.operation_2d_array = operation_2d_array
 
     def __eq__(self, other_solution):
-        """
-        Returns True if self is equal to other_solution.
-
-        :param other_solution: The solution to compare
-        :return: True if self == other_solution
-        """
         return self.makespan == other_solution.makespan and np.array_equal(
             self.machine_makespans, other_solution.machine_makespans) and np.array_equal(
             self.operation_2d_array, other_solution.operation_2d_array)
 
     def __ne__(self, other_solution):
-        """
-        Returns True if self is not equal to other_solution.
-
-        :param other_solution: The solution to compare
-        :return: True if self != other_solution
-        """
         return self.makespan != other_solution.makespan or not np.array_equal(
             self.machine_makespans, other_solution.machine_makespans) or not np.array_equal(
             self.operation_2d_array, other_solution.operation_2d_array)
 
     def __lt__(self, other_solution):
         """
-        Returns True if self is "better" than other_solution.
+        Returns true if self is "better" than other_solution.
         better is defined as having a lower makespan or machine_makespans if the makespans are equal.
 
         :param other_solution: The solution to compare
-        :return: True if self has a lower makespan than other_solution
+        :return: True if self is "better" than other_solution
         """
         if self.makespan < other_solution.makespan:
             return True
@@ -92,11 +81,11 @@ class Solution:
 
     def __gt__(self, other_solution):
         """
-        Returns True if self is "worse" than other_solution.
+        Returns true if self is "worse" than other_solution.
         worse is defined as having a greater makespan or machine_makespans if the makespans are equal.
 
         :param other_solution: The solution to compare
-        :return: True if self has a greater makespan than other_solution
+        :return: True if self is "worse" than other_solution
         """
         if self.makespan > other_solution.makespan:
             return True
@@ -125,15 +114,17 @@ class Solution:
               f"operation_list =\n"
               f"{self.operation_2d_array}")
 
-    def create_schedule(self, output_dir):
+    def create_schedule(self, output_dir, filename='Schedule'):
         """
-        Creates an excel file called 'Schedule.xlsx' in the output_dir directory that contains the schedule for each machine.
-        The machine schedules have the following headers, Job_Task, Start, and End, which correspond to
-        the Job_Task being processed, it's start, and it's end time on that machine.
+        Creates an excel file in the output_dir directory that contains the schedule for each machine.
 
-        :param output_dir: The directory to place Schedule.xlsx in
+        :param output_dir: The directory to place the excel file into
+        :param filename: The name of the excel file
         :return: None
         """
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+
         # get all the necessary data from the static Data class
         machine_speeds = Data.machine_speeds
         sequence_dependency_matrix = Data.sequence_dependency_matrix
@@ -142,7 +133,7 @@ class Solution:
         num_machines = machine_speeds.shape[0]
 
         # create an excel workbook and worksheet in output directory
-        workbook = xlsxwriter.Workbook(f'{output_dir}/Schedule.xlsx')
+        workbook = xlsxwriter.Workbook(f'{output_dir + "/" + filename + ".xlsx"}')
         colored = workbook.add_format({'bg_color': '#E7E6E6'})
         worksheet = workbook.add_worksheet('Schedule')
 
@@ -246,9 +237,8 @@ class Solution:
 
     def pickle_to_file(self, file_name):
         """
-        Serializes self to a binary file using pickle.
-    
-        :param self: Solution to serialize
+        Serializes this Solution to a binary file using pickle.
+
         :param file_name: Name of file to serialize to
         :return: None
         """
@@ -291,10 +281,10 @@ def generate_feasible_solution():
         available[rand_job_id].remove(rand_task)
 
         if len(available[rand_job_id]) == 0:
-            if rand_task.get_sequence() == Data.get_job(rand_job_id).get_max_sequence():
+            if rand_task.get_sequence() == Data.jobs[rand_job_id].get_max_sequence():
                 del available[rand_job_id]
             else:
-                available[rand_job_id] = [task for task in Data.get_job(rand_job_id).get_tasks() if
+                available[rand_job_id] = [task for task in Data.jobs[rand_job_id].get_tasks() if
                                           task.get_sequence() == rand_task.get_sequence() + 1]
 
         last_task_scheduled_on_machine[rand_machine] = rand_task

@@ -36,8 +36,8 @@ ext_modules = [Extension("genetic_algorithm.ga_helpers",
 setup(
     name='JSSP',
     version=__version__,
-    description='Program for solving the job shop schedule problem with sequence dependent set up times.',
-    author='Matt McFadden',
+    description='Package for solving the job shop schedule problem with sequence dependent set up times.',
+    author='Matt McFadden (mcfadd)',
     author_email='TODO',
     python_requires='>=3.6.0',
     url='https://github.com/mcfadd/Job_Shop_Schedule_Problem',
@@ -49,9 +49,6 @@ setup(
     ],
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
-    entry_points={
-        'console_scripts': ['jssp=JSSP.__main__:start'],
-    },
     install_requires=REQUIRED,
     ext_modules=cythonize(ext_modules)
 )

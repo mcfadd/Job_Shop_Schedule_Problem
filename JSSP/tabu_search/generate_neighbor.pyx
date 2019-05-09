@@ -3,8 +3,6 @@ cimport cython
 import numpy as np
 cimport numpy as np
 
-from libc.stdlib cimport rand, RAND_MAX
-
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -13,11 +11,11 @@ cpdef generate_neighbor(solution, double probability_change_machine, int[:, ::1]
     """
     This function generates a feasible solution that is a neighbor of the solution parameter.
 
-    :param solution: The solution to generate a neighbor of.
-    :param probability_change_machine: The probability of changing a chosen operation's machine.
-    :param dependency_matrix_index_encoding: dependency matrix index encoding from static Data.
-    :param usable_machines_matrix: usable machines matrix from static Data.
-    :return: A neighbor of the solution parameter.
+    :param solution: The solution to generate a neighbor of
+    :param probability_change_machine: The probability of changing a chosen operation's machine
+    :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
+    :param usable_machines_matrix: Usable machines matrix from static Data
+    :return: A neighbor of the solution parameter
     """
     cdef int[:, ::1] result_operation_2d_array = np.copy(solution.operation_2d_array)
     cdef int[::1] operation, usable_machines

@@ -10,57 +10,61 @@ from JSSP.solution import InfeasibleSolutionException
 from .generate_neighbor import generate_neighbor
 
 
-# TODO generate_neighbor() should not generate infeasible neighbors, but it does in some cases.
-#  The try except block catches these cases.
-def generate_neighborhood(size, wait, seed_solution, probability_change_machine):
+def generate_neighborhood(solution, size, wait, probability_change_machine, dependency_matrix_index_encoding, usable_machines_matrix):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the seed solution parameter.
 
-    :param size: The size of the neighborhood to generate.
-    :param wait: The maximum time spent to generate a neighborhood.
-    :param seed_solution: The solution to generate a neighborhood of.
-    :param probability_change_machine: The probability of changing a chosen operations machine while generating a neighbor.
-    :return: SolutionSet of neighboring solutions.
+    :param solution: The solution to generate a neighborhood of
+    :param size: The size of the neighborhood to generate
+    :param wait: The maximum time spent to generate a neighborhood
+    :param probability_change_machine: The probability of changing a chosen operations machine while generating a neighbor
+    :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
+    :param usable_machines_matrix: Usable machines matrix from static Data
+    :return: SolutionSet of neighboring solutions
     """
-    dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
-    usable_machines_matrix = Data.usable_machines_matrix
     stop_time = time.time() + wait
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
-        # the generate_neighbor function is a c-extension that was compiled with cython. see cython_files directory
         try:
-            result.add(generate_neighbor(seed_solution, probability_change_machine,
+            result.add(generate_neighbor(solution, probability_change_machine,
                                          dependency_matrix_index_encoding, usable_machines_matrix))
         except InfeasibleSolutionException:
+            # this should not happen
             pass
     return result
 
 
 def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_size, neighborhood_wait,
-           probability_change_machine, benchmark=False):
+           probability_change_machine, reset_threshold, benchmark):
     """
     This function performs Tabu Search for a given duration starting with an initial solution.
-    The best solution found is pickled to a file called 'solution_<process_id>' in a temporary directory for TabuSearchManager.
+    The best solution found is pickled to a file called 'solution<process_id>' in a temporary directory.
 
-    :param process_id: An integer id of the tabu_search search process (used by tabu_search.manager).
-    :param initial_solution: The initial solution to start the Tabu search from.
-    :param runtime: The duration that Tabu search will run in seconds.
-    :param tabu_list_size: The size of the Tabu list.
-    :param neighborhood_size: The size of neighborhoods to generate during Tabu search.
-    :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds.
-    :param probability_change_machine: The probability of changing a chosen operations machine.
+    :param process_id: An integer id of the tabu search search process
+    :param initial_solution: The initial solution to start the tabu search from
+    :param runtime: The duration that tabu search will run in seconds
+    :param tabu_list_size: The size of the Tabu list
+    :param neighborhood_size: The size of neighborhoods to generate during Tabu search
+    :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
+    :param probability_change_machine: The probability of changing a chosen operations machine
+    :param reset_threshold: The number of iteration to potentially force a worse move after if the best solution is not improved
     :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
     :return None.
     """
+    tmp_dir = f'{os.path.dirname(os.path.realpath(__file__))}/tmp'
+    if not os.path.exists(tmp_dir):
+        raise FileNotFoundError(f'{tmp_dir} not found')
+
+    dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+    usable_machines_matrix = Data.usable_machines_matrix
+
     seed_solution = initial_solution
     best_solution = initial_solution
     tabu_list = TabuList(initial_solution)
     stop_time = time.time() + runtime
 
-    # if the seed solution is not improved after reset_threshold iterations a move to a worse solution is made to try to get out of local minima
     lacking_solution = seed_solution
     counter = 0
-    reset_threshold = 100
 
     # variables used for benchmarks
     iterations = 0
@@ -70,12 +74,11 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
     minimum_makespan_iteration = 0
 
     while time.time() < stop_time:
-        neighborhood = generate_neighborhood(neighborhood_size, neighborhood_wait, seed_solution,
-                                             probability_change_machine)
+        neighborhood = generate_neighborhood(seed_solution, neighborhood_size, neighborhood_wait,
+                                             probability_change_machine, dependency_matrix_index_encoding, usable_machines_matrix)
         sorted_neighborhood = sorted(neighborhood.solutions.items())
         break_boolean = False
 
-        # Complexity of sorted() = O(n log n)
         for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
             for neighbor in sorted(lst):  # sort subset of neighbors with the same makespans
                 if not tabu_list.solutions.contains(neighbor):
@@ -118,9 +121,9 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
             tabu_list_sizes.append(tabu_list.solutions.size)
 
     # pickle results to file in tmp directory
-    best_solution.machine_makespans = np.asarray(
-        best_solution.machine_makespans)  # need to convert memory view to np array
-    with open(f"{os.path.dirname(os.path.realpath(__file__))}/tmp/solution_{process_id}", 'wb') as file:
+    # need to convert memory view to np array
+    best_solution.machine_makespans = np.asarray(best_solution.machine_makespans)
+    with open(f"{tmp_dir}/solution{process_id}", 'wb') as file:
         if benchmark:
             pickle.dump([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes,
                          (minimum_makespan_iteration, best_solution.makespan)], file, protocol=-1)
@@ -151,7 +154,7 @@ class TabuList:
         """
         Adds a solution to the end of this TabuList.
 
-        :param solution: The solution to add.
+        :param solution: The solution to add
         :return: None
         """
 
@@ -164,7 +167,7 @@ class TabuList:
         """
         Removes the solution at the beginning of this TabuList
 
-        :return: Solution that was dequeued
+        :return: Solution that was removed
         """
 
         head_node = self.head
@@ -184,10 +187,10 @@ class SolutionSet:
 
     def add(self, solution):
         """
-        Adds a solution and increments size if the solution is not already in this SolutionSet.
+        Adds a solution and increments size.
 
-        :param solution: The solution to add.
-        :return: True if solution was added.
+        :param solution: The solution to add
+        :return: None
         """
         if solution.makespan not in self.solutions:
             self.solutions[solution.makespan] = [solution]
@@ -198,9 +201,9 @@ class SolutionSet:
 
     def remove(self, solution):
         """
-        Removes a solution and decrements size if the solution is in this SolutionSet.
+        Removes a solution and decrements size.
 
-        :param solution: The solution to remove.
+        :param solution: The solution to remove
         :return: None
         """
         if len(self.solutions[solution.makespan]) == 1:
@@ -214,25 +217,7 @@ class SolutionSet:
         """
         Returns True if the solution is in this SolutionSet.
 
-        :param solution: The solution to look for.
-        :return: True if the solution is in this SolutionSet.
+        :param solution: The solution to look for
+        :return: True if the solution is in this SolutionSet
         """
         return solution.makespan in self.solutions and solution in self.solutions[solution.makespan]
-
-    def pprint_makespans(self):
-        """
-        Prints a list of make spans for the solutions in this SolutionSet.
-
-        :return: None
-        """
-        print([sol.makespan for sol in self.solutions])
-
-    def pprint(self):
-        """
-        Prints all of the solutions in this SolutionSet in a pretty way.
-
-        :return: None
-        """
-        for lst in self.solutions.values():
-            for sol in lst:
-                sol.pprint()

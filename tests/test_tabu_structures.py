@@ -1,21 +1,15 @@
 import unittest
-import sys
-import numpy as np
-
-from os.path import dirname
-sys.path.append(dirname(__file__) + "/..")
 
 from JSSP import solution
 from JSSP.data import Data
-from JSSP.tabu_search.structures import SolutionSet, TabuList
+from JSSP.tabu_search.ts import SolutionSet, TabuList
 
 """
 This Unit Test contains test cases that do the following: 
-
-
 """
-Data.initialize_data_from_csv('../data/data_set2/sequenceDependencyMatrix.csv', '../data/data_set2/machineRunSpeed.csv',
-                     '../data/data_set2/jobTasks.csv')
+Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
+                              '../data/given_data/machineRunSpeed.csv',
+                              '../data/given_data/jobTasks.csv')
 
 
 class Test(unittest.TestCase):
@@ -23,19 +17,16 @@ class Test(unittest.TestCase):
     def test_solution_set_add(self):
         solution_set = SolutionSet()
 
+        # add a Solution
         solution_obj1 = solution.generate_feasible_solution()
-
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
         self.assertTrue(solution_set.contains(solution_obj1))
-
-        solution_set.add(solution.Solution(np.copy(solution_obj1.operation_2d_array)))
-
-        # make sure duplicate Solution was not added
         self.assertEqual(solution_set.size, 1)
-        solution_obj2 = solution.generate_feasible_solution()
 
+        # add another Solution
+        solution_obj2 = solution.generate_feasible_solution()
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
@@ -46,7 +37,6 @@ class Test(unittest.TestCase):
         solution_set = SolutionSet()
 
         solution_obj1 = solution.generate_feasible_solution()
-
         solution_set.add(solution_obj1)
 
         # make sure Solution was added

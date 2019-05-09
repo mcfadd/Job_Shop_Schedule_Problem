@@ -14,17 +14,17 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
                                             const int[:, ::1] sequence_dependency_matrix,
                                             const int[:, ::1] sequence_dependency_matrix_index_encoding):
     """
-    Computes a 1d array of all the machine's makespan times given a 2d array of operations, where an operation
-    is a 1d array of integers in the form [job_id, task_id, sequence, machine, pieces].
+    Computes a 1d array of all the machine's makespan times given a 2d nparray of operations, where an operation
+    is a 1d nparray of integers in the form [job_id, task_id, sequence, machine, pieces].
 
     :param operation_2d_array: The 2d array of operations to compute the machine makespans for.
-    :param machine_speeds: nparray of machine speeds from static Data
+    :param machine_speeds: machine speeds from static Data
     :param sequence_dependency_matrix: sequence depencency matrix from static Data
     :param sequence_dependency_matrix_index_encoding: sequence dependency matrix index encoding from static Data
-    :return: a 1d array of machine make span times, where makespan[i] = makespan of machine i
+    :return: memory view of a 1d array of machine make span times, where makespan[i] = makespan of machine i
     :raise: InfeasibleSolutionException if the solution is infeasible.
 
-    Note: to get the actual makespan, take the max of the result.
+    Note: to get the actual makespan take the max of the result.
     """
     cdef int num_jobs = sequence_dependency_matrix.shape[0]
     cdef int num_machines = machine_speeds.shape[0]
