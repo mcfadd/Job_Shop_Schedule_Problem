@@ -43,8 +43,32 @@ See the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/mast
 **Important Note**
 
 Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to their (job_id, task_id).  
-(see csv files in the [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2) folder for reference)
-  
+(see csv files in the [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/given_data) folder for reference)
+
+**Example**
+```python
+from JSSP.solver import Solver
+from JSSP.data import Data
+import os
+
+# initialize data
+data_directory = '../data/given_data'
+Data.initialize_data_from_csv(data_directory + '/sequenceDependencyMatrix.csv',
+                              data_directory + '/machineRunSpeed.csv',
+                              data_directory + '/jobTasks.csv')
+
+# run tabu search
+solver = Solver()
+solution = solver.tabu_search(runtime=30,
+                              num_processes=2,
+                              tabu_list_size=50,
+                              neighborhood_size=250,
+                              neighborhood_wait=0.1,
+                              probability_change_machine=0.8,
+                              reset_threshold=100
+                             )                              
+```
+
 **Flexible Job Shop**
 
 To read in a flexible job shop problem instance from a .fjs file (see [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data) folder) do the following:
