@@ -52,7 +52,7 @@ from JSSP.data import Data
 import os
 
 # initialize data
-data_directory = '../data/given_data'
+data_directory = 'data/given_data'
 Data.initialize_data_from_csv(data_directory + '/sequenceDependencyMatrix.csv',
                               data_directory + '/machineRunSpeed.csv',
                               data_directory + '/jobTasks.csv')
