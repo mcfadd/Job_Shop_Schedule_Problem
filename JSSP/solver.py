@@ -128,6 +128,16 @@ class Solver:
                                  for _ in range(max(0, num_processes - len(initial_solutions)))],
         }
 
+        if verbose:
+            if benchmark:
+                print("Running benchmark of TS")
+            else:
+                print("Running TS")
+            print("Parameters:")
+            for param, val in self.ts_parameters[:1]:
+                if param != 'initial solutions':
+                    print(param, "=", val, "\n")
+
         if progress_bar:
             mp.Process(target=run_progress_bar, args=[runtime]).start()
 
@@ -195,7 +205,7 @@ class Solver:
         return self.ts_best_solution
 
     def genetic_algorithm(self, runtime, population=None, population_size=200, mutation_probability=0.8,
-                          selection_size=10, benchmark=False, progress_bar=False):
+                          selection_size=10, benchmark=False, verbose=False, progress_bar=False):
         """
         This function performs a Genetic Algorithm for a given duration starting with an initial population.
 
@@ -207,6 +217,7 @@ class Solver:
         :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
         :param selection_size: The size of the selection group for tournament style selection
         :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
+        :param verbose: If true runs in verbose mode
         :param progress_bar: If true a progress bar is spawned
         :return:
         """
@@ -221,6 +232,16 @@ class Solver:
                            range(population_size)] if population is None else population + [
                 solution.generate_feasible_solution() for _ in range(max(0, population_size - len(population)))],
         }
+
+        if verbose:
+            if benchmark:
+                print("Running benchmark of GA")
+            else:
+                print("Running GA")
+            print("Parameters:")
+            for param, val in self.ga_parameters[:1]:
+                if param != 'population':
+                    print(param, "=", val, "\n")
 
         if progress_bar:
             mp.Process(target=run_progress_bar, args=[runtime]).start()
@@ -272,6 +293,7 @@ class Solver:
                                 <h2>{name}</h2>
                                 {self._ts_benchmark_results(output_directory) if self.ts_benchmark else ''}
                                 {self._ga_benchmark_results(output_directory) if self.ga_benchmark else ''}
+                            {'<br>' * 10}
                             </body>
                         </html>
                         '''
@@ -307,9 +329,7 @@ class Solver:
             reset threshold = {self.ts_parameters['reset threshold']} seconds<br>
             best initial makespan = {round(min(self.ts_parameters['initial solutions']).makespan)}<br>
             <br>
-            <b>Results:</b>
-            <br>
-            makespans:
+            <b>Makespan Results:</b>
             <br>
             min = {round(min(best_makespans_per_ts))}<br>
             median = {round(statistics.median(best_makespans_per_ts))}<br>
@@ -318,7 +338,7 @@ class Solver:
             var = {round(statistics.variance(best_makespans_per_ts)) if len(best_makespans_per_ts) > 1 else 0}<br>
             mean = {round(statistics.mean(best_makespans_per_ts))}<br>
             <br>
-            iterations:
+            <b>Iterations Results:</b>
             <br>
             min = {min(self.ts_iterations)}<br>
             median = {statistics.median(self.ts_iterations)}<br>
@@ -332,6 +352,7 @@ class Solver:
             <a href="./ts_makespans.html">Makespan vs Iteration</a><br>
             <a href="./neighborhood_sizes.html">Neighborhood Size vs Iteration</a><br>
             <a href="./tabu_list_sizes.html">Tabu Size vs Iteration</a><br>
+            <br>
             <b>Schedule:</b>
             <br>
             <a href="file://{output_directory}/ts_schedule.xlsx">ts_schedule.xlsx</a>
@@ -400,7 +421,7 @@ class Solver:
             selection size = {self.ga_parameters['selection size']}<br>
             mutation probability = {self.ga_parameters['mutation probability']}<br>
             <br>
-            <b>Initial Population:</b>
+            <b>Initial Population Makespans:</b>
             <br>
             min = {round(min(initial_population_makespans))}<br>
             median = {round(statistics.median(initial_population_makespans))}<br>
@@ -411,7 +432,7 @@ class Solver:
             initial_population_makespans) > 1 else 0}<br>
             mean = {round(statistics.mean(initial_population_makespans))}<br>
             <br>
-            <b>Final Population:</b>
+            <b>Final Population Makespans:</b>
             <br>
             min = {round(min(result_population_makespans))}<br>
             median = {round(statistics.median(result_population_makespans))}<br>
@@ -425,6 +446,7 @@ class Solver:
             <b>Plots:</b>
             <br>
             <a href="./ga_makespans.html">Makespan vs Iteration</a><br>
+            <br>
             <b>Schedule:</b>
             <br>
             <a href="file://{output_directory}/ga_schedule.xlsx">ga_schedule.xlsx</a>

@@ -34,6 +34,7 @@ def generate_neighborhood(solution, size, wait, probability_change_machine, depe
     return result
 
 
+# TODO allow for max iteration as well as runtime
 def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_size, neighborhood_wait,
            probability_change_machine, reset_threshold, benchmark):
     """
@@ -103,13 +104,13 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
         # if solution is not being improved after a number of iterations, force a move to a worse one
         counter += 1
         if counter > reset_threshold:
-            if not lacking_solution > seed_solution:
+            if not lacking_solution > seed_solution and len(sorted_neighborhood) > 10:
                 # add the seed solution to the tabu list
                 tabu_list.enqueue(seed_solution)
                 if tabu_list.solutions.size > tabu_list_size:
                     tabu_list.dequeue()
                 # choose a worse solution
-                seed_solution = sorted_neighborhood[random.randint(5, 15)][1][0]
+                seed_solution = sorted_neighborhood[random.randint(1, int(0.2 * len(sorted_neighborhood)))][1][0]
 
             counter = 0
             lacking_solution = seed_solution

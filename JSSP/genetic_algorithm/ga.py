@@ -7,6 +7,7 @@ from JSSP.data import Data
 from .ga_helpers import crossover
 
 
+# TODO allow for max iteration as well as runtime
 def search(runtime, population, mutation_probability, selection_size, benchmark):
     """
     This function performs a genetic algorithm for a given duration starting with an initial population.
@@ -34,19 +35,8 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
     while time.time() < stop_time:
 
         # tournament style selection
-        selection_group = [random.randrange(len(population)) for _ in range(selection_size)]
-
-        # sort the selection_group
-        # TODO make selection_group sort more efficient
-        is_sorted = True
-        while is_sorted:
-            is_sorted = False
-            for i in range(selection_size - 1):
-                if population[selection_group[i]] > population[selection_group[i + 1]]:
-                    tmp = selection_group[i]
-                    selection_group[i] = selection_group[i + 1]
-                    selection_group[i + 1] = tmp
-                    is_sorted = True
+        selection_group = sorted([random.randrange(len(population)) for _ in range(selection_size)],
+                                 key=lambda i: population[i].makespan)
 
         # choose two best solutions from selection_group for breeding
         parent1_operation_2d_array = population[selection_group[0]].operation_2d_array
@@ -93,6 +83,7 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
             avg_population_makespan.append(statistics.mean([sol.makespan for sol in population]))
 
     if benchmark:
-        return [best_solution, iterations, best_makespans, avg_population_makespan, (minimum_makespan_iteration, best_solution.makespan)]
+        return [best_solution, iterations, best_makespans, avg_population_makespan,
+                (minimum_makespan_iteration, best_solution.makespan)]
     else:
         return best_solution

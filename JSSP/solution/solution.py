@@ -51,9 +51,7 @@ class Solution:
             self.operation_2d_array, other_solution.operation_2d_array)
 
     def __ne__(self, other_solution):
-        return self.makespan != other_solution.makespan or not np.array_equal(
-            self.machine_makespans, other_solution.machine_makespans) or not np.array_equal(
-            self.operation_2d_array, other_solution.operation_2d_array)
+        return not self == other_solution
 
     def __lt__(self, other_solution):
         """
@@ -77,7 +75,7 @@ class Solution:
         return False
 
     def __le__(self, other_solution):
-        return self.__lt__(other_solution) or self.__eq__(other_solution)
+        return not self > other_solution
 
     def __gt__(self, other_solution):
         """
@@ -101,7 +99,7 @@ class Solution:
         return False
 
     def __ge__(self, other_solution):
-        return self.__gt__(other_solution) or self.__eq__(other_solution)
+        return not self < other_solution
 
     def pprint(self):
         """
@@ -247,7 +245,8 @@ class Solution:
             pickle.dump(self, file, protocol=-1)
 
 
-def generate_feasible_solution():
+# TODO implement shortest processing time (spt) and longest processing time (lpt)
+def generate_feasible_solution(spt=False, lpt=False):
     """
     Generates a random feasible solution.
 

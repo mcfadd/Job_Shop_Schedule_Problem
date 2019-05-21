@@ -251,8 +251,8 @@ class Data:
             with open(output_dir + '/jobTasks.csv', 'w') as fout:
                 fout.write("Job,Task,Sequence,Usable_Machines,Pieces\n")
 
-                lines = fin.readlines()
-                line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')]
+                lines = [line for line in [l.strip() for l in fin] if line]
+                line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')[:-1]]
 
                 total_num_mahines = line[1]
 
