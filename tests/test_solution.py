@@ -7,25 +7,28 @@ from JSSP import solution
 from JSSP.data import Data
 
 """
-This Unit Test contains test cases that do the following: 
+Test the following: 
 
-1. test Solution equality
-2. test Solution inequality
-3. test Solution less than
-4. test Solution greater than 
-5. test sorting Solutions
-6. test InfeasibleSolutionException is raised when an infeasible operation list is passed to Solution()
-7. test IncompleteSolutionException is raised when an incomplete operation list is passed to Solution()   
-8. test that generate_feasible_solution() does not generate infeasible solutions
-9. test pickling a Solution to a file
+1. solution.Solution equality
+2. solution.Solution inequality
+3. solution.Solution less than
+4. solution.Solution greater than 
+5. sorting solution.Solution objects
+6. InfeasibleSolutionException is raised when an infeasible operation list is passed to solution.Solution()
+7. IncompleteSolutionException is raised when an incomplete operation list is passed to solution.Solution()   
+8. solution.generate_feasible_solution() function
+9. pickling a solution.Solution object to a file
+
 """
-
-Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
-                              '../data/given_data/machineRunSpeed.csv',
-                              '../data/given_data/jobTasks.csv')
 
 
 class TestSolution(unittest.TestCase):
+
+    def __init__(self, *args):
+        Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
+                                      '../data/given_data/machineRunSpeed.csv',
+                                      '../data/given_data/jobTasks.csv')
+        super(TestSolution, self).__init__(*args)
 
     def test_solution_equality(self):
 
@@ -40,7 +43,7 @@ class TestSolution(unittest.TestCase):
 
         self.assertNotEqual(solution_obj1, solution_obj2, "These two Solutions should not be equal")
 
-    def test_solution_lt(self):
+    def test_solution_less_than(self):
         solution_obj1 = solution.generate_feasible_solution()
         solution_obj2 = solution.Solution(solution_obj1.operation_2d_array)
         solution_obj2.makespan -= 1
@@ -52,7 +55,7 @@ class TestSolution(unittest.TestCase):
 
         self.assertLess(solution_obj2, solution_obj1, "solution_obj2 should be less than solution_obj1")
 
-    def test_solution_gt(self):
+    def test_solution_greater_than(self):
         solution_obj1 = solution.generate_feasible_solution()
         solution_obj2 = solution.Solution(solution_obj1.operation_2d_array)
         solution_obj2.makespan -= 1

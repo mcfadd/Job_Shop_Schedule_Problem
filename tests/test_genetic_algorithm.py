@@ -6,20 +6,18 @@ from JSSP.data import Data
 from JSSP.solver import Solver
 
 """
-Test Solver's Genetic Algorithm (regular run and benchmark run)
+Test solver.genetic_algorithm() function
 """
 
 
 class TestGA(unittest.TestCase):
 
     def __init__(self, *args):
-        self.tmp_dir = f'{os.path.dirname(os.path.realpath(__file__))}/tmp'
-        super(TestGA, self).__init__(*args)
-
-    def setUp(self) -> None:
+        self.tmp_dir = os.path.dirname(os.path.realpath(__file__)) + '/tmp'
         Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
                                       '../data/given_data/machineRunSpeed.csv',
                                       '../data/given_data/jobTasks.csv')
+        super(TestGA, self).__init__(*args)
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmp_dir)
