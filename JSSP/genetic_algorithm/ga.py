@@ -23,7 +23,7 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
     best_solution = min(population)
     stop_time = time.time() + runtime
 
-    dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+    dependency_matrix_index_encoding = Data.job_task_index_matrix
     usable_machines_matrix = Data.usable_machines_matrix
 
     # variables used for benchmarks

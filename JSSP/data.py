@@ -70,8 +70,9 @@ class Data:
 
     # uninitialized static fields
     sequence_dependency_matrix = None
-    dependency_matrix_index_encoding = None
+    job_task_index_matrix = None
     usable_machines_matrix = None
+    task_processing_times = None
     machine_speeds = None
     jobs = []
     total_number_of_jobs = 0
@@ -94,6 +95,7 @@ class Data:
         Data._read_machine_speeds_file(machine_speeds_file)
         Data._initialize_derived_data()
 
+    # TODO redo this function without converting fjs instance to csv.
     @staticmethod
     def initialize_data_from_fjs(input_file):
         """
@@ -194,16 +196,28 @@ class Data:
         Data.total_number_of_tasks = Data.sequence_dependency_matrix.shape[0]
         Data.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in Data.jobs])
         Data.total_number_of_machines = Data.machine_speeds.shape[0]
-        Data.dependency_matrix_index_encoding = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1,
-                                                        dtype=np.intc)
+
+        Data.job_task_index_matrix = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1,
+                                             dtype=np.intc)
         Data.usable_machines_matrix = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines),
                                                dtype=np.intc)
+        Data.task_processing_times = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines))
+        # process all job-tasks
         index = 0
         for job in Data.jobs:
             for task in job.get_tasks():
-                Data.dependency_matrix_index_encoding[job.get_job_id(), task.get_task_id()] = index
+
+                # create mapping of (job id, task id) to index
+                Data.job_task_index_matrix[job.get_job_id(), task.get_task_id()] = index
+
+                # create row in Data.usable_machines_matrix
                 Data.usable_machines_matrix[index] = np.resize(task.get_usable_machines(),
                                                                Data.total_number_of_machines)
+
+                # create row in Data.task_processing_times
+                for machine in task.get_usable_machines():
+                    Data.task_processing_times[index, machine] = task.get_pieces() / Data.machine_speeds[machine]
+
                 index += 1
 
     @staticmethod
@@ -221,11 +235,14 @@ class Data:
         print("sequence_dependency_matrix:", Data.sequence_dependency_matrix.shape, end="\n\n")
         print(Data.sequence_dependency_matrix)
         print()
-        print("dependency_matrix_index_encoding:", Data.dependency_matrix_index_encoding.shape, end="\n\n")
-        print(Data.dependency_matrix_index_encoding)
+        print("dependency_matrix_index_encoding:", Data.job_task_index_matrix.shape, end="\n\n")
+        print(Data.job_task_index_matrix)
         print()
         print("usable_machines_matrix:", Data.usable_machines_matrix.shape, end="\n\n")
         print(Data.usable_machines_matrix)
+        print()
+        print("task_processing_times:", Data.task_processing_times.shape, end="\n\n")
+        print(Data.task_processing_times)
         print()
         print("machine_speeds:", Data.machine_speeds.shape, end="\n\n")
         print(Data.machine_speeds)

@@ -56,7 +56,7 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
     if not os.path.exists(tmp_dir):
         raise FileNotFoundError(f'{tmp_dir} not found')
 
-    dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+    dependency_matrix_index_encoding = Data.job_task_index_matrix
     usable_machines_matrix = Data.usable_machines_matrix
 
     seed_solution = initial_solution

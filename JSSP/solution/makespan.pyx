@@ -10,24 +10,24 @@ from libc.stdlib cimport abort, malloc, free
 @cython.nonecheck(False)
 @cython.cdivision(True)
 cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
-                                            const double[::1] machine_speeds,
+                                            const double[:, ::1] task_processing_times_matrix,
                                             const int[:, ::1] sequence_dependency_matrix,
-                                            const int[:, ::1] sequence_dependency_matrix_index_encoding):
+                                            const int[:, ::1] job_task_index_matrix):
     """
     Computes a 1d array of all the machine's makespan times given a 2d nparray of operations, where an operation
     is a 1d nparray of integers in the form [job_id, task_id, sequence, machine, pieces].
 
     :param operation_2d_array: The 2d array of operations to compute the machine makespans for.
-    :param machine_speeds: machine speeds from static Data
-    :param sequence_dependency_matrix: sequence depencency matrix from static Data
-    :param sequence_dependency_matrix_index_encoding: sequence dependency matrix index encoding from static Data
+    :param task_processing_times_matrix: task processing times matrix from static Data
+    :param sequence_dependency_matrix: sequence dependency matrix from static Data
+    :param job_task_index_matrix: job task index matrix from static Data
     :return: memory view of a 1d array of machine make span times, where makespan[i] = makespan of machine i
     :raise: InfeasibleSolutionException if the solution is infeasible.
 
     Note: to get the actual makespan take the max of the result.
     """
     cdef int num_jobs = sequence_dependency_matrix.shape[0]
-    cdef int num_machines = machine_speeds.shape[0]
+    cdef int num_machines = task_processing_times_matrix.shape[1]
 
     # memory for keeping track of all machine's make span time
     cdef double[::1] machine_makespan_memory = np.zeros(num_machines)
@@ -73,8 +73,8 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
         pieces = operation_2d_array[row, 4]
 
         if machine_jobs_memory[machine] != -1:
-            cur_task_index = sequence_dependency_matrix_index_encoding[job_id, task_id]
-            prev_task_index = sequence_dependency_matrix_index_encoding[machine_jobs_memory[machine], machine_tasks_memory[machine]]
+            cur_task_index = job_task_index_matrix[job_id, task_id]
+            prev_task_index = job_task_index_matrix[machine_jobs_memory[machine], machine_tasks_memory[machine]]
             setup = sequence_dependency_matrix[cur_task_index, prev_task_index]
         else:
             setup = 0
@@ -90,8 +90,10 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
         else:
             wait = prev_job_end_memory[job_id] - machine_makespan_memory[machine]
 
+        runtime = task_processing_times_matrix[job_task_index_matrix[job_id, task_id], machine]
+
         # compute total added time and update memory modules
-        machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
+        machine_makespan_memory[machine] += runtime + wait + setup
         job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
         job_seq_memory[job_id] = sequence
         machine_jobs_memory[machine] = job_id

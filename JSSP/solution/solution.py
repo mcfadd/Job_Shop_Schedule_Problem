@@ -39,9 +39,9 @@ class Solution:
                                               f"Should be {Data.total_number_of_tasks}")
 
         self.machine_makespans = compute_machine_makespans(operation_2d_array,
-                                                           Data.machine_speeds,
+                                                           Data.task_processing_times,
                                                            Data.sequence_dependency_matrix,
-                                                           Data.dependency_matrix_index_encoding)
+                                                           Data.job_task_index_matrix)
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
 
@@ -126,7 +126,7 @@ class Solution:
         # get all the necessary data from the static Data class
         machine_speeds = Data.machine_speeds
         sequence_dependency_matrix = Data.sequence_dependency_matrix
-        sequence_dependency_matrix_index_encoding = Data.dependency_matrix_index_encoding
+        sequence_dependency_matrix_index_encoding = Data.job_task_index_matrix
         num_jobs = sequence_dependency_matrix.shape[0]
         num_machines = machine_speeds.shape[0]
 
