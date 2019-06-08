@@ -70,7 +70,8 @@ class Solver:
 
         # uninitialized ga parameters
         self.ga_parameters = {
-            'runtime': None,
+            'stopping condition': None,
+            'time condition': None,
             'mutation probability': None,
             'selection size': None,
             'population size': None,
@@ -86,38 +87,47 @@ class Solver:
 
     def tabu_search_time(self, runtime, num_processes=4, tabu_list_size=50, neighborhood_size=300,
                          neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
-                         initial_solutions=None,
-                         benchmark=False, verbose=False, progress_bar=False):
+                         initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
+        """
+        This function performs tabu search starting with an initial solution for a certain number of seconds.
 
-        self.tabu_search(runtime, time_condition=True, num_processes=num_processes, tabu_list_size=tabu_list_size,
-                         neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
-                         probability_change_machine=probability_change_machine,
-                         reset_threshold=reset_threshold, initial_solutions=initial_solutions,
-                         benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
+        See solver._tabu_search for more information on the tabu search function.
+        """
+
+        return self._tabu_search(runtime, time_condition=True, num_processes=num_processes,
+                                 tabu_list_size=tabu_list_size,
+                                 neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
+                                 probability_change_machine=probability_change_machine,
+                                 reset_threshold=reset_threshold, initial_solutions=initial_solutions,
+                                 benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
 
     def tabu_search_iter(self, iterations, num_processes=4, tabu_list_size=50, neighborhood_size=300,
                          neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
-                         initial_solutions=None,
-                         benchmark=False, verbose=False, progress_bar=False):
-
-        self.tabu_search(iterations, time_condition=False, num_processes=num_processes, tabu_list_size=tabu_list_size,
-                         neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
-                         probability_change_machine=probability_change_machine,
-                         reset_threshold=reset_threshold, initial_solutions=initial_solutions,
-                         benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
-
-    def tabu_search(self, stopping_condition, time_condition, num_processes=4, tabu_list_size=50, neighborhood_size=300,
-                    neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100, initial_solutions=None,
-                    benchmark=False, verbose=False, progress_bar=False):
+                         initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
         """
-        This function performs tabu search for a given duration starting with an initial solution.
+        This function performs tabu search starting with an initial solution for a certain number of iterations.
 
-        First this function generates random initial solutions if initial_solutions is None,
-        then it forks a number_processes child processes to run tabu search.
+        See solver._tabu_search for more information on the tabu search function.
+        """
+        return self._tabu_search(iterations, time_condition=False, num_processes=num_processes,
+                                 tabu_list_size=tabu_list_size,
+                                 neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
+                                 probability_change_machine=probability_change_machine,
+                                 reset_threshold=reset_threshold, initial_solutions=initial_solutions,
+                                 benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
+
+    def _tabu_search(self, stopping_condition, time_condition, num_processes, tabu_list_size, neighborhood_size,
+                     neighborhood_wait, probability_change_machine, reset_threshold, initial_solutions,
+                     benchmark, verbose, progress_bar):
+        """
+        This function performs tabu search starting with an initial solution until the stopping condition is met.
+
+        First the function generates random initial solutions if initial_solutions is None,
+        then it forks a number of child processes to run tabu search.
 
         The parent process waits for the child processes to finish, then collects their results from a temporary directory.
 
-        :param stopping_condition: The duration that tabu search will run in seconds
+        :param stopping_condition: Integer indicating either the duration in seconds or the number of iterations to search
         :param time_condition: If true TS is ran for 'stopping_condition' number of seconds else TS is ran for 'stopping_condition' number of iterations
         :param num_processes: The number of processes to run tabu search
         :param tabu_list_size: The size of the tabu list
@@ -129,12 +139,11 @@ class Solver:
         :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
         :param verbose: If true runs in verbose mode
         :param progress_bar: If true a progress bar is spawned
-        :return:
+        :return: Best solution found
         """
         # initial solution to start TS from if not None
-        if initial_solutions is not None and not (
-                len(initial_solutions) == 0 or all(isinstance(s, solution.Solution) for s in initial_solutions)):
-            raise TypeError("initial_solutions must be a list of solutions")
+        if initial_solutions is not None and not all(isinstance(s, solution.Solution) for s in initial_solutions):
+            raise TypeError("initial_solutions must be a list of solutions or None")
 
         tmp_dir = f"{os.path.dirname(os.path.realpath(__file__))}/tabu_search/tmp"
 
@@ -162,7 +171,7 @@ class Solver:
             print("Parameters:")
             for param, val in self.ts_parameters.items():
                 if param != 'initial solutions':
-                    print(param, "=", val, "\n")
+                    print(param, "=", val)
 
         if progress_bar:
             mp.Process(target=run_progress_bar, args=[stopping_condition]).start()
@@ -231,14 +240,42 @@ class Solver:
         self.ts_best_solution = min(self.ts_all_solutions)
         return self.ts_best_solution
 
-    def genetic_algorithm(self, runtime, population=None, population_size=200, mutation_probability=0.8,
-                          selection_size=10, benchmark=False, verbose=False, progress_bar=False):
+    def genetic_algorithm_time(self, runtime, population=None, population_size=200, mutation_probability=0.8,
+                               selection_size=10, benchmark=False, verbose=False, progress_bar=False):
         """
-        This function performs a Genetic Algorithm for a given duration starting with an initial population.
+        This function performs the genetic algorithm starting with an initial population for a certain number of seconds.
+
+        See solver._genetic_algorithm for more information on the genetic algorithm function.
+        """
+
+        return self._genetic_algorithm(runtime, time_condition=True, population=population,
+                                       population_size=population_size, mutation_probability=mutation_probability,
+                                       selection_size=selection_size, benchmark=benchmark, verbose=verbose,
+                                       progress_bar=progress_bar)
+
+    def genetic_algorithm_iter(self, iterations, population=None, population_size=200, mutation_probability=0.8,
+                               selection_size=10, benchmark=False, verbose=False, progress_bar=False):
+        """
+        This function performs the genetic algorithm starting with an initial population for a certain number of iterations.
+
+        See solver._genetic_algorithm for more information on the genetic algorithm function.
+        """
+
+        return self._genetic_algorithm(iterations, time_condition=False, population=population,
+                                       population_size=population_size, mutation_probability=mutation_probability,
+                                       selection_size=selection_size, benchmark=benchmark, verbose=verbose,
+                                       progress_bar=progress_bar)
+
+    def _genetic_algorithm(self, stopping_condition, time_condition, population=None, population_size=200,
+                           mutation_probability=0.8, selection_size=10, benchmark=False, verbose=False,
+                           progress_bar=False):
+        """
+        This function performs a Genetic Algorithm starting with an initial population until the stopping condition is met.
 
         First this function generates a random initial population if population is None, then it runs GA with the parameters specified.
 
-        :param runtime: The duration that the genetic algorithm will run in seconds
+        :param stopping_condition: Integer indicating either the duration in seconds or the number of iterations to search
+        :param time_condition: If true GA is ran for 'stopping_condition' number of seconds else GA is ran for 'stopping_condition' number of iterations
         :param population: The initial population to start the GA from
         :param population_size: The size of the initial population
         :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
@@ -246,12 +283,13 @@ class Solver:
         :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
         :param verbose: If true runs in verbose mode
         :param progress_bar: If true a progress bar is spawned
-        :return:
+        :return: The best solution found
         """
 
         self.ga_benchmark = benchmark
         self.ga_parameters = {
-            'runtime': runtime,
+            'stopping condition': stopping_condition,
+            'time condition': time_condition,
             'mutation probability': mutation_probability,
             'selection size': selection_size,
             'population size': population_size,
@@ -266,16 +304,16 @@ class Solver:
             else:
                 print("Running GA")
             print("Parameters:")
-            for param, val in self.ga_parameters[:1]:
+            for param, val in self.ga_parameters.items():
                 if param != 'population':
-                    print(param, "=", val, "\n")
+                    print(param, "=", val)
 
         if progress_bar:
-            mp.Process(target=run_progress_bar, args=[runtime]).start()
+            mp.Process(target=run_progress_bar, args=[stopping_condition]).start()
 
         self.ga_result_population = self.ga_parameters['population'].copy()
-        results = genetic_algorithm.search(runtime, self.ga_result_population, mutation_probability, selection_size,
-                                           benchmark)
+        results = genetic_algorithm.search(stopping_condition, time_condition, self.ga_result_population,
+                                           mutation_probability, selection_size, benchmark)
 
         if benchmark:
             self.ga_best_solution = results[0]
@@ -347,13 +385,14 @@ class Solver:
             <h3>Tabu Search</h3>
             <b>Parameters:</b>
             <br>
-            stopping condition = {self.ts_parameters['stopping condition'] + (" seconds" if self.ts_parameters['time condition'] else " iterations") }<br>
+            stopping condition = {self.ts_parameters['stopping condition']} {" seconds" if self.ts_parameters[
+            'time condition'] else " iterations"}<br>
             number of processes = {self.ts_parameters['processes']}<br>
             tabu list size = {self.ts_parameters['tabu list size']}<br>
             neighborhood size = {self.ts_parameters['neighborhood size']}<br>
             neighborhood wait = {self.ts_parameters['neighborhood wait']} seconds<br>
             probability of changing an operation's machine = {self.ts_parameters['probability change_machine']}<br>
-            reset threshold = {self.ts_parameters['reset threshold']} seconds<br>
+            reset threshold = {self.ts_parameters['reset threshold']} iterations<br>
             best initial makespan = {round(min(self.ts_parameters['initial solutions']).makespan)}<br>
             <br>
             <b>Makespan Results:</b>
@@ -443,7 +482,8 @@ class Solver:
             <h3>Genetic Algorithm</h3>
             <b>Parameters:</b>
             <br>
-            runtime = {self.ga_parameters['runtime']} seconds<br>
+            runtime = {self.ga_parameters['stopping condition']} {" seconds" if self.ga_parameters[
+            'time condition'] else " iterations"}<br>
             population size = {self.ga_parameters['population size']}<br>
             selection size = {self.ga_parameters['selection size']}<br>
             mutation probability = {self.ga_parameters['mutation probability']}<br>

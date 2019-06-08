@@ -7,12 +7,12 @@ from JSSP.data import Data
 from .ga_helpers import crossover
 
 
-# TODO allow for max iteration as well as runtime
-def search(runtime, population, mutation_probability, selection_size, benchmark):
+def search(stopping_condition, time_condition, population, mutation_probability, selection_size, benchmark):
     """
     This function performs a genetic algorithm for a given duration starting with an initial population.
 
-    :param runtime: The duration that the GA search will run in seconds
+    :param stopping_condition: Integer indicating either the duration in seconds or the number of iterations to search
+    :param time_condition: If true search is ran for 'stopping_condition' number of seconds else it is ran for 'stopping_condition' number of iterations
     :param population: The initial population to start the GA from
     :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
     :param selection_size: The size of the selection group for tournament style selection
@@ -21,18 +21,28 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
     """
 
     best_solution = min(population)
-    stop_time = time.time() + runtime
+    iterations = 0
 
+    # get static data
     dependency_matrix_index_encoding = Data.job_task_index_matrix
     usable_machines_matrix = Data.usable_machines_matrix
 
     # variables used for benchmarks
-    iterations = 0
     best_makespans = []
     avg_population_makespan = [statistics.mean([sol.makespan for sol in population])]
-    minimum_makespan_iteration = 0
+    best_solution_iteration = 0
 
-    while time.time() < stop_time:
+    # create stopping condition function
+    if time_condition:
+        stop_time = time.time() + stopping_condition
+
+        def stop_condition():
+            return time.time() >= stop_time
+    else:
+        def stop_condition():
+            return iterations >= stopping_condition
+
+    while not stop_condition():
 
         # tournament style selection
         selection_group = sorted([random.randrange(len(population)) for _ in range(selection_size)],
@@ -53,8 +63,12 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
                                    mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
                 feasible_child = True
             except solution.InfeasibleSolutionException:
-                if time.time() > stop_time:
-                    return best_solution
+                if stop_condition():
+                    if benchmark:
+                        return [best_solution, iterations, best_makespans, avg_population_makespan,
+                                (best_solution_iteration, best_solution.makespan)]
+                    else:
+                        return best_solution
 
         # breed the parents to produce child2 (parent2 cross parent1)
         feasible_child = False
@@ -64,8 +78,12 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
                                    mutation_probability, dependency_matrix_index_encoding, usable_machines_matrix)
                 feasible_child = True
             except solution.InfeasibleSolutionException:
-                if time.time() > stop_time:
-                    return best_solution
+                if stop_condition():
+                    if benchmark:
+                        return [best_solution, iterations, best_makespans, avg_population_makespan,
+                                (best_solution_iteration, best_solution.makespan)]
+                    else:
+                        return best_solution
 
         # replace worse solutions in selection with children
         population[selection_group[-1]] = child1
@@ -75,15 +93,17 @@ def search(runtime, population, mutation_probability, selection_size, benchmark)
         if min(child1, child2) < best_solution:
             best_solution = min(child1, child2)
             if benchmark:
-                minimum_makespan_iteration = iterations
+                best_solution_iteration = iterations
 
         if benchmark:
             iterations += 1
             best_makespans.append(best_solution.makespan)
             avg_population_makespan.append(statistics.mean([sol.makespan for sol in population]))
+        elif not time_condition:
+            iterations += 1
 
     if benchmark:
         return [best_solution, iterations, best_makespans, avg_population_makespan,
-                (minimum_makespan_iteration, best_solution.makespan)]
+                (best_solution_iteration, best_solution.makespan)]
     else:
         return best_solution

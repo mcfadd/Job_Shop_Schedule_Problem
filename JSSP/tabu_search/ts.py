@@ -10,7 +10,8 @@ from JSSP.solution import InfeasibleSolutionException
 from .generate_neighbor import generate_neighbor
 
 
-def generate_neighborhood(solution, size, wait, probability_change_machine, dependency_matrix_index_encoding, usable_machines_matrix):
+def generate_neighborhood(solution, size, wait, probability_change_machine, dependency_matrix_index_encoding,
+                          usable_machines_matrix):
     """
     This function generates a neighborhood of feasible solutions that are neighbors of the seed solution parameter.
 
@@ -26,25 +27,29 @@ def generate_neighborhood(solution, size, wait, probability_change_machine, depe
     result = SolutionSet()
     while result.size < size and time.time() < stop_time:
         try:
-            result.add(generate_neighbor(solution, probability_change_machine,
-                                         dependency_matrix_index_encoding, usable_machines_matrix))
+            neighbor = generate_neighbor(solution, probability_change_machine, dependency_matrix_index_encoding,
+                                         usable_machines_matrix)
+
+            if not result.contains(neighbor):
+                result.add(neighbor)
+
         except InfeasibleSolutionException:
             # this should not happen
+            # if it does don't add the infeasible solution to the neighborhood
             pass
     return result
 
 
-# TODO allow for max iteration as well as runtime
-def search(process_id, initial_solution, stopping_condition, time_condition, tabu_list_size, neighborhood_size, neighborhood_wait,
-           probability_change_machine, reset_threshold, benchmark):
+def search(process_id, initial_solution, stopping_condition, time_condition, tabu_list_size, neighborhood_size,
+           neighborhood_wait, probability_change_machine, reset_threshold, benchmark):
     """
     This function performs Tabu Search for a given duration starting with an initial solution.
     The best solution found is pickled to a file called 'solution<process_id>' in a temporary directory.
 
     :param process_id: An integer id of the tabu search search process
     :param initial_solution: The initial solution to start the tabu search from
-    :param stopping_condition: The duration that tabu search will run in seconds
-    :param time_condition: If true TS is ran for 'stopping_condition' number of seconds else TS is ran for 'stopping_condition' number of iterations
+    :param stopping_condition: Integer indicating either the duration in seconds or the number of iterations to search
+    :param time_condition: If true search is ran for 'stopping_condition' number of seconds else it is ran for 'stopping_condition' number of iterations
     :param tabu_list_size: The size of the Tabu list
     :param neighborhood_size: The size of neighborhoods to generate during Tabu search
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
@@ -53,41 +58,46 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
     :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
     :return None.
     """
-    tmp_dir = f'{os.path.dirname(os.path.realpath(__file__))}/tmp'
+    # create temporary directory
+    tmp_dir = os.path.dirname(os.path.realpath(__file__)) + '/tmp'
     if not os.path.exists(tmp_dir):
-        raise FileNotFoundError(f'{tmp_dir} not found')
+        raise FileNotFoundError(tmp_dir + 'not found')
 
+    # get static data
     dependency_matrix_index_encoding = Data.job_task_index_matrix
     usable_machines_matrix = Data.usable_machines_matrix
 
+    # ts variables
     seed_solution = initial_solution
     best_solution = initial_solution
     tabu_list = TabuList(initial_solution)
 
+    # variables used for restarts
     lacking_solution = seed_solution
     counter = 0
 
-    # variables used for benchmarks
     iterations = 0
+
+    # variables used for benchmarks
     neighborhood_sizes = []
     tabu_list_sizes = []
     makespans = []
-    minimum_makespan_iteration = 0
+    best_solution_iteration = 0
 
+    # create stopping condition function
     if time_condition:
         stop_time = time.time() + stopping_condition
 
-        def stop_func():
-            return time.time() < stop_time
-        # stop_func = lambda: time.time() < stop_time
+        def stop_condition():
+            return time.time() >= stop_time
     else:
-        def stop_func():
-            return iterations < stopping_condition
-        # stop_func = lambda: iterations < stopping_condition
+        def stop_condition():
+            return iterations >= stopping_condition
 
-    while stop_func():
+    while not stop_condition():
         neighborhood = generate_neighborhood(seed_solution, neighborhood_size, neighborhood_wait,
-                                             probability_change_machine, dependency_matrix_index_encoding, usable_machines_matrix)
+                                             probability_change_machine, dependency_matrix_index_encoding,
+                                             usable_machines_matrix)
         sorted_neighborhood = sorted(neighborhood.solutions.items())
         break_boolean = False
 
@@ -108,9 +118,9 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
                 break
 
         if seed_solution < best_solution:
-            best_solution = seed_solution
+            best_solution = seed_solution  # update best solution
             if benchmark:
-                minimum_makespan_iteration = iterations
+                best_solution_iteration = iterations
 
         # if solution is not being improved after a number of iterations, force a move to a worse one
         counter += 1
@@ -120,7 +130,7 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
                 tabu_list.enqueue(seed_solution)
                 if tabu_list.solutions.size > tabu_list_size:
                     tabu_list.dequeue()
-                # choose a worse solution
+                # choose a worse solution from the neighborhood
                 seed_solution = sorted_neighborhood[random.randint(1, int(0.2 * len(sorted_neighborhood)))][1][0]
 
             counter = 0
@@ -137,10 +147,10 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
     # pickle results to file in tmp directory
     # need to convert memory view to np array
     best_solution.machine_makespans = np.asarray(best_solution.machine_makespans)
-    with open(f"{tmp_dir}/solution{process_id}", 'wb') as file:
+    with open(f'{tmp_dir}/solution{process_id}', 'wb') as file:
         if benchmark:
             pickle.dump([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes,
-                         (minimum_makespan_iteration, best_solution.makespan)], file, protocol=-1)
+                         (best_solution_iteration, best_solution.makespan)], file, protocol=-1)
         else:
             pickle.dump(best_solution, file, protocol=-1)
 
