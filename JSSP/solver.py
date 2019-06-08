@@ -36,6 +36,7 @@ class Solver:
     """
     The main solver class which calls tabu search and/or the genetic algorithm
     """
+
     def __init__(self):
 
         # uninitialized ts results
@@ -44,7 +45,8 @@ class Solver:
 
         # uninitialized ts parameters
         self.ts_parameters = {
-            'runtime': None,
+            'stopping condition': None,
+            'time condition': None,
             'processes': None,
             'tabu list size': None,
             'neighborhood size': None,
@@ -82,7 +84,29 @@ class Solver:
         self.ga_avg_population_makespans = []
         self.ga_min_makespan_coordinates = []
 
-    def tabu_search(self, runtime, num_processes=4, tabu_list_size=50, neighborhood_size=300,
+    def tabu_search_time(self, runtime, num_processes=4, tabu_list_size=50, neighborhood_size=300,
+                         neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
+                         initial_solutions=None,
+                         benchmark=False, verbose=False, progress_bar=False):
+
+        self.tabu_search(runtime, time_condition=True, num_processes=num_processes, tabu_list_size=tabu_list_size,
+                         neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
+                         probability_change_machine=probability_change_machine,
+                         reset_threshold=reset_threshold, initial_solutions=initial_solutions,
+                         benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
+
+    def tabu_search_iter(self, iterations, num_processes=4, tabu_list_size=50, neighborhood_size=300,
+                         neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
+                         initial_solutions=None,
+                         benchmark=False, verbose=False, progress_bar=False):
+
+        self.tabu_search(iterations, time_condition=False, num_processes=num_processes, tabu_list_size=tabu_list_size,
+                         neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
+                         probability_change_machine=probability_change_machine,
+                         reset_threshold=reset_threshold, initial_solutions=initial_solutions,
+                         benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
+
+    def tabu_search(self, stopping_condition, time_condition, num_processes=4, tabu_list_size=50, neighborhood_size=300,
                     neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100, initial_solutions=None,
                     benchmark=False, verbose=False, progress_bar=False):
         """
@@ -93,7 +117,8 @@ class Solver:
 
         The parent process waits for the child processes to finish, then collects their results from a temporary directory.
 
-        :param runtime: The duration that tabu search will run in seconds
+        :param stopping_condition: The duration that tabu search will run in seconds
+        :param time_condition: If true TS is ran for 'stopping_condition' number of seconds else TS is ran for 'stopping_condition' number of iterations
         :param num_processes: The number of processes to run tabu search
         :param tabu_list_size: The size of the tabu list
         :param neighborhood_size: The size of neighborhoods to generate during tabu search
@@ -115,7 +140,8 @@ class Solver:
 
         self.ts_benchmark = benchmark
         self.ts_parameters = {
-            'runtime': runtime,
+            'stopping condition': stopping_condition,
+            'time condition': time_condition,
             'processes': num_processes,
             'tabu list size': tabu_list_size,
             'neighborhood size': neighborhood_size,
@@ -134,12 +160,12 @@ class Solver:
             else:
                 print("Running TS")
             print("Parameters:")
-            for param, val in self.ts_parameters[:1]:
+            for param, val in self.ts_parameters.items():
                 if param != 'initial solutions':
                     print(param, "=", val, "\n")
 
         if progress_bar:
-            mp.Process(target=run_progress_bar, args=[runtime]).start()
+            mp.Process(target=run_progress_bar, args=[stopping_condition]).start()
 
         parent_process_id = os.getpid()
 
@@ -159,7 +185,8 @@ class Solver:
         for tabu_id, initial_solution in enumerate(self.ts_parameters['initial solutions']):
             processes.append(mp.Process(target=tabu_search.search, args=[tabu_id,
                                                                          initial_solution,
-                                                                         runtime,
+                                                                         stopping_condition,
+                                                                         time_condition,
                                                                          tabu_list_size,
                                                                          neighborhood_size,
                                                                          neighborhood_wait,
@@ -320,7 +347,7 @@ class Solver:
             <h3>Tabu Search</h3>
             <b>Parameters:</b>
             <br>
-            runtime = {self.ts_parameters['runtime']} seconds<br>
+            stopping condition = {self.ts_parameters['stopping condition'] + (" seconds" if self.ts_parameters['time condition'] else " iterations") }<br>
             number of processes = {self.ts_parameters['processes']}<br>
             tabu list size = {self.ts_parameters['tabu list size']}<br>
             neighborhood size = {self.ts_parameters['neighborhood size']}<br>
@@ -458,7 +485,8 @@ class Solver:
             go.Scatter(x=[self.ga_min_makespan_coordinates[0]], y=[self.ga_min_makespan_coordinates[1]], mode='markers',
                        name='best makespan'),
             go.Scatter(x=list(range(self.ga_iterations)), y=self.ga_best_makespans, name='Best makespan trace'),
-            go.Scatter(x=list(range(self.ga_iterations)), y=self.ga_avg_population_makespans, name='Avg population makespan')
+            go.Scatter(x=list(range(self.ga_iterations)), y=self.ga_avg_population_makespans,
+                       name='Avg population makespan')
         ]
 
         # create layouts for plot

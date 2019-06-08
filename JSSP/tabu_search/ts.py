@@ -35,7 +35,7 @@ def generate_neighborhood(solution, size, wait, probability_change_machine, depe
 
 
 # TODO allow for max iteration as well as runtime
-def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_size, neighborhood_wait,
+def search(process_id, initial_solution, stopping_condition, time_condition, tabu_list_size, neighborhood_size, neighborhood_wait,
            probability_change_machine, reset_threshold, benchmark):
     """
     This function performs Tabu Search for a given duration starting with an initial solution.
@@ -43,7 +43,8 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
 
     :param process_id: An integer id of the tabu search search process
     :param initial_solution: The initial solution to start the tabu search from
-    :param runtime: The duration that tabu search will run in seconds
+    :param stopping_condition: The duration that tabu search will run in seconds
+    :param time_condition: If true TS is ran for 'stopping_condition' number of seconds else TS is ran for 'stopping_condition' number of iterations
     :param tabu_list_size: The size of the Tabu list
     :param neighborhood_size: The size of neighborhoods to generate during Tabu search
     :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
@@ -62,7 +63,6 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
     seed_solution = initial_solution
     best_solution = initial_solution
     tabu_list = TabuList(initial_solution)
-    stop_time = time.time() + runtime
 
     lacking_solution = seed_solution
     counter = 0
@@ -74,7 +74,18 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
     makespans = []
     minimum_makespan_iteration = 0
 
-    while time.time() < stop_time:
+    if time_condition:
+        stop_time = time.time() + stopping_condition
+
+        def stop_func():
+            return time.time() < stop_time
+        # stop_func = lambda: time.time() < stop_time
+    else:
+        def stop_func():
+            return iterations < stopping_condition
+        # stop_func = lambda: iterations < stopping_condition
+
+    while stop_func():
         neighborhood = generate_neighborhood(seed_solution, neighborhood_size, neighborhood_wait,
                                              probability_change_machine, dependency_matrix_index_encoding, usable_machines_matrix)
         sorted_neighborhood = sorted(neighborhood.solutions.items())
@@ -120,6 +131,8 @@ def search(process_id, initial_solution, runtime, tabu_list_size, neighborhood_s
             neighborhood_sizes.append(neighborhood.size)
             makespans.append(seed_solution.makespan)
             tabu_list_sizes.append(tabu_list.solutions.size)
+        elif not time_condition:
+            iterations += 1
 
     # pickle results to file in tmp directory
     # need to convert memory view to np array

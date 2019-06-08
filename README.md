@@ -59,7 +59,7 @@ Data.initialize_data_from_csv(data_directory + '/sequenceDependencyMatrix.csv',
 
 # run tabu search
 solver = Solver()
-solution = solver.tabu_search(runtime=30,
+solution = solver.tabu_search(stopping_condition=30,
                               num_processes=2,
                               tabu_list_size=50,
                               neighborhood_size=250,
