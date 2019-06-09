@@ -1,5 +1,7 @@
 # Job Shop Schedule Problem (JSSP)
 
+[![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
+
 The specific JSSP problem this program attempts to solve is classified as the 
 **Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**. 
 For a complete description of the problem see the [Problem Description](https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Job-Shop-Schedule-Problem-Description) wiki.
