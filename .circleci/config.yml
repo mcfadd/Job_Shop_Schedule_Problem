@@ -1,0 +1,27 @@
+# Python CircleCI 2.0 configuration file
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6
+
+    working_directory: ~/Job_Shop_Schedule_Problem
+
+    steps:
+      - checkout
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: build cython
+          command: |
+            . venv/bin/activate
+            python setup.py build_ext
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            python -m unittest discover

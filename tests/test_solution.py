@@ -1,5 +1,6 @@
 import pickle
 import unittest
+import os
 
 import numpy as np
 
@@ -25,9 +26,10 @@ Test the following:
 class TestSolution(unittest.TestCase):
 
     def __init__(self, *args):
-        Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
-                                      '../data/given_data/machineRunSpeed.csv',
-                                      '../data/given_data/jobTasks.csv')
+        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        Data.initialize_data_from_csv(self.project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      self.project_root + '/data/given_data/machineRunSpeed.csv',
+                                      self.project_root + '/data/given_data/jobTasks.csv')
         super(TestSolution, self).__init__(*args)
 
     def test_solution_equality(self):
@@ -107,15 +109,17 @@ class TestSolution(unittest.TestCase):
     def test_pickle_to_file(self):
 
         solution_obj = solution.generate_feasible_solution()
-        solution_obj.pickle_to_file('./test_solution.pkl')
+        solution_obj.pickle_to_file(self.project_root + '/tests/solution.pkl')
 
-        with open('./test_solution.pkl', 'rb') as fin:
+        with open(self.project_root + '/tests/solution.pkl', 'rb') as fin:
             solution_obj_pickled = pickle.load(fin)
 
         self.assertEqual(solution_obj, solution_obj_pickled, "The pickled solution should be equal to solution_obj")
         solution_obj.makespan -= 1
         self.assertNotEqual(solution_obj, solution_obj_pickled,
                             "The pickled solution should not be equal to solution_obj")
+
+        os.remove(self.project_root + '/tests/solution.pkl')
 
 
 if __name__ == '__main__':

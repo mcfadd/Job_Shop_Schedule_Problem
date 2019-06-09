@@ -14,9 +14,11 @@ class TestGA(unittest.TestCase):
 
     def __init__(self, *args):
         self.tmp_dir = os.path.dirname(os.path.realpath(__file__)) + '/tmp'
-        Data.initialize_data_from_csv('../data/given_data/sequenceDependencyMatrix.csv',
-                                      '../data/given_data/machineRunSpeed.csv',
-                                      '../data/given_data/jobTasks.csv')
+
+        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        Data.initialize_data_from_csv(self.project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      self.project_root + '/data/given_data/machineRunSpeed.csv',
+                                      self.project_root + '/data/given_data/jobTasks.csv')
         super(TestGA, self).__init__(*args)
 
     def tearDown(self) -> None:
