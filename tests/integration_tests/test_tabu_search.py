@@ -1,8 +1,10 @@
-import unittest
-from JSSP.data import Data
-from JSSP.solver import Solver
 import os
 import shutil
+import unittest
+
+from JSSP.data import Data
+from JSSP.solver import Solver
+from tests import project_root, tmp_dir
 
 """
 Test solver.tabu_search() function
@@ -11,18 +13,16 @@ Test solver.tabu_search() function
 
 class TestTS(unittest.TestCase):
 
-    def __init__(self, *args):
-        self.tmp_dir = os.path.dirname(os.path.realpath(__file__)) + '/tmp'
+    def setUp(self) -> None:
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
 
-        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        Data.initialize_data_from_csv(self.project_root + '/data/given_data/sequenceDependencyMatrix.csv',
-                                      self.project_root + '/data/given_data/machineRunSpeed.csv',
-                                      self.project_root + '/data/given_data/jobTasks.csv')
-
-        super(TestTS, self).__init__(*args)
+        Data.initialize_data_from_csv(project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      project_root + '/data/given_data/machineRunSpeed.csv',
+                                      project_root + '/data/given_data/jobTasks.csv')
 
     def tearDown(self) -> None:
-        shutil.rmtree(self.tmp_dir)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ts_time(self):
 
@@ -46,11 +46,11 @@ class TestTS(unittest.TestCase):
         except Exception as e:
             self.fail('Unexpected exception raised:' + str(e))
 
-        self.assertIsNotNone(solver.ts_best_solution)
+        self.assertIsNotNone(solver.ts_best_solution, "TS should have produced a best solution")
 
         # output results
-        solver.ts_best_solution.create_schedule(self.tmp_dir)
-        self.assertTrue(os.path.exists(self.tmp_dir + '/Schedule.xlsx'))
+        solver.ts_best_solution.create_schedule(tmp_dir, filename='ts_test_schedule')
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_schedule.xlsx'), "ts_test_schedule.xlsx was not produced")
 
     def test_ts_time_benchmark(self):
 
@@ -88,8 +88,13 @@ class TestTS(unittest.TestCase):
         self.assertNotEqual(0, len(solver.ts_min_makespan_coordinates))
 
         # output results
-        solver.output_benchmark_results(self.tmp_dir, name='test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(self.tmp_dir + '/test_benchmark'))
+        solver.output_benchmark_results(tmp_dir, name='ts_test_benchmark', auto_open=False)
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark'), "TS benchmark results were not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/index.html'), "TS benchmark results index.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/ts_makespans.html'), "TS benchmark results ts_makespans.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/neighborhood_sizes.html'), "TS benchmark results neighborhood_sizes.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/tabu_list_sizes.html'), "TS benchmark results tabu_list_sizes.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/ts_schedule.xlsx'), "TS benchmark results ts_schedule.xlsx was not produced")
 
     def test_ts_iter(self):
 
@@ -114,11 +119,11 @@ class TestTS(unittest.TestCase):
         except Exception as e:
             self.fail('Unexpected exception raised:' + str(e))
 
-        self.assertIsNotNone(solver.ts_best_solution)
+        self.assertIsNotNone(solver.ts_best_solution, "TS should have produced a best solution")
 
         # output results
-        solver.ts_best_solution.create_schedule(self.tmp_dir)
-        self.assertTrue(os.path.exists(self.tmp_dir + '/Schedule.xlsx'))
+        solver.ts_best_solution.create_schedule(tmp_dir, filename='ts_test_schedule')
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_schedule.xlsx'), "ts_test_schedule.xlsx was not produced")
 
     def test_ts_iter_benchmark(self):
 
@@ -158,8 +163,13 @@ class TestTS(unittest.TestCase):
             self.assertEqual(iterations, ts_iteration)
 
         # output results
-        solver.output_benchmark_results(self.tmp_dir, name='test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(self.tmp_dir + '/test_benchmark'))
+        solver.output_benchmark_results(tmp_dir, name='ts_test_benchmark', auto_open=False)
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark'), "TS benchmark results were not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/index.html'), "TS benchmark results index.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/ts_makespans.html'), "TS benchmark results ts_makespans.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/neighborhood_sizes.html'), "TS benchmark results neighborhood_sizes.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/tabu_list_sizes.html'), "TS benchmark results tabu_list_sizes.html was not produced")
+        self.assertTrue(os.path.exists(tmp_dir + '/ts_test_benchmark/ts_schedule.xlsx'), "TS benchmark results ts_schedule.xlsx was not produced")
 
 
 if __name__ == '__main__':

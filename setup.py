@@ -6,7 +6,7 @@ from Cython.Build import cythonize
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 
-__version__ = '1.0.0'
+__version__ = '0.1.0'
 
 REQUIRED = [
     'Cython',

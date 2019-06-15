@@ -1,11 +1,13 @@
-import pickle
-import unittest
 import os
+import pickle
+import shutil
+import unittest
 
 import numpy as np
 
 from JSSP import solution
 from JSSP.data import Data
+from tests import project_root, tmp_dir
 
 """
 Test the following: 
@@ -25,15 +27,12 @@ Test the following:
 
 class TestSolution(unittest.TestCase):
 
-    def __init__(self, *args):
-        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        Data.initialize_data_from_csv(self.project_root + '/data/given_data/sequenceDependencyMatrix.csv',
-                                      self.project_root + '/data/given_data/machineRunSpeed.csv',
-                                      self.project_root + '/data/given_data/jobTasks.csv')
-        super(TestSolution, self).__init__(*args)
+    def setUp(self) -> None:
+        Data.initialize_data_from_csv(project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      project_root + '/data/given_data/machineRunSpeed.csv',
+                                      project_root + '/data/given_data/jobTasks.csv')
 
     def test_solution_equality(self):
-
         solution_obj1 = solution.generate_feasible_solution()
         solution_obj2 = solution.Solution(solution_obj1.operation_2d_array)
 
@@ -106,20 +105,33 @@ class TestSolution(unittest.TestCase):
         except solution.InfeasibleSolutionException:
             self.assertTrue(False, "Infeasible solution was generated")
 
+
+class TestPicklingSolution(unittest.TestCase):
+
+    def setUp(self) -> None:
+        if not os.path.exists(tmp_dir):
+            os.mkdir(tmp_dir)
+
+        Data.initialize_data_from_csv(project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      project_root + '/data/given_data/machineRunSpeed.csv',
+                                      project_root + '/data/given_data/jobTasks.csv')
+
+    def tearDown(self) -> None:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
     def test_pickle_to_file(self):
 
         solution_obj = solution.generate_feasible_solution()
-        solution_obj.pickle_to_file(self.project_root + '/tests/solution.pkl')
+        solution_obj.pickle_to_file(tmp_dir + '/test_solution.pkl')
 
-        with open(self.project_root + '/tests/solution.pkl', 'rb') as fin:
+        self.assertTrue(os.path.exists(tmp_dir + '/test_solution.pkl'), "The pickled solution does not exist")
+
+        with open(tmp_dir + '/test_solution.pkl', 'rb') as fin:
             solution_obj_pickled = pickle.load(fin)
 
         self.assertEqual(solution_obj, solution_obj_pickled, "The pickled solution should be equal to solution_obj")
         solution_obj.makespan -= 1
-        self.assertNotEqual(solution_obj, solution_obj_pickled,
-                            "The pickled solution should not be equal to solution_obj")
-
-        os.remove(self.project_root + '/tests/solution.pkl')
+        self.assertNotEqual(solution_obj, solution_obj_pickled, "The pickled solution should not be equal to solution_obj")
 
 
 if __name__ == '__main__':

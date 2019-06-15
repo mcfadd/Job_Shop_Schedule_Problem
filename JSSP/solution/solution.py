@@ -39,7 +39,7 @@ class Solution:
                                               f"Should be {Data.total_number_of_tasks}")
 
         self.machine_makespans = compute_machine_makespans(operation_2d_array,
-                                                           Data.task_processing_times,
+                                                           Data.task_processing_times_matrix,
                                                            Data.sequence_dependency_matrix,
                                                            Data.job_task_index_matrix)
         self.makespan = max(self.machine_makespans)
@@ -124,11 +124,11 @@ class Solution:
             os.mkdir(output_dir)
 
         # get all the necessary data from the static Data class
-        machine_speeds = Data.machine_speeds
+        task_processing_times_matrix = Data.task_processing_times_matrix
+        job_task_index_matrix = Data.job_task_index_matrix
         sequence_dependency_matrix = Data.sequence_dependency_matrix
-        sequence_dependency_matrix_index_encoding = Data.job_task_index_matrix
         num_jobs = sequence_dependency_matrix.shape[0]
-        num_machines = machine_speeds.shape[0]
+        num_machines = task_processing_times_matrix.shape[1]
 
         # create an excel workbook and worksheet in output directory
         workbook = xlsxwriter.Workbook(f'{output_dir + "/" + filename + ".xlsx"}')
@@ -181,12 +181,11 @@ class Solution:
             task_id = operation_2d_array[row, 1]
             sequence = operation_2d_array[row, 2]
             machine = operation_2d_array[row, 3]
-            pieces = operation_2d_array[row, 4]
 
             # get the setup time for the current operation
             if machine_jobs_memory[machine] != (-1, -1):
-                cur_task_index = sequence_dependency_matrix_index_encoding[job_id, task_id]
-                prev_task_index = sequence_dependency_matrix_index_encoding[machine_jobs_memory[machine]]
+                cur_task_index = job_task_index_matrix[job_id, task_id]
+                prev_task_index = job_task_index_matrix[machine_jobs_memory[machine]]
                 setup = sequence_dependency_matrix[cur_task_index, prev_task_index]
             else:
                 setup = 0
@@ -200,6 +199,8 @@ class Solution:
             else:
                 wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
 
+            runtime = task_processing_times_matrix[job_task_index_matrix[job_id, task_id], machine]
+
             # write Job_Task setup
             worksheet.write_row(machine_current_row[machine], machine * 4, [f"{job_id}_{task_id} setup",
                                                                             machine_makespan_memory[machine] + wait,
@@ -211,11 +212,10 @@ class Solution:
                                                                                 machine_makespan_memory[
                                                                                     machine] + wait + setup,
                                                                                 machine_makespan_memory[
-                                                                                    machine] + wait + setup + pieces /
-                                                                                machine_speeds[machine]])
+                                                                                    machine] + wait + setup + runtime])
 
             # compute total added time and update memory modules
-            machine_makespan_memory[machine] += pieces / machine_speeds[machine] + wait + setup
+            machine_makespan_memory[machine] += runtime + wait + setup
             machine_waitime_memory[machine] += wait
             machine_setup_time_memory[machine] += setup
             job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
@@ -254,9 +254,8 @@ def generate_feasible_solution(spt=False, lpt=False):
     """
 
     operation_list = []
-    last_task_scheduled_on_machine = [0] * len(Data.machine_speeds)
-    available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
-                 Data.jobs}
+    last_task_scheduled_on_machine = [None] * Data.total_number_of_machines
+    available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in Data.jobs}
 
     while 0 < len(available):
         get_unstuck = 0
@@ -266,7 +265,7 @@ def generate_feasible_solution(spt=False, lpt=False):
 
         # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
         # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
-        while last_task_scheduled_on_machine[rand_machine] != 0 and \
+        while last_task_scheduled_on_machine[rand_machine] is not None and \
                 last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id and \
                 last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
 
@@ -287,6 +286,6 @@ def generate_feasible_solution(spt=False, lpt=False):
                                           task.get_sequence() == rand_task.get_sequence() + 1]
 
         last_task_scheduled_on_machine[rand_machine] = rand_task
-        operation_list.append(
-            [rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine, rand_task.get_pieces()])
+        operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine])
+
     return Solution(np.array(operation_list, dtype=np.intc))

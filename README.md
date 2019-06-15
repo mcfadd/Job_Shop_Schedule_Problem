@@ -1,6 +1,7 @@
 # Job Shop Schedule Problem (JSSP)
 
 [![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
+#### Version 0.1.0  
 
 The specific JSSP problem this program attempts to solve is classified as the 
 **Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**. 
@@ -61,7 +62,7 @@ solution = solver.tabu_search_time(runtime=30, # in seconds
 solution.pprint()
 
 # create Schedule.xlsx in output directory
-solution.create_schedule('output', )                   
+solution.create_schedule('output')                   
 ```
 
 **Flexible Job Shop**

@@ -2,7 +2,6 @@ import datetime
 import multiprocessing as mp
 import os
 import pickle
-import shutil
 import statistics
 import time
 import webbrowser
@@ -145,8 +144,6 @@ class Solver:
         if initial_solutions is not None and not all(isinstance(s, solution.Solution) for s in initial_solutions):
             raise TypeError("initial_solutions must be a list of solutions or None")
 
-        tmp_dir = f"{os.path.dirname(os.path.realpath(__file__))}/tabu_search/tmp"
-
         self.ts_benchmark = benchmark
         self.ts_parameters = {
             'stopping condition': stopping_condition,
@@ -178,21 +175,16 @@ class Solver:
 
         parent_process_id = os.getpid()
 
-        # remove temporary directory if it exists
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-
-        # create temporary directory for storing results
-        os.mkdir(tmp_dir)
-
         if verbose:
             print("Initial Solution's makespans:")
             print([round(x.makespan) for x in self.ts_parameters['initial solutions']])
             print()
 
         # create child processes to run tabu search
+        child_results_queue = mp.Queue()
         processes = []
         for tabu_id, initial_solution in enumerate(self.ts_parameters['initial solutions']):
-            processes.append(mp.Process(target=tabu_search.search, args=[tabu_id,
+            processes.append(mp.Process(target=tabu_search.search, args=[child_results_queue,
                                                                          initial_solution,
                                                                          stopping_condition,
                                                                          time_condition,
@@ -221,21 +213,17 @@ class Solver:
             print("collecting results from tmp directory")
 
         # get the results from the tmp directory
-        for tabu_id in range(num_processes):
-            with open(tmp_dir + f'/solution{tabu_id}', 'rb') as file:
-                if benchmark:
-                    results = pickle.load(file)
-                    self.ts_all_solutions.append(results[0])
-                    self.ts_iterations.append(results[1])
-                    self.ts_nh_sizes.append(results[2])
-                    self.ts_makespans.append(results[3])
-                    self.ts_tabu_sizes.append(results[4])
-                    self.ts_min_makespan_coordinates.append(results[5])
-                else:
-                    self.ts_all_solutions.append(pickle.load(file))
-
-        # remove temporary directory
-        shutil.rmtree(tmp_dir)
+        while not child_results_queue.empty():
+            if benchmark:
+                results = pickle.loads(child_results_queue.get())
+                self.ts_all_solutions.append(results[0])
+                self.ts_iterations.append(results[1])
+                self.ts_nh_sizes.append(results[2])
+                self.ts_makespans.append(results[3])
+                self.ts_tabu_sizes.append(results[4])
+                self.ts_min_makespan_coordinates.append(results[5])
+            else:
+                self.ts_all_solutions.append(pickle.loads(child_results_queue.get()))
 
         self.ts_best_solution = min(self.ts_all_solutions)
         return self.ts_best_solution

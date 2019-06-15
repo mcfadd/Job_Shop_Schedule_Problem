@@ -4,24 +4,66 @@ jobs:
   build:
     docker:
       - image: circleci/python:3.6
+      - image: circleci/python:3.7
 
     working_directory: ~/Job_Shop_Schedule_Problem
 
     steps:
       - checkout
       - run:
-          name: install dependencies
+          name: Install dependencies
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
       - run:
-          name: build cython
+          name: Build cython
           command: |
             . venv/bin/activate
             python setup.py build_ext
       - run:
-          name: run tests
+          name: Install JSSP
           command: |
             . venv/bin/activate
-            python -m unittest discover
+            pip install .
+
+  test:
+    docker:
+      - image: circleci/python:3.6
+      - image: circleci/python:3.7
+
+    working_directory: ~/Job_Shop_Schedule_Problem
+
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+      - run:
+          name: Build cython
+          command: |
+            . venv/bin/activate
+            python setup.py build_ext
+      - run:
+          name: Unit tests
+          command: |
+            . venv/bin/activate
+            python -m unittest discover -s ./tests/unit_tests
+      - run:
+          name: Integration tests
+          command: |
+            . venv/bin/activate
+            python -m unittest discover -s ./tests/integration_tests
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build

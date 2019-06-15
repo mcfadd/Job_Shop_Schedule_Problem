@@ -1,9 +1,9 @@
 import unittest
-import os
 
 from JSSP import solution
 from JSSP.data import Data
 from JSSP.tabu_search.ts import SolutionSet, TabuList
+from tests import project_root
 
 """
 Test the following:
@@ -19,12 +19,10 @@ Test the following:
 
 class TestTSStructures(unittest.TestCase):
 
-    def __init__(self, *args):
-        self.project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        Data.initialize_data_from_csv(self.project_root + '/data/given_data/sequenceDependencyMatrix.csv',
-                                      self.project_root + '/data/given_data/machineRunSpeed.csv',
-                                      self.project_root + '/data/given_data/jobTasks.csv')
-        super(TestTSStructures, self).__init__(*args)
+    def setUp(self) -> None:
+        Data.initialize_data_from_csv(project_root + '/data/given_data/sequenceDependencyMatrix.csv',
+                                      project_root + '/data/given_data/machineRunSpeed.csv',
+                                      project_root + '/data/given_data/jobTasks.csv')
 
     def test_solution_set_add(self):
         solution_set = SolutionSet()

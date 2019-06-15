@@ -15,7 +15,7 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
                                             const int[:, ::1] job_task_index_matrix):
     """
     Computes a 1d array of all the machine's makespan times given a 2d nparray of operations, where an operation
-    is a 1d nparray of integers in the form [job_id, task_id, sequence, machine, pieces].
+    is a 1d nparray of integers in the form [job_id, task_id, sequence, machine].
 
     :param operation_2d_array: The 2d array of operations to compute the machine makespans for.
     :param task_processing_times_matrix: task processing times matrix from static Data
@@ -51,7 +51,7 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
         abort()
 
     cdef Py_ssize_t row, i
-    cdef int job_id, task_id, sequence, machine, pieces, setup, cur_task_index, prev_task_index
+    cdef int job_id, task_id, sequence, machine, setup, cur_task_index, prev_task_index
     cdef double wait
 
     for i in range(num_machines):
@@ -70,7 +70,6 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
         task_id = operation_2d_array[row, 1]
         sequence = operation_2d_array[row, 2]
         machine = operation_2d_array[row, 3]
-        pieces = operation_2d_array[row, 4]
 
         if machine_jobs_memory[machine] != -1:
             cur_task_index = job_task_index_matrix[job_id, task_id]

@@ -1,4 +1,3 @@
-import os
 import pickle
 import random
 import time
@@ -40,13 +39,13 @@ def generate_neighborhood(solution, size, wait, probability_change_machine, depe
     return result
 
 
-def search(process_id, initial_solution, stopping_condition, time_condition, tabu_list_size, neighborhood_size,
+def search(child_results_queue, initial_solution, stopping_condition, time_condition, tabu_list_size, neighborhood_size,
            neighborhood_wait, probability_change_machine, reset_threshold, benchmark):
     """
     This function performs Tabu Search for a given duration starting with an initial solution.
     The best solution found is pickled to a file called 'solution<process_id>' in a temporary directory.
 
-    :param process_id: An integer id of the tabu search search process
+    :param child_results_queue: A multiprocessing.Queue object that stores the results for the parent process
     :param initial_solution: The initial solution to start the tabu search from
     :param stopping_condition: Integer indicating either the duration in seconds or the number of iterations to search
     :param time_condition: If true search is ran for 'stopping_condition' number of seconds else it is ran for 'stopping_condition' number of iterations
@@ -58,10 +57,6 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
     :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
     :return None.
     """
-    # create temporary directory
-    tmp_dir = os.path.dirname(os.path.realpath(__file__)) + '/tmp'
-    if not os.path.exists(tmp_dir):
-        raise FileNotFoundError(tmp_dir + 'not found')
 
     # get static data
     dependency_matrix_index_encoding = Data.job_task_index_matrix
@@ -144,15 +139,14 @@ def search(process_id, initial_solution, stopping_condition, time_condition, tab
         elif not time_condition:
             iterations += 1
 
-    # pickle results to file in tmp directory
+    # pickle results and add to Queue
     # need to convert memory view to np array
     best_solution.machine_makespans = np.asarray(best_solution.machine_makespans)
-    with open(f'{tmp_dir}/solution{process_id}', 'wb') as file:
-        if benchmark:
-            pickle.dump([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes,
-                         (best_solution_iteration, best_solution.makespan)], file, protocol=-1)
-        else:
-            pickle.dump(best_solution, file, protocol=-1)
+    if benchmark:
+        child_results_queue.put(pickle.dumps([best_solution, iterations, neighborhood_sizes, makespans, tabu_list_sizes,
+                                              (best_solution_iteration, best_solution.makespan)], protocol=-1))
+    else:
+        child_results_queue.put(pickle.dumps(best_solution, protocol=-1))
 
 
 ''' Below are the data structures used by Tabu Search '''

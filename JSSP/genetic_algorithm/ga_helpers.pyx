@@ -55,8 +55,8 @@ cpdef crossover(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, 
     cdef Py_ssize_t end_bottomlist_index = 0
     cdef Py_ssize_t random_opeartion_index, i
 
-    cdef int[:, ::] toplist = np.empty([parent1.shape[0] - (random_y - random_x), 5], dtype=np.intc)
-    cdef int[:, ::] bottomlist = np.empty([parent1.shape[0] - (random_y - random_x), 5], dtype=np.intc)
+    cdef int[:, ::] toplist = np.empty([parent1.shape[0] - (random_y - random_x), 4], dtype=np.intc)
+    cdef int[:, ::] bottomlist = np.empty([parent1.shape[0] - (random_y - random_x), 4], dtype=np.intc)
     cdef int[:, ::] result
 
     for row in range(parent2.shape[0]):

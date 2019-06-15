@@ -1,7 +1,7 @@
 import csv
 import os
 import re
-import shutil
+
 import numpy as np
 
 
@@ -28,6 +28,12 @@ class Task:
 
     def get_pieces(self):
         return self._pieces
+
+    def __eq__(self, other):
+        return self._jobId == other.get_job_id() \
+               and self._taskId == other.get_task_id() \
+               and self._sequence == other.get_sequence() \
+               and np.array_equal(self._usable_machines, other.get_usable_machines())  # note pieces are omitted
 
     def pprint(self):
         print(f"[{self._jobId}, "
@@ -62,6 +68,11 @@ class Job:
     def get_number_of_tasks(self):
         return len(self._tasks)
 
+    def __eq__(self, other):
+        return self._jobId == other.get_job_id() \
+               and self._max_sequence == other.get_max_sequence() \
+               and self._tasks == other.get_tasks()
+
 
 class Data:
     """
@@ -69,16 +80,36 @@ class Data:
     """
 
     # uninitialized static fields
+    fjs_instance = False
     sequence_dependency_matrix = None
     job_task_index_matrix = None
     usable_machines_matrix = None
-    task_processing_times = None
+    task_processing_times_matrix = None
     machine_speeds = None
     jobs = []
     total_number_of_jobs = 0
     total_number_of_tasks = 0
     total_number_of_machines = 0
     max_tasks_for_a_job = 0
+
+    @staticmethod
+    def reset_data():
+        """
+        Resets all of the static data.
+
+        :return: None
+        """
+        Data.fjs_instance = False
+        Data.sequence_dependency_matrix = None
+        Data.job_task_index_matrix = None
+        Data.usable_machines_matrix = None
+        Data.task_processing_times_matrix = None
+        Data.machine_speeds = None
+        Data.jobs = []
+        Data.total_number_of_jobs = 0
+        Data.total_number_of_tasks = 0
+        Data.total_number_of_machines = 0
+        Data.max_tasks_for_a_job = 0
 
     @staticmethod
     def initialize_data_from_csv(seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
@@ -90,30 +121,83 @@ class Data:
         :param job_tasks_file: csv file containg all of the job-tasks
         :return: None
         """
+        Data.reset_data()
         Data._read_job_tasks_file(job_tasks_file)
         Data._read_sequence_dependency_matrix_file(seq_dep_matrix_file)
         Data._read_machine_speeds_file(machine_speeds_file)
         Data._initialize_derived_data()
 
-    # TODO redo this function without converting fjs instance to csv.
     @staticmethod
     def initialize_data_from_fjs(input_file):
         """
         This function initializes all of the static data from a .fjs file
 
         :param input_file: The .fjs file to read the data from
-        :return:
+        :return: None
         """
-        tmp_dir = f"{os.path.dirname(os.path.realpath(__file__))}/tmp"
+        Data.reset_data()
+        Data.fjs_instance = True
+        # read .fjs input file
+        with open(input_file, 'r') as fin:
 
-        # convert .fjs to csv then initialize
-        Data.convert_fjs_to_csv(input_file, tmp_dir)
-        Data.initialize_data_from_csv(tmp_dir + '/sequenceDependencyMatrix.csv',
-                                      tmp_dir + '/machineRunSpeed.csv',
-                                      tmp_dir + '/jobTasks.csv')
+            lines = [line for line in [l.strip() for l in fin] if line]  # read all non-blank lines
+            first_line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')[:-1]]
 
-        # remove temporary directory
-        shutil.rmtree(f"{os.path.dirname(os.path.realpath(__file__))}/tmp", ignore_errors=True)
+            Data.total_number_of_jobs = first_line[0]  # get total num jobs
+            Data.total_number_of_machines = first_line[1]  # get total num machines
+
+            Data.total_number_of_tasks = 0
+            Data.max_tasks_for_a_job = 0
+            for line in lines[1:]:  # iterate over jobs
+                # convert row (task data) to list of integers
+                line = [int(s) for s in re.sub(r'\s+', ' ', line.strip()).split(' ')]
+
+                num_tasks = int(line[0])
+                Data.total_number_of_tasks += num_tasks
+                Data.max_tasks_for_a_job = max(num_tasks, Data.max_tasks_for_a_job)
+
+            # initialize matrices
+            Data.task_processing_times_matrix = np.full((Data.total_number_of_tasks, Data.total_number_of_machines), -1, dtype=np.float)
+            Data.sequence_dependency_matrix = np.zeros((Data.total_number_of_tasks, Data.total_number_of_tasks), dtype=np.intc)
+            Data.usable_machines_matrix = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines), dtype=np.intc)
+            Data.job_task_index_matrix = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1, dtype=np.intc)
+
+            task_index = 0
+            for job_id, task_data in enumerate(lines[1:]):  # iterate over jobs
+
+                # create and append new Job
+                Data.jobs.append(Job(job_id))
+
+                task_id = 0
+                sequence = 0
+
+                # get all the Job's task data
+                task_data = [int(s) for s in re.sub(r'\s+', ' ', task_data.strip()).split(' ')]
+
+                i = 1
+                while i < len(task_data):  # iterate over tasks
+
+                    num_usable_machines = task_data[i]
+                    usable_machines = []
+
+                    for j in range(i + 1, i + num_usable_machines * 2 + 1, 2):  # iterate over machines & run times for task
+
+                        machine = task_data[j] - 1  # machines are zero indexed
+                        runtime = task_data[j + 1]
+
+                        usable_machines.append(machine)
+                        Data.task_processing_times_matrix[task_index, machine] = runtime
+
+                    Data.jobs[job_id].get_tasks().append(Task(job_id, task_id, sequence, usable_machines, -1))
+                    Data.usable_machines_matrix[task_index] = np.resize(np.array(usable_machines, dtype=np.intc), Data.total_number_of_machines)
+                    Data.job_task_index_matrix[job_id, task_id] = task_index
+
+                    task_id += 1
+                    sequence += 1
+                    task_index += 1
+                    i += num_usable_machines * 2 + 1
+
+                Data.jobs[job_id].set_max_sequence(sequence - 1)
 
     @staticmethod
     def _read_job_tasks_file(job_tasks_file):
@@ -126,7 +210,6 @@ class Data:
         :param job_tasks_file: The csv file that contains the job-task data
         :return: None
         """
-        Data.jobs = []
         prev_job_id = -1  # record previously seen job_id
         with open(job_tasks_file) as fin:
             # skip headers (i.e. first row in csv file)
@@ -197,28 +280,25 @@ class Data:
         Data.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in Data.jobs])
         Data.total_number_of_machines = Data.machine_speeds.shape[0]
 
-        Data.job_task_index_matrix = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1,
-                                             dtype=np.intc)
-        Data.usable_machines_matrix = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines),
-                                               dtype=np.intc)
-        Data.task_processing_times = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines))
+        Data.job_task_index_matrix = np.full((Data.total_number_of_jobs, Data.max_tasks_for_a_job), -1, dtype=np.intc)
+        Data.usable_machines_matrix = np.empty((Data.total_number_of_tasks, Data.total_number_of_machines), dtype=np.intc)
+        Data.task_processing_times_matrix = np.full((Data.total_number_of_tasks, Data.total_number_of_machines), -1, dtype=np.float)
         # process all job-tasks
-        index = 0
+        task_index = 0
         for job in Data.jobs:
             for task in job.get_tasks():
 
                 # create mapping of (job id, task id) to index
-                Data.job_task_index_matrix[job.get_job_id(), task.get_task_id()] = index
+                Data.job_task_index_matrix[job.get_job_id(), task.get_task_id()] = task_index
 
                 # create row in Data.usable_machines_matrix
-                Data.usable_machines_matrix[index] = np.resize(task.get_usable_machines(),
-                                                               Data.total_number_of_machines)
+                Data.usable_machines_matrix[task_index] = np.resize(task.get_usable_machines(), Data.total_number_of_machines)
 
                 # create row in Data.task_processing_times
                 for machine in task.get_usable_machines():
-                    Data.task_processing_times[index, machine] = task.get_pieces() / Data.machine_speeds[machine]
+                    Data.task_processing_times_matrix[task_index, machine] = task.get_pieces() / Data.machine_speeds[machine]
 
-                index += 1
+                task_index += 1
 
     @staticmethod
     def print_data():
@@ -241,11 +321,12 @@ class Data:
         print("usable_machines_matrix:", Data.usable_machines_matrix.shape, end="\n\n")
         print(Data.usable_machines_matrix)
         print()
-        print("task_processing_times:", Data.task_processing_times.shape, end="\n\n")
-        print(Data.task_processing_times)
+        print("task_processing_times:", Data.task_processing_times_matrix.shape, end="\n\n")
+        print(Data.task_processing_times_matrix)
         print()
-        print("machine_speeds:", Data.machine_speeds.shape, end="\n\n")
-        print(Data.machine_speeds)
+        if not Data.fjs_instance:
+            print("machine_speeds:", Data.machine_speeds.shape, end="\n\n")
+            print(Data.machine_speeds)
 
     @staticmethod
     def convert_fjs_to_csv(input_file, output_dir):
@@ -271,7 +352,7 @@ class Data:
                 lines = [line for line in [l.strip() for l in fin] if line]
                 line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')[:-1]]
 
-                total_num_mahines = line[1]
+                total_num_machines = line[1]
 
                 # iterate over jobs
                 for job_id, tasks in enumerate(lines[1:]):
@@ -298,12 +379,11 @@ class Data:
                         task_id += 1
                         sequence += 1
                         fout.write(output_line + '\n')
-                        # print(output_line)
 
         # create machineRunSpeed.csv
         with open(output_dir + '/machineRunSpeed.csv', 'w') as fout:
             fout.write("Machine,RunSpeed\n")
-            for i in range(total_num_mahines):
+            for i in range(total_num_machines):
                 fout.write(f"{i},1\n")
 
         # create sequenceDependencyMatrix.csv
