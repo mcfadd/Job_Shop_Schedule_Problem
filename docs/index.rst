@@ -37,8 +37,8 @@ Features
 How to Install
 ==============
 
-1. `Download JSSP < TODO >`_
-2. Run ``easy_install < TODO >``
+1. Download `JSSP-0.2.0.linux-x86_64.egg <https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases/download/0.2.0/JSSP-0.2.0.linux-x86_64.egg>`_
+2. Run ``easy_install JSSP-0.2.0.linux-x86_64.egg``
 
 If you get an error about ``python.h`` not being found try installing `python3-dev <https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for>`_.
 

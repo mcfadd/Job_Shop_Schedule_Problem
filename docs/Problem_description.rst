@@ -92,7 +92,7 @@ time) for each machine], where
 
 For a more detailed description of how this works see the `source code`_.
 
-.. _source code: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/JSSP/solution/makespan.pyx
+.. _source code: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/JSSP/solution/_makespan.pyx
 .. _`https://en.wikipedia.org/wiki/Job_shop_scheduling`: https://en.wikipedia.org/wiki/Job_shop_scheduling
 .. _jobTasks.csv: https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2/jobTasks.csv
 .. _machineRunSpeed.csv: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/data/given_data/machineRunSpeed.csv
