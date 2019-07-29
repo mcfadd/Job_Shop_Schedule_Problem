@@ -8,19 +8,27 @@
 JSSP is an optimization package for the Job Shop Schedule Problem.  
 JSSP has two different optimization algorithms:  
 
-1. Parallel Tabu Search
-2. Genetic Algorithm
+- Parallel Tabu Search
+- Genetic Algorithm
 
-For more information on JSSP, [read the docs](https://readthedocs.org/projects/job-shop-schedule-problem/).
+### Features 
 
-### How to Install
+1. Find near optimal solutions to flexible job shop schedule problems with sequence dependency setup times.
+2. Use of [Cython](https://cython.org/) C extensions for fast execution of code.
+3. Plot tabu search and/or genetic algorithm optimization using [Plotly](https://plot.ly/).
+4. Create gantt charts using [Plotly](https://plot.ly/).
+5. Create production schedule excel file.
 
-1. [Download JSSP-0.2.0.linux-x86_64.egg](https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases/download/0.2.0/JSSP-0.2.0.linux-x86_64.egg)
+For more information as well as examples, [read the docs](https://readthedocs.org/projects/job-shop-schedule-problem/).
+
+## How to Install
+
+1. Download [JSSP-0.2.0.linux-x86_64.egg](https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases/download/0.2.0/JSSP-0.2.0.linux-x86_64.egg)
 2. Run `easy_install JSSP-0.2.0.linux-x86_64.egg`
 
 **For Developers**
 
-After clone this repo, change directories to where `setup.py` exists and run 
+After cloning this repo, change directories to where `setup.py` exists and run 
 ```
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -28,14 +36,14 @@ python setup.py build_ext
 ```
 If you get an error about `python.h` not being found try installing [python3-dev](https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for).
 
-### How to Use
+## How to Use
 
 After installation, JSSP can imported as a normal python package.  
+For examples on how to use JSSP see the jupyter notebooks in the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/examples) folder or [see the docs](https://job-shop-schedule-problem.readthedocs.io/en/stable/Examples.html).
 
 **Important Note**
 
-Job-Tasks in jobTasks.csv and sequenceDependencyMatrix.csv need to be in ascending order according to (job_id, task_id).  
-(see csv files in the [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/given_data) folder for reference)
+Job-Tasks in [jobTasks.csv](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/data/given_data/jobTasks.csv) and [sequenceDependencyMatrix.csv](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/data/given_data/sequenceDependencyMatrix.csv) need to be in ascending order according to (job_id, task_id).  
 
 ### Example
 
@@ -67,7 +75,7 @@ solution.create_schedule_xlsx_file('output')
 
 **Flexible Job Shop**
 
-To read in a flexible job shop problem instance from a .fjs file (see [data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data) folder) do the following:
+To read in a flexible job shop problem instance from a .fjs file (see [data/fjs_data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data)) do the following:
 ```python
 from JSSP.data import Data
 
@@ -98,3 +106,5 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
+
+
