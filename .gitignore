@@ -1,0 +1,16 @@
+venv
+__pycache__
+.idea
+build
+benchmark_results
+fjs_benchmarks
+tests/benchmark_output
+tests/schedule_output
+.ipynb_checkpoints
+example_output
+JSSP.egg-info
+dist
+*.c
+*.so
+.eggs
+docs/_build

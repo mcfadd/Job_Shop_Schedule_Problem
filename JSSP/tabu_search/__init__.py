@@ -1,1 +1,1 @@
-from .ts import search
+from .ts import TabuSearchAgent

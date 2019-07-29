@@ -1,36 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy
-from Cython.Build import cythonize
-from setuptools import find_packages, setup
-from setuptools.extension import Extension
+from setuptools import find_packages, setup, Extension
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
-REQUIRED = [
-    'Cython',
-    'numpy',
-    'plotly',
-    'progressbar',
-    'XlsxWriter'
-]
 
-ext_modules = [Extension('genetic_algorithm.ga_helpers',
-                         ['JSSP/genetic_algorithm/ga_helpers.pyx'],
-                         libraries=['m'],
-                         extra_compile_args=['-ffast-math'],
-                         include_dirs=[numpy.get_include()]),
-               Extension('solution.makespan',
-                         ['JSSP/solution/makespan.pyx'],
-                         libraries=['m'],
-                         extra_compile_args=['-ffast-math'],
-                         include_dirs=[numpy.get_include()]),
-               Extension('tabu_search.generate_neighbor',
-                         ['JSSP/tabu_search/generate_neighbor.pyx'],
-                         libraries=['m'],
-                         extra_compile_args=['-ffast-math'],
-                         include_dirs=[numpy.get_include()])
+class NumpyExtension(Extension):
+    # setuptools calls this function after installing dependencies
+    def _convert_pyx_sources_to_lang(self):
+        import numpy
+        self.include_dirs.append(numpy.get_include())
+        super()._convert_pyx_sources_to_lang()
+
+
+ext_modules = [NumpyExtension('JSSP.genetic_algorithm._ga_helpers',
+                              ['JSSP/genetic_algorithm/_ga_helpers.pyx'],
+                              libraries=['m'],
+                              extra_compile_args=['-ffast-math'],
+                              ),
+               NumpyExtension('JSSP.solution._makespan',
+                              ['JSSP/solution/_makespan.pyx'],
+                              libraries=['m'],
+                              extra_compile_args=['-ffast-math'],
+                              ),
+               NumpyExtension('JSSP.tabu_search._generate_neighbor',
+                              ['JSSP/tabu_search/_generate_neighbor.pyx'],
+                              libraries=['m'],
+                              extra_compile_args=['-ffast-math'],
+                              )
                ]
 
 setup(
@@ -47,13 +45,14 @@ setup(
         'LICENSE :: OSI APPROVED :: ISC LICENSE (ISCL)',
         'OPERATING SYSTEM :: POSIX',
         'OPERATING SYSTEM :: UNIX',
-        'Programming Language :: Python :: 3.6',
+        'PROGRAMMING LANGUAGE :: Python :: 3.6',
         'PROGRAMMING LANGUAGE :: CYTHON',
         'TOPIC :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',
         'TOPIC :: OFFICE/BUSINESS :: SCHEDULING',
     ],
-    packages=find_packages(exclude=['tests']),
+    setup_requires=['numpy', 'cython'],
+    install_requires=['numpy', 'plotly', 'progressbar', 'XlsxWriter'],
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     include_package_data=True,
-    install_requires=REQUIRED,
-    ext_modules=cythonize(ext_modules)
+    ext_modules=ext_modules,
 )

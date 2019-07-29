@@ -1,36 +1,36 @@
 # Job Shop Schedule Problem (JSSP)
 
 [![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
-#### Version 0.1.0  
+[![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=latest)](https://job-shop-schedule-problem.readthedocs.io/en/latest/?badge=latest)
 
-The specific JSSP problem this program attempts to solve is classified as the 
-**Partial Flexible Job Shop Scheduling Problem With Sequence Dependent Setup Times**. 
-For a complete description of the problem see the [Problem Description](https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Job-Shop-Schedule-Problem-Description) wiki.
+#### Version 0.2.0  
 
-As of right now, JSSP is not supported on Windows operating system.  
-JSSP has two different optimization algorithms: parallel tabu search, and a genetic algorithm.  For more information on these algorithms see the [Algorithms](https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Algorithms) wiki.
+JSSP is an optimization package for the Job Shop Schedule Problem.  
+JSSP has two different optimization algorithms:  
+
+1. Parallel Tabu Search
+2. Genetic Algorithm
+
+For more information on JSSP, [read the docs](https://readthedocs.org/projects/job-shop-schedule-problem/).
 
 ### How to Install
 
-1. Make sure you have [python3-dev](https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for) installed (for cython)
+1. [Download JSSP]()
+2. Run `easy_install `
 
-2. Clone this repository:
-```
-git clone https://github.com/mcfadd/Job_Shop_Schedule_Problem
-```
-3. Navigate to the cloned directory where setup.py is located.  
+**For Developers**
 
-4. Run the following:
+After clone this repo, change directories to where `setup.py` exists and run 
 ```
+pip install --upgrade pip
 pip install -r requirements.txt
-python setup.py build_ext # this compiles the cython files to c modules 
-pip install .
+python setup.py build_ext
 ```
+If you get an error about `python.h` not being found try installing [python3-dev](https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for).
 
 ### How to Use
 
 After installation, JSSP can imported as a normal python package.  
-See the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/examples) folder for example jupyter notebooks. 
 
 **Important Note**
 
@@ -53,16 +53,16 @@ Data.initialize_data_from_csv(data_directory + '/sequenceDependencyMatrix.csv',
 
 # run tabu search
 solver = Solver()
-solution = solver.tabu_search_time(runtime=30, # in seconds
+solution = solver.tabu_search_iter(iterations=500,
                                    num_processes=4,
                                    tabu_list_size=20,
                                    neighborhood_size=250,
-                                  )
+                                   )
 # print solution
-solution.pprint()
+print(solution)
 
-# create Schedule.xlsx in output directory
-solution.create_schedule('output')                   
+# create Schedule.xlsx in 'output' directory
+solution.create_schedule_xlsx_file('output')                   
 ```
 
 **Flexible Job Shop**

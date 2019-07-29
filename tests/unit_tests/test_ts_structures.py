@@ -1,8 +1,9 @@
+import os
 import unittest
 
 from JSSP import solution
 from JSSP.data import Data
-from JSSP.tabu_search.ts import SolutionSet, TabuList
+from JSSP.tabu_search.ts import _SolutionSet, _TabuList, _MaxHeap
 from tests import project_root
 
 """
@@ -20,15 +21,16 @@ Test the following:
 class TestTSStructures(unittest.TestCase):
 
     def setUp(self) -> None:
-        Data.initialize_data_from_csv(project_root + '/data/given_data/sequenceDependencyMatrix.csv',
-                                      project_root + '/data/given_data/machineRunSpeed.csv',
-                                      project_root + '/data/given_data/jobTasks.csv')
+        Data.initialize_data_from_csv(
+            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
+            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
+            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
 
     def test_solution_set_add(self):
-        solution_set = SolutionSet()
+        solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = solution.generate_feasible_solution()
+        solution_obj1 = solution.SolutionFactory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -36,7 +38,7 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(solution_set.size, 1)
 
         # add another Solution
-        solution_obj2 = solution.generate_feasible_solution()
+        solution_obj2 = solution.SolutionFactory.get_solution()
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
@@ -44,10 +46,10 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(solution_set.size, 2)
 
     def test_solution_set_remove(self):
-        solution_set = SolutionSet()
+        solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = solution.generate_feasible_solution()
+        solution_obj1 = solution.SolutionFactory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -62,10 +64,10 @@ class TestTSStructures(unittest.TestCase):
 
     def test_tabu_list_enqueue(self):
         # add solutions to tabu list
-        tabu_list = TabuList(solution.generate_feasible_solution())
+        tabu_list = _TabuList(solution.SolutionFactory.get_solution())
         size = 100
         while tabu_list.solutions.size < size:
-            tabu_list.enqueue(solution.generate_feasible_solution())
+            tabu_list.enqueue(solution.SolutionFactory.get_solution())
         self.assertNotEqual(tabu_list.head.data_val, tabu_list.tail.data_val)
 
         # count the number of solutions in tabu_list
@@ -78,14 +80,14 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(cnt, size)
 
     def test_tabu_list_dequeue(self):
-        initial_solution = solution.generate_feasible_solution()
+        initial_solution = solution.SolutionFactory.get_solution()
 
         # build tabu_list and solutions list
-        tabu_list = TabuList(initial_solution)
+        tabu_list = _TabuList(initial_solution)
         lst = [initial_solution]
         size = 100
         while tabu_list.solutions.size < size:
-            solution_obj = solution.generate_feasible_solution()
+            solution_obj = solution.SolutionFactory.get_solution()
             tabu_list.enqueue(solution_obj)
             lst.append(solution_obj)
 
@@ -96,6 +98,20 @@ class TestTSStructures(unittest.TestCase):
             self.assertEqual(lst[i], tabu_list.dequeue())
             self.assertFalse(tabu_list.solutions.contains(lst[i]))
             i += 1
+
+    def test_max_heap(self):
+
+        heap_size = 50
+        heap = _MaxHeap()
+        for _ in range(heap_size):
+            heap.heappush(solution.SolutionFactory.get_solution())
+
+        self.assertEqual(heap_size, len(heap), "The max heap size should be equal to heap_size")
+
+        while len(heap) > 1:
+            sol = heap.heappop()
+            self.assertGreaterEqual(sol, heap[0],
+                                    "The max heap items should be organized with the worst solutions (greatest) at h[0]")
 
 
 if __name__ == '__main__':
