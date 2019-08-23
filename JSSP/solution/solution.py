@@ -1,6 +1,5 @@
 import datetime
 import heapq
-import pickle
 import random
 
 import numpy as np
@@ -39,10 +38,9 @@ class Solution:
         :raise: InfeasibleSolutionException if solution is infeasible
         :raise: IncompleteSolutionException if solution is incomplete
         """
-
-        if operation_2d_array.shape[0] != Data.total_number_of_tasks:
+        if operation_2d_array.shape[0] != Data.sequence_dependency_matrix.shape[0]:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
-                                              f"Should be {Data.total_number_of_tasks}")
+                                              f"Should be {Data.sequence_dependency_matrix.shape[0]}")
 
         self.machine_makespans = compute_machine_makespans(operation_2d_array,
                                                            Data.task_processing_times_matrix,
@@ -118,6 +116,17 @@ class Solution:
             f"machine_makespans = {list(self.machine_makespans)}\n" \
             f"operation_list =\n" \
             f"{self.operation_2d_array}"
+
+    def __getstate__(self):
+        self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
+        return {'operation_2d_array': self.operation_2d_array,
+                'machine_makespans': self.machine_makespans,
+                'makespan': self.makespan}
+
+    def __setstate__(self, state):
+        self.operation_2d_array = state['operation_2d_array']
+        self.machine_makespans = state['machine_makespans']
+        self.makespan = state['makespan']
 
     def create_schedule_xlsx_file(self, output_dir, start_time=datetime.time(hour=8, minute=0),
                                   end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
@@ -210,19 +219,6 @@ class Solution:
         create_gantt_chart(self, output_dir, title=title, start_date=start_date, start_time=start_time,
                            end_time=end_time, filename=filename, iplot_bool=False, auto_open=auto_open,
                            continuous=continuous)
-
-    def pickle_to_file(self, file_path):
-        """
-        Serializes this Solution to a binary file using pickle.
-
-        :type file_path: str
-        :param file_path: Path of file to serialize to
-
-        :returns: None
-        """
-        self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
-        with open(file_path, 'wb') as file:
-            pickle.dump(self, file, protocol=-1)
 
 
 class SolutionFactory:

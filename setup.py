@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+
 from setuptools import find_packages, setup, Extension
 
 __version__ = '0.2.0'
@@ -11,24 +13,19 @@ class NumpyExtension(Extension):
     def _convert_pyx_sources_to_lang(self):
         import numpy
         self.include_dirs.append(numpy.get_include())
+        # include libraries and compile flags if not on Windows
+        if os.name != 'nt':
+            self.libraries.append('m')
+            self.extra_compile_args.append('-ffast-math')
         super()._convert_pyx_sources_to_lang()
 
 
 ext_modules = [NumpyExtension('JSSP.genetic_algorithm._ga_helpers',
-                              ['JSSP/genetic_algorithm/_ga_helpers.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              ),
+                              ['JSSP/genetic_algorithm/_ga_helpers.pyx']),
                NumpyExtension('JSSP.solution._makespan',
-                              ['JSSP/solution/_makespan.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              ),
+                              ['JSSP/solution/_makespan.pyx']),
                NumpyExtension('JSSP.tabu_search._generate_neighbor',
-                              ['JSSP/tabu_search/_generate_neighbor.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              )
+                              ['JSSP/tabu_search/_generate_neighbor.pyx'])
                ]
 
 setup(
@@ -45,6 +42,7 @@ setup(
         'LICENSE :: OSI APPROVED :: ISC LICENSE (ISCL)',
         'OPERATING SYSTEM :: POSIX',
         'OPERATING SYSTEM :: UNIX',
+        'OPERATING SYSTEM :: WINDOWS',
         'PROGRAMMING LANGUAGE :: Python :: 3.6',
         'PROGRAMMING LANGUAGE :: CYTHON',
         'TOPIC :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',

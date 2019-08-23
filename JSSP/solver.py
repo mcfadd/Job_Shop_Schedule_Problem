@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 import pickle
 import time
 
@@ -6,8 +7,40 @@ from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
 from JSSP import benchmark_plotter
 from JSSP import genetic_algorithm
-from JSSP.solution import SolutionFactory, Solution
 from JSSP import tabu_search
+from JSSP.data import Data
+from JSSP.solution import SolutionFactory, Solution
+
+
+class SpawnedProcess(mp.Process):
+
+    def __init__(self, sequence_dependency_matrix, job_task_index_matrix, usable_machines_matrix,
+                 task_processing_times_matrix, ts_agent, child_results_queue):
+        super(SpawnedProcess, self).__init__()
+
+        self.sequence_dependency_matrix = sequence_dependency_matrix
+        self.job_task_index_matrix = job_task_index_matrix
+        self.usable_machines_matrix = usable_machines_matrix
+        self.task_processing_times_matrix = task_processing_times_matrix
+        self.ts_agent = ts_agent
+        self.child_results_queue = child_results_queue
+
+    def run(self):
+        """
+        Method to be run in sub-process; can be overridden in sub-class
+        :return:
+        """
+        from JSSP.data import Data
+        Data.sequence_dependency_matrix = self.sequence_dependency_matrix
+        Data.job_task_index_matrix = self.job_task_index_matrix
+        Data.usable_machines_matrix = self.usable_machines_matrix
+        Data.task_processing_times_matrix = self.task_processing_times_matrix
+
+        # Data.initialize_data_from_csv(self.seq_dep_matrix_file,
+        #                               self.machine_speeds_file,
+        #                               self.job_tasks_file)
+
+        self.ts_agent.start(self.child_results_queue)
 
 
 def _run_progress_bar(seconds):
@@ -101,7 +134,8 @@ class Solver:
                                  benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
 
     def tabu_search_iter(self, iterations, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
-                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
+                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
+                         reset_threshold=100,
                          initial_solutions=None, benchmark=False, verbose=False):
         """
         Performs parallel tabu search for a certain number of iterations.
@@ -155,8 +189,8 @@ class Solver:
                                  benchmark=benchmark, verbose=verbose, progress_bar=False)
 
     def _tabu_search(self, stopping_condition, time_condition, num_solutions_per_process, num_processes, tabu_list_size,
-                     neighborhood_size, neighborhood_wait, probability_change_machine, reset_threshold, initial_solutions,
-                     benchmark, verbose, progress_bar):
+                     neighborhood_size, neighborhood_wait, probability_change_machine, reset_threshold,
+                     initial_solutions, benchmark, verbose, progress_bar):
         """
         Performs parallel tabu search until the stopping condition is met.
 
@@ -213,7 +247,8 @@ class Solver:
         if initial_solutions is None:
             initial_solutions = [SolutionFactory.get_solution() for _ in range(num_processes)]
         else:
-            initial_solutions += [SolutionFactory.get_solution() for _ in range(max(0, num_processes - len(initial_solutions)))]
+            initial_solutions += [SolutionFactory.get_solution() for _ in
+                                  range(max(0, num_processes - len(initial_solutions)))]
 
         ts_agent_list = [tabu_search.TabuSearchAgent(stopping_condition,
                                                      time_condition,
@@ -248,12 +283,18 @@ class Solver:
             print([round(x.makespan) for x in initial_solutions])
             print()
 
-        if progress_bar and time_condition:
-            mp.Process(target=_run_progress_bar, args=[stopping_condition]).start()
-
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
+            # if os is windows use spawn process
+            SpawnedProcess(Data.sequence_dependency_matrix,
+                           Data.job_task_index_matrix,
+                           Data.usable_machines_matrix,
+                           Data.task_processing_times_matrix,
+                           ts_agent,
+                           child_results_queue)
+            if os.name == 'nt' else
+            # else use normal process
             mp.Process(target=ts_agent.start,
                        args=[child_results_queue])
             for ts_agent in ts_agent_list
@@ -264,6 +305,10 @@ class Solver:
             p.start()
             if verbose:
                 print(f"child TS process started. pid = {p.pid}")
+
+        # start progress bar
+        if progress_bar and time_condition:
+            mp.Process(target=_run_progress_bar, args=[stopping_condition]).start()
 
         # collect results from Queue and wait for child processes to finish
         self.ts_agent_list = []
@@ -278,7 +323,8 @@ class Solver:
 
     def genetic_algorithm_time(self, runtime, population=None, population_size=200,
                                selection_method_enum=genetic_algorithm.GASelectionEnum.TOURNAMENT,
-                               mutation_probability=0.8, selection_size=10, benchmark=False, verbose=False, progress_bar=False):
+                               mutation_probability=0.8, selection_size=10, benchmark=False, verbose=False,
+                               progress_bar=False):
         """
         Performs the genetic algorithm for a certain number of seconds.
 

@@ -100,6 +100,11 @@ class Data:
     """
     Static class containing all of the static data that is read in.
     """
+    # paths to input files
+    seq_dep_matrix_file_path = None
+    machine_speeds_file_path = None
+    job_tasks_file_path = None
+    fjs_file_path = None
 
     # uninitialized static fields
     fjs_instance = False
@@ -121,6 +126,10 @@ class Data:
 
         :returns: None
         """
+        Data.seq_dep_matrix_file_path = None
+        Data.machine_speeds_file_path = None
+        Data.job_tasks_file_path = None
+        Data.fjs_file_path = None
         Data.fjs_instance = False
         Data.sequence_dependency_matrix = None
         Data.job_task_index_matrix = None
@@ -150,6 +159,9 @@ class Data:
         :returns: None
         """
         Data.reset_data()
+        Data.seq_dep_matrix_file_path = seq_dep_matrix_file
+        Data.machine_speeds_file_path = machine_speeds_file
+        Data.job_tasks_file_path = job_tasks_file
         Data._read_job_tasks_file(job_tasks_file)
         Data._read_sequence_dependency_matrix_file(seq_dep_matrix_file)
         Data._read_machine_speeds_file(machine_speeds_file)
@@ -166,6 +178,7 @@ class Data:
         :returns: None
         """
         Data.reset_data()
+        Data.fjs_file_path = input_file
         Data.fjs_instance = True
         # read .fjs input file
         with open(input_file, 'r') as fin:
