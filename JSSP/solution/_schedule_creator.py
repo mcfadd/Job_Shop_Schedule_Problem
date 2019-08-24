@@ -17,10 +17,10 @@ def _get_n_colors(n):
     """
     Gets n random rgb values (colors).
 
-    :param n: The number of colors to return
+    :param n: number of colors to return
 
     :rtype: list
-    :returns: A list of n rgb tuple values
+    :returns: list of n rgb tuple values
     """
     ret = []
     r = int(random.random() * 256)
@@ -43,10 +43,10 @@ def _convert_mins_to_formatted_str(minutes):
     Converts minutes to days, hours, minutes as a formatted String.
 
     :type minutes: int
-    :param minutes: Minutes to convert
+    :param minutes: minutes to convert
 
     :rtype: str
-    :returns: A string in the form "{days}d {hours}h {minutes}m"
+    :returns: string in the form "{days}d {hours}h {minutes}m"
     """
     days = minutes // (60 * 24)
     minutes %= (60 * 24)
@@ -59,17 +59,19 @@ def _convert_mins_to_formatted_str(minutes):
 class _CustomDayHourMinute:
     """
     Class for keeping track of the start & end times of operations in a schedule.
+
+    :type start_time: datetime.time
+    :param start_time: Start time of the workday
+
+    :type end_time: datetime.time
+    :param end_time: End time of the workday
+
+    See help(_CustomDayHourMinute.__init__)
     """
     def __init__(self, start_time, end_time):
         """
         Initializes a _CustomDayHourMinute with day = 1, hour = start_time.hour, min = start_time.minute,
         start_time = start_time, end_time = end_time, and total_elapsed_minutes = 0.
-
-        :type start_time: datetime.time
-        :param start_time: Start time of the workday
-
-        :type end_time: datetime.time
-        :param end_time: End time of the workday
         """
         if end_time <= start_time:
             raise UnacceptableScheduleTime(
@@ -87,7 +89,7 @@ class _CustomDayHourMinute:
         Adds a number of minutes to this _CustomDayHourMinute.
 
         :type minutes_to_add: int
-        :param minutes_to_add: Minutes to add
+        :param minutes_to_add: minutes to add
 
         :returns: None
         """
@@ -119,7 +121,7 @@ class _CustomDayHourMinute:
 
     def copy(self):
         """
-        :returns: A copy of this _CustomDayHourMinute
+        :returns: a copy of this _CustomDayHourMinute
         """
         result = _CustomDayHourMinute(self.start_time, self.end_time)
         result.day = self.day
@@ -130,13 +132,13 @@ class _CustomDayHourMinute:
     def get_hour_min_sec_str(self):
         """
         :rtype: str
-        :returns: A string in the form "{self.hour}:{self.min}:00"
+        :returns: string in the form "{self.hour}:{self.min}:00"
         """
         return "{:02d}:{:02d}:00".format(int(self.hour), int(self.min))
 
     def __str__(self):
         """
-        :returns: A string in the form "day {self.day} {self.hour}:{self.min}:00
+        :returns: string in the form "day {self.day} {self.hour}:{self.min}:00
         """
         return "day {}  {:02d}:{:02d}:00".format(int(self.day), int(self.hour), int(self.min))
 
@@ -144,6 +146,8 @@ class _CustomDayHourMinute:
 class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
     """
     Class for keeping track of the start/end times of operations in a continuous schedule.
+
+    See help(_ContinuousCustomDayHourMinute.__init__)
     """
     def __init__(self):
         """
@@ -156,7 +160,7 @@ class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
         Adds a number of minutes to this _ContinuousCustomDayHourMinute.
 
         :type minutes_to_add: int
-        :param minutes_to_add: Minutes to add
+        :param minutes_to_add: minutes to add
 
         :returns: None
         """
@@ -183,7 +187,7 @@ class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
 
     def copy(self):
         """
-        :returns: A copy of this _ContinuousCustomDayHourMinute
+        :returns: a copy of this _ContinuousCustomDayHourMinute
         """
         result = _ContinuousCustomDayHourMinute()
         result.day = self.day
@@ -197,22 +201,22 @@ def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hou
     Creates an excel file in the output_dir directory that contains the schedule for each machine of the solution parameter.
 
     :type solution: Solution
-    :param solution: The solution to create a schedule for
+    :param solution: solution to create a schedule for
 
     :type output_dir: str
-    :param output_dir: The directory to place the excel file into
+    :param output_dir: path to the directory to place the excel file into
 
     :type start_time: datetime.time
-    :param start_time: Start time of the work day
+    :param start_time: start time of the work day
 
     :type end_time: datetime.time
-    :param end_time: End time of the work day
+    :param end_time: end time of the work day
 
     :type filename: str
-    :param filename: The name of the excel file
+    :param filename: name of the excel file
 
     :type continuous: bool
-    :param continuous: If true a continuous schedule is created. (i.e. start_time and end_time are not used)
+    :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
     :returns: None
     """
@@ -358,34 +362,34 @@ def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_
     else it plots a gantt chart of the solution parameter in an ipyton notebook.
 
     :type solution: Solution
-    :param solution: The solution to create a schedule for
+    :param solution: solution to create a schedule for
 
     :type output_dir: str
-    :param output_dir: The directory to place the excel file into
+    :param output_dir: path to the directory to place the excel file into
 
     :type title: str
-    :param title: The name of the gantt chart
+    :param title: name of the gantt chart
 
     :type start_date: datetime.datetime
-    :param start_date: Datetime to start the schedule from
+    :param start_date: datetime to start the schedule from
 
     :type start_time: datetime.time
-    :param start_time: Start time of the work day
+    :param start_time: start time of the work day
 
     :type end_time: datetime.time
-    :param end_time: End time of the work day
+    :param end_time: end time of the work day
 
     :type filename: str
-    :param filename: The name of the excel file
+    :param filename: name of the html file
 
     :type iplot_bool: bool
-    :param iplot_bool: plots the gantt chart in an ipyton notebook if true
+    :param iplot_bool: if true plots the gantt chart in an ipyton notebook
 
     :type auto_open: bool
-    :param auto_open: If true the gantt chart html file is automatically opened in a browser
+    :param auto_open: if true the gantt chart html file is automatically opened in a browser
 
     :type continuous: bool
-    :param continuous: If true a continuous schedule is created. (i.e. start_time and end_time are not used)
+    :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
     :returns: None
     """

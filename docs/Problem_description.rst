@@ -32,23 +32,6 @@ Constraints
    are complete.
 -  Each task can only be run on certain machines.
 
-Data
-----
-
--  `jobTasks.csv`_: Contains an ordered list of all job-tasks and their
-   sequence numbers, usable machines, and pieces.
--  `machineRunSpeed.csv`_: Contains a list of all machine IDs and run
-   speeds.
--  `sequenceDependencyMatrix.csv`_: Contains a matrix of job-task setup
-   times.
-
-The rows of `sequenceDependencyMatrix.csv`_ represent the current job-task
-in the form *j_t* where *j* is the job ID and *t* is the task ID.
-The columns represent the previous job-task. A matrix value at index *(j_t, x_y)*
-represents the setup time to schedule job-task *j_t* after job-task *x_y* on
-a machine. Matrix values with the value -1 represent cases where the
-current job-task (row) would never be scheduled after the previous job-task (column).
-
 Solution Formulation
 --------------------
 

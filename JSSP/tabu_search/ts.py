@@ -13,6 +13,36 @@ from ._generate_neighbor import generate_neighbor
 class TabuSearchAgent:
     """
     Tabu search optimization agent.
+
+    :type stopping_condition: float
+    :param stopping_condition: either the duration in seconds or the number of iterations to search
+
+    :type time_condition: bool
+    :param time_condition: if true TS is ran for stopping_condition number of seconds else it is ran for stopping_condition number of iterations
+
+    :type initial_solution: Solution
+    :param initial_solution: initial solution to start the tabu search from
+
+    :type num_solutions_to_find: int
+    :param num_solutions_to_find: number of best solutions to find
+
+    :type tabu_list_size: int
+    :param tabu_list_size: size of the Tabu list
+
+    :type neighborhood_size: int
+    :param neighborhood_size: size of neighborhoods to generate during each TS iteration
+
+    :type neighborhood_wait: float
+    :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
+
+    :type probability_change_machine: float
+    :param probability_change_machine: probability of changing a chosen operations machine
+
+    :type reset_threshold: int
+    :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
+
+    :type benchmark: bool
+    :param benchmark: if true benchmark data is gathered
     """
     def __init__(self, stopping_condition, time_condition, initial_solution=None, num_solutions_to_find=1,
                  tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
@@ -21,35 +51,7 @@ class TabuSearchAgent:
         """
         Initializes an instance of TabuSearchAgent.
 
-        :type stopping_condition: float
-        :param stopping_condition: Either the duration in seconds or the number of iterations to search
-
-        :type time_condition: bool
-        :param time_condition: If true TS is ran for 'stopping_condition' number of seconds else it is ran for 'stopping_condition' number of iterations
-
-        :type initial_solution: Solution
-        :param initial_solution: The initial solution to start the tabu search from
-
-        :type num_solutions_to_find: int
-        :param num_solutions_to_find: The number of best solutions to find
-
-        :type tabu_list_size: int
-        :param tabu_list_size: The size of the Tabu list
-
-        :type neighborhood_size: int
-        :param neighborhood_size: The size of neighborhoods to generate during each TS iteration
-
-        :type neighborhood_wait: float
-        :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
-
-        :type probability_change_machine: float
-        :param probability_change_machine: The probability of changing a chosen operations machine
-
-        :type reset_threshold: int
-        :param reset_threshold: The number of iterations to potentially force a worse move after if the best solution is not improved
-
-        :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered
+        See help(TabuSearchAgent)
         """
 
         self.time_condition = time_condition
@@ -113,14 +115,15 @@ class TabuSearchAgent:
 
     def start(self, multi_process_queue=None):
         """
-        Starts the tabu search for this TabuSearchAgent.
+        Starts the search for this TabuSearchAgent.
+
         If the multi_process_queue parameter is not None, this function attempts to push this TabuSearchAgent to the multi processing queue.
 
-        :type multi_process_queue: multiprocessing.Queue or None
-        :param multi_process_queue: Queue to put result into
+        :type multi_process_queue: multiprocessing.Queue
+        :param multi_process_queue: queue to put result into
 
         :rtype: Solution
-        :returns: The best Solution found
+        :returns: best Solution found
         """
 
         # get static data
@@ -169,11 +172,11 @@ class TabuSearchAgent:
 
             for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
                 for neighbor in sorted(lst):  # sort subset of neighbors with the same makespans
-                    if not tabu_list.solutions.contains(neighbor):
+                    if not tabu_list.contains(neighbor):
                         # if new seed solution is not better than current seed solution add it to the tabu list
                         if neighbor.makespan >= seed_solution.makespan:
                             tabu_list.enqueue(seed_solution)
-                            if tabu_list.solutions.size > self.tabu_list_size:
+                            if tabu_list.size > self.tabu_list_size:
                                 tabu_list.dequeue()
 
                         seed_solution = neighbor
@@ -197,7 +200,7 @@ class TabuSearchAgent:
                 if not lacking_solution > seed_solution and len(sorted_neighborhood) > 10:
                     # add the seed solution to the tabu list
                     tabu_list.enqueue(seed_solution)
-                    if tabu_list.solutions.size > self.tabu_list_size:
+                    if tabu_list.size > self.tabu_list_size:
                         tabu_list.dequeue()
                     # choose a worse solution from the neighborhood
                     seed_solution = sorted_neighborhood[random.randint(1, int(0.2 * len(sorted_neighborhood)))][1][0]
@@ -209,7 +212,7 @@ class TabuSearchAgent:
                 iterations += 1
                 neighborhood_size_v_iter.append(neighborhood.size)
                 seed_solution_makespan_v_iter.append(seed_solution.makespan)
-                tabu_size_v_iter.append(tabu_list.solutions.size)
+                tabu_size_v_iter.append(tabu_list.size)
             elif not self.time_condition:
                 iterations += 1
 
@@ -245,7 +248,7 @@ TS data structures
 
 class _MaxHeapObj(object):
     """
-    Wrapper class for Solution in MaxHeap
+    Wrapper class for Solution used in _MaxHeap.
     """
     def __init__(self, val):
         self.val = val
@@ -269,7 +272,7 @@ class _MaxHeap:
         Pushes a solution onto this _MaxHeap.
 
         :type solution: Solution
-        :param solution: The solution to push
+        :param solution: solution to push
 
         :return: None
         """
@@ -280,7 +283,7 @@ class _MaxHeap:
         Pops a solution from the top of this _MaxHeap.
 
         :rtype: Solution
-        :return: The solution at the top
+        :return: solution at the top of this heap
         """
         return heapq.heappop(self.h).val
 
@@ -293,7 +296,7 @@ class _MaxHeap:
 
 class _Node:
     """
-    Single linked list node ADT used in the _TabuList class.
+    Single linked list node ADT used in _TabuList.
     """
     def __init__(self, data_val=None):
         self.data_val = data_val
@@ -305,16 +308,20 @@ class _TabuList:
     Queue for containing Solution instances.
     """
     def __init__(self, initial_solution):
-        self.head = self.tail = _Node(data_val=initial_solution)  # use linked list to keep FIFO property
+        self.head = self.tail = _Node(data_val=initial_solution)  # use linked list to keep FIFO behavior
         self.solutions = _SolutionSet()
         self.solutions.add(initial_solution)
 
+    @property
+    def size(self):
+        return self.solutions.size
+
     def enqueue(self, solution):
         """
-        Adds a solution to the end of this TabuList.
+        Adds a solution to the end of this _TabuList.
 
         :type solution: Solution
-        :param solution: The solution to add
+        :param solution: solution to add
 
         :returns: None
         """
@@ -326,7 +333,7 @@ class _TabuList:
 
     def dequeue(self):
         """
-        Removes the solution at the beginning of this TabuList.
+        Removes the solution at the beginning of this _TabuList.
 
         :rtype: Solution
         :returns: Solution that was removed
@@ -336,6 +343,18 @@ class _TabuList:
         self.head = self.head.next_node
         self.solutions.remove(head_node.data_val)
         return head_node.data_val
+
+    def contains(self, solution):
+        """
+        Returns true if the solution is in this _TabuList.
+
+        :type solution: Solution
+        :param solution: solution to look for
+
+        :rtype: bool
+        :returns: true if the solution is in this _TabuList
+        """
+        return self.solutions.contains(solution)
 
 
 class _SolutionSet:
@@ -351,7 +370,7 @@ class _SolutionSet:
         Adds a solution and increments size.
 
         :type solution: Solution
-        :param solution: The solution to add
+        :param solution: solution to add
 
         :returns: None
         """
@@ -367,7 +386,7 @@ class _SolutionSet:
         Removes a solution and decrements size.
 
         :type solution: Solution
-        :param solution: The solution to remove
+        :param solution: solution to remove
 
         :returns: None
         """
@@ -380,12 +399,12 @@ class _SolutionSet:
 
     def contains(self, solution):
         """
-        Returns True if the solution is in this SolutionSet.
+        Returns true if the solution is in this _SolutionSet.
 
         :type solution: Solution
-        :param solution: The solution to look for
+        :param solution: solution to look for
 
         :rtype: bool
-        :returns: True if the solution is in this SolutionSet
+        :returns: true if the solution is in this _SolutionSet
         """
         return solution.makespan in self.solutions and solution in self.solutions[solution.makespan]

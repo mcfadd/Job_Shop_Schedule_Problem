@@ -16,6 +16,7 @@ Lastly, an excel file of the production schedule (i.e. solution) is created in t
 .. code-block:: python
 
     from JSSP.data import Data
+    from JSSP import Solver
     from JSSP.genetic_algorithm import GASelectionEnum
 
     # initialize data

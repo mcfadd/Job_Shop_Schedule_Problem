@@ -119,7 +119,8 @@ class TestPicklingSolution(unittest.TestCase):
 
     def test_pickle_to_file(self):
         solution_obj = solution.solution.SolutionFactory.get_solution()
-        solution_obj.pickle_to_file(tmp_dir + os.sep + 'test_solution.pkl')
+        with open(tmp_dir + os.sep + 'test_solution.pkl', 'wb') as fout:
+            pickle.dump(solution_obj, fout)
 
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'test_solution.pkl'), "The pickled solution does not exist")
 

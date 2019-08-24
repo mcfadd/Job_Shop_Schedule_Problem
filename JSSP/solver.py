@@ -1,4 +1,5 @@
 import multiprocessing as mp
+import os
 import pickle
 import time
 
@@ -6,8 +7,40 @@ from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
 from JSSP import benchmark_plotter
 from JSSP import genetic_algorithm
-from JSSP.solution import SolutionFactory, Solution
 from JSSP import tabu_search
+from JSSP.data import Data
+from JSSP.solution import SolutionFactory, Solution
+
+
+class _SpawnedProcess(mp.Process):
+    """
+    Extension of mp.Process which is used when mp.context is set to spawn.
+    """
+
+    def __init__(self, sequence_dependency_matrix, job_task_index_matrix, usable_machines_matrix,
+                 task_processing_times_matrix, ts_agent, child_results_queue):
+        super(_SpawnedProcess, self).__init__()
+
+        self.sequence_dependency_matrix = sequence_dependency_matrix
+        self.job_task_index_matrix = job_task_index_matrix
+        self.usable_machines_matrix = usable_machines_matrix
+        self.task_processing_times_matrix = task_processing_times_matrix
+        self.ts_agent = ts_agent
+        self.child_results_queue = child_results_queue
+
+    def run(self):
+        """
+        Re-initializes static Data before running tabu search.
+
+        :return: None
+        """
+        from JSSP.data import Data
+        Data.sequence_dependency_matrix = self.sequence_dependency_matrix
+        Data.job_task_index_matrix = self.job_task_index_matrix
+        Data.usable_machines_matrix = self.usable_machines_matrix
+        Data.task_processing_times_matrix = self.task_processing_times_matrix
+
+        self.ts_agent.start(self.child_results_queue)
 
 
 def _run_progress_bar(seconds):
@@ -15,7 +48,7 @@ def _run_progress_bar(seconds):
     Runs a progress bar for a certain duration.
 
     :type seconds: int
-    :param seconds: Duration to run the process bar for in seconds
+    :param seconds: duration to run the process bar for in seconds
 
     :returns: None
     """
@@ -48,49 +81,49 @@ class Solver:
         """
         Performs parallel tabu search for a certain number of seconds.
 
-        First the function generates random initial solutions if initial_solutions is None,
-        then it forks 'num_processes' of child processes to run tabu search in parallel.
+        First the function generates random initial solutions if the initial_solutions parameter is None,
+        then it forks/spawns num_processes of child processes to run tabu search in parallel.
 
         The parent process waits for the child processes to finish, then collects their results and updates self.solution.
 
         :type runtime: float
-        :param runtime: Seconds that tabu search should run for
+        :param runtime: seconds that tabu search should run for
 
         :type num_solutions_per_process: int
-        :param num_solutions_per_process: The number of solutions that one tabu search process should gather
+        :param num_solutions_per_process: number of solutions that one tabu search process should gather
 
         :type num_processes: int
-        :param num_processes: The number of processes to run tabu search in parallel
+        :param num_processes: number of processes to run tabu search in parallel
 
         :type tabu_list_size: int
-        :param tabu_list_size: The size of the tabu list
+        :param tabu_list_size: size of the tabu list
 
         :type neighborhood_size: int
-        :param neighborhood_size: The size of neighborhoods to generate during tabu search
+        :param neighborhood_size: size of neighborhoods to generate during tabu search
 
         :type neighborhood_wait: float
-        :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
+        :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: The probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine
 
         :type reset_threshold: int
-        :param reset_threshold: The number of iterations to potentially force a worse move after if the best solution is not improved
+        :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
 
-        :type initial_solutions: list
-        :param initial_solutions: The initial solutions to start the tabu searches from
+        :type initial_solutions: [Solution]
+        :param initial_solutions: initial solutions to start the tabu searches from
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
+        :param benchmark: if true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :type progress_bar: bool
-        :param progress_bar: If true a progress bar is spawned
+        :param progress_bar: if true a progress bar is spawned
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
 
         return self._tabu_search(runtime, time_condition=True, num_solutions_per_process=num_solutions_per_process,
@@ -101,51 +134,52 @@ class Solver:
                                  benchmark=benchmark, verbose=verbose, progress_bar=progress_bar)
 
     def tabu_search_iter(self, iterations, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
-                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
+                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
+                         reset_threshold=100,
                          initial_solutions=None, benchmark=False, verbose=False):
         """
         Performs parallel tabu search for a certain number of iterations.
 
-        First the function generates random initial solutions if initial_solutions is None,
+        First the function generates random initial solutions if the initial_solutions parameter is None,
         then it forks a number of child processes to run tabu search.
 
         The parent process waits for the child processes to finish, then collects their results and updates self.solution.
 
         :type iterations: int
-        :param iterations: The number of iterations for each tabu search to go through
+        :param iterations: number of iterations for each tabu search to go through
 
         :type num_solutions_per_process: int
-        :param num_solutions_per_process: The number of solutions that one tabu search process should gather
+        :param num_solutions_per_process: number of solutions that one tabu search process should gather
 
         :type num_processes: int
-        :param num_processes: The number of processes to run tabu search in parallel
+        :param num_processes: number of processes to run tabu search in parallel
 
         :type tabu_list_size: int
-        :param tabu_list_size: The size of the tabu list
+        :param tabu_list_size: size of the tabu list
 
         :type neighborhood_size: int
-        :param neighborhood_size: The size of neighborhoods to generate during tabu search
+        :param neighborhood_size: size of neighborhoods to generate during tabu search
 
         :type neighborhood_wait: float
-        :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
+        :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: The probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine
 
         :type reset_threshold: int
-        :param reset_threshold: The number of iterations to potentially force a worse move after if the best solution is not improved
+        :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
 
-        :type initial_solutions: list
-        :param initial_solutions: The initial solutions to start the tabu searches from
+        :type initial_solutions: [Solution]
+        :param initial_solutions: initial solutions to start the tabu searches from
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
+        :param benchmark: if true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
         return self._tabu_search(iterations, time_condition=False, num_solutions_per_process=num_solutions_per_process,
                                  num_processes=num_processes, tabu_list_size=tabu_list_size,
@@ -155,57 +189,57 @@ class Solver:
                                  benchmark=benchmark, verbose=verbose, progress_bar=False)
 
     def _tabu_search(self, stopping_condition, time_condition, num_solutions_per_process, num_processes, tabu_list_size,
-                     neighborhood_size, neighborhood_wait, probability_change_machine, reset_threshold, initial_solutions,
-                     benchmark, verbose, progress_bar):
+                     neighborhood_size, neighborhood_wait, probability_change_machine, reset_threshold,
+                     initial_solutions, benchmark, verbose, progress_bar):
         """
         Performs parallel tabu search until the stopping condition is met.
 
-        First the function generates random initial solutions if initial_solutions is None,
+        First the function generates random initial solutions if the initial_solutions parameter is None,
         then it forks a number of child processes to run tabu search.
 
         The parent process waits for the child processes to finish, then collects their results and updates self.solution.
 
         :type stopping_condition: float
-        :param stopping_condition: Either the duration in seconds or the number of iterations to search
+        :param stopping_condition: either the duration in seconds or the number of iterations to search
 
         :type time_condition: bool
-        :param time_condition: If true tabu search is ran for 'stopping_condition' number of seconds else tabu search is ran for 'stopping_condition' number of generations
+        :param time_condition: if true tabu search is ran for stopping_condition number of seconds else tabu search is ran for stopping_condition number of generations
 
         :type num_solutions_per_process: int
-        :param num_solutions_per_process: The number of solutions that one tabu search process should gather
+        :param num_solutions_per_process: number of solutions that one tabu search process should gather
 
         :type num_processes: int
-        :param num_processes: The number of processes to run tabu search in parallel
+        :param num_processes: number of processes to run tabu search in parallel
 
         :type tabu_list_size: int
-        :param tabu_list_size: The size of the tabu list
+        :param tabu_list_size: size of the tabu list
 
         :type neighborhood_size: int
-        :param neighborhood_size: The size of neighborhoods to generate during tabu search
+        :param neighborhood_size: size of neighborhoods to generate during tabu search
 
         :type neighborhood_wait: float
-        :param neighborhood_wait: The maximum time to wait for generating a neighborhood in seconds
+        :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: The probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine
 
         :type reset_threshold: int
-        :param reset_threshold: The number of iterations to potentially force a worse move after if the best solution is not improved
+        :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
 
-        :type initial_solutions: list
-        :param initial_solutions: The initial solutions to start the tabu searches from
+        :type initial_solutions: [Solution]
+        :param initial_solutions: initial solutions to start the tabu searches from
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
+        :param benchmark: if true benchmark data is gathered (e.g. # of iterations, makespans, etc.)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :type progress_bar: bool
-        :param progress_bar: If true a progress bar is spawned
+        :param progress_bar: if true a progress bar is spawned
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
         if initial_solutions is not None and not all(isinstance(s, Solution) for s in initial_solutions):
             raise TypeError("initial_solutions must be a list of solutions or None")
@@ -213,7 +247,8 @@ class Solver:
         if initial_solutions is None:
             initial_solutions = [SolutionFactory.get_solution() for _ in range(num_processes)]
         else:
-            initial_solutions += [SolutionFactory.get_solution() for _ in range(max(0, num_processes - len(initial_solutions)))]
+            initial_solutions += [SolutionFactory.get_solution() for _ in
+                                  range(max(0, num_processes - len(initial_solutions)))]
 
         ts_agent_list = [tabu_search.TabuSearchAgent(stopping_condition,
                                                      time_condition,
@@ -248,12 +283,18 @@ class Solver:
             print([round(x.makespan) for x in initial_solutions])
             print()
 
-        if progress_bar and time_condition:
-            mp.Process(target=_run_progress_bar, args=[stopping_condition]).start()
-
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
+            # if os is windows use spawn process
+            _SpawnedProcess(Data.sequence_dependency_matrix,
+                            Data.job_task_index_matrix,
+                            Data.usable_machines_matrix,
+                            Data.task_processing_times_matrix,
+                            ts_agent,
+                            child_results_queue)
+            if os.name == 'nt' else
+            # else use normal process
             mp.Process(target=ts_agent.start,
                        args=[child_results_queue])
             for ts_agent in ts_agent_list
@@ -264,6 +305,10 @@ class Solver:
             p.start()
             if verbose:
                 print(f"child TS process started. pid = {p.pid}")
+
+        # start progress bar
+        if progress_bar and time_condition:
+            mp.Process(target=_run_progress_bar, args=[stopping_condition]).start()
 
         # collect results from Queue and wait for child processes to finish
         self.ts_agent_list = []
@@ -278,42 +323,43 @@ class Solver:
 
     def genetic_algorithm_time(self, runtime, population=None, population_size=200,
                                selection_method_enum=genetic_algorithm.GASelectionEnum.TOURNAMENT,
-                               mutation_probability=0.8, selection_size=10, benchmark=False, verbose=False, progress_bar=False):
+                               mutation_probability=0.8, selection_size=10, benchmark=False, verbose=False,
+                               progress_bar=False):
         """
         Performs the genetic algorithm for a certain number of seconds.
 
-        First this function generates a random initial population if population is None,
+        First this function generates a random initial population if the population parameter is None,
         then it runs GA with the parameters specified and updates self.solution.
 
         :type runtime: float
-        :param runtime: Number of seconds to run the GA
+        :param runtime: seconds to run the GA
 
-        :type population: list
-        :param population: The initial population to start the GA from
+        :type population: [Solution]
+        :param population: initial population to start the GA from
 
         :type population_size: int
-        :param population_size: The size of the initial population
+        :param population_size: size of the initial population
 
-        :type selection_method_enum: GASelection
-        :param selection_method_enum: The selection method to use for selecting parents from the population. Options are GASelection.TOURNAMENT, GASelection.FITNESS_PROPORTIONATE, GASelection.RANDOM
+        :type selection_method_enum: GASelectionEnum
+        :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
 
         :type selection_size: int
-        :param selection_size: The size of the selection group for tournament style selection
+        :param selection_size: size of the selection group for tournament style selection
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
+        :param benchmark: if true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :type progress_bar: bool
-        :param progress_bar: If true a progress bar is spawned
+        :param progress_bar: if true a progress bar is spawned
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
 
         return self._genetic_algorithm(runtime, time_condition=True, population=population,
@@ -329,35 +375,35 @@ class Solver:
         """
         Performs the genetic algorithm for a certain number of generations.
 
-        First this function generates a random initial population if population is None,
+        First this function generates a random initial population if the population parameter is None,
         then it runs GA with the parameters specified and updates self.solution.
 
         :type iterations: int
-        :param iterations: Number of generations to go through during the GA
+        :param iterations: number of generations to go through during the GA
 
-        :type population: list
-        :param population: The initial population to start the GA from
+        :type population: [Solution]
+        :param population: initial population to start the GA from
 
         :type population_size: int
-        :param population_size: The size of the initial population
+        :param population_size: size of the initial population
 
-        :type selection_method_enum: GASelection
-        :param selection_method_enum: The selection method to use for selecting parents from the population. Options are GASelection.TOURNAMENT, GASelection.FITNESS_PROPORTIONATE, GASelection.RANDOM
+        :type selection_method_enum: GASelectionEnum
+        :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
 
         :type selection_size: int
-        :param selection_size: The size of the selection group for tournament style selection
+        :param selection_size: size of the selection group for tournament style selection
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
+        :param benchmark: if true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
 
         return self._genetic_algorithm(iterations, time_condition=False, population=population,
@@ -372,41 +418,41 @@ class Solver:
         """
         Performs the genetic algorithm until the stopping condition is met.
 
-        First this function generates a random initial population if population is None,
+        First this function generates a random initial population if the population parameter is None,
         then it runs GA with the parameters specified and updates self.solution.
 
         :type stopping_condition: float
-        :param stopping_condition: Either the duration in seconds or the number of generations to iterate through
+        :param stopping_condition: either the duration in seconds or the number of generations to iterate through
 
         :type time_condition: bool
-        :param time_condition: If true GA is ran for 'stopping_condition' number of seconds else GA is ran for 'stopping_condition' number of iterations
+        :param time_condition: if true GA is ran for stopping_condition number of seconds else GA is ran for stopping_condition number of iterations
 
-        :type population: list
-        :param population: The initial population to start the GA from
+        :type population: [Solution]
+        :param population: initial population to start the GA from
 
         :type population_size: int
-        :param population_size: The size of the initial population
+        :param population_size: size of the initial population
 
-        :type selection_method_enum: GASelection
-        :param selection_method_enum: The selection method to use for selecting parents from the population. Options are GASelection.TOURNAMENT, GASelection.FITNESS_PROPORTIONATE, GASelection.RANDOM
+        :type selection_method_enum: GASelectionEnum
+        :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: The probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
 
         :type selection_size: int
-        :param selection_size: The size of the selection group for tournament style selection
+        :param selection_size: size of the selection group for tournament style selection
 
         :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
+        :param benchmark: if true benchmark data is gathered (i.e. # of iterations, makespans, min makespan iteration)
 
         :type verbose: bool
-        :param verbose: If true runs in verbose mode
+        :param verbose: if true runs in verbose mode
 
         :type progress_bar: bool
-        :param progress_bar: If true a progress bar is spawned
+        :param progress_bar: if true a progress bar is spawned
 
         :rtype: Solution
-        :returns: Best solution found
+        :returns: best solution found
         """
 
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
@@ -444,13 +490,14 @@ class Solver:
         Outputs html files containing benchmark results in the output directory specified.
 
         :type output_dir: str
-        :param output_dir: Path to the output directory to place the results into
+        :param output_dir: path to the output directory to place the results into
 
         :type name: str
-        :param name: The name of the benchmark run
+        :param name: name of the benchmark run
+        :param name: name of the benchmark run
 
         :type auto_open: bool
-        :param auto_open: If true index.html is automatically opened in a browser
+        :param auto_open: if true index.html is automatically opened in a browser
 
         :returns: None
         """

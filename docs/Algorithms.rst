@@ -8,16 +8,18 @@ Below is a high level flow diagram of the main sequence of steps to use both par
 Generate Feasible Solution
 --------------------------
 
+.. image:: _static/generate_solution.png
+
 This algorithm generates a random feasible solution. It begins with an empty solution and a subset of all the job-tasks that can be scheduled next.
 That is, initially the subset contains all the tasks with sequence number = 0. While the subset is not empty, tasks are removed at random and turned
 into operations by assigning a usable machine (step 1), then they are appended to the solution (step 2). If there does not exist a task in the subset
 that is apart of the same job as the task that was removed, then tasks from the same job with the next sequence number are added to the subset (step 3).
 As operations are appended to the solution, tasks are added to the subset until all job-tasks have been appended to the solution.
 
-.. image:: _static/generate_solution.png
-
 Tabu Search
 -----------
+
+.. image:: _static/tabu_search.png
 
 For general information on Tabu Search see `https://en.wikipedia.org/wiki/Tabu_search`_.
 
@@ -39,10 +41,10 @@ selected from a set excluding those equal to or better than the current solution
 
 At termination, TS may generate a single best-found solution, or a set of multiple best-found solutions.
 
-.. image:: _static/tabu_search.png
-
 Genetic Algorithm
 -----------------
+
+.. image:: _static/genetic_algorithm.png
 
 For general information on Genetic Algorithm see `https://en.wikipedia.org/wiki/Genetic_algorithm`_.
 
@@ -63,8 +65,6 @@ according to the top list and bottom list.
 Mutation may take place if the criteria is met (mutation probability).
 Mutation involves changing the machine that a randomly chosen job-task runs on.
 
-
-.. image:: _static/genetic_algorithm.png
 
 .. _`https://en.wikipedia.org/wiki/Genetic_algorithm`: https://en.wikipedia.org/wiki/Genetic_algorithm
 .. _Generate Random Solution: https://github.com/mcfadd/Job_Shop_Schedule_Problem/wiki/Algorithms#generate-random-solution

@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import find_packages, setup, Extension
+import os
 
-__version__ = '0.2.0'
+from setuptools import find_packages, setup, Extension
+import pathlib
+
+__version__ = '0.2.1'
+
+README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 
 class NumpyExtension(Extension):
@@ -11,24 +16,19 @@ class NumpyExtension(Extension):
     def _convert_pyx_sources_to_lang(self):
         import numpy
         self.include_dirs.append(numpy.get_include())
+        # include libraries and compile flags if not on Windows
+        if os.name != 'nt':
+            self.libraries.append('m')
+            self.extra_compile_args.append('-ffast-math')
         super()._convert_pyx_sources_to_lang()
 
 
 ext_modules = [NumpyExtension('JSSP.genetic_algorithm._ga_helpers',
-                              ['JSSP/genetic_algorithm/_ga_helpers.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              ),
+                              ['JSSP/genetic_algorithm/_ga_helpers.pyx']),
                NumpyExtension('JSSP.solution._makespan',
-                              ['JSSP/solution/_makespan.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              ),
+                              ['JSSP/solution/_makespan.pyx']),
                NumpyExtension('JSSP.tabu_search._generate_neighbor',
-                              ['JSSP/tabu_search/_generate_neighbor.pyx'],
-                              libraries=['m'],
-                              extra_compile_args=['-ffast-math'],
-                              )
+                              ['JSSP/tabu_search/_generate_neighbor.pyx'])
                ]
 
 setup(
@@ -39,16 +39,28 @@ setup(
     author_email='mrfadd8@gmail.com',
     python_requires='>=3.6.0',
     url='https://github.com/mcfadd/Job_Shop_Schedule_Problem',
+    download_url='https://github.com/mcfadd/Job_Shop_Schedule_Problem/archive/' + __version__ + '.tar.gz',
     license='ISC',
-    keywords='Job Shop Schedule Problem',
+    keywords=['Job Shop Schedule Problem', 'Optimization', 'Tabu Search', 'Genetic Algorithm'],
+    long_description=README,
+    long_description_content_type='text/markdown',
     classifiers=[
-        'LICENSE :: OSI APPROVED :: ISC LICENSE (ISCL)',
-        'OPERATING SYSTEM :: POSIX',
-        'OPERATING SYSTEM :: UNIX',
-        'PROGRAMMING LANGUAGE :: Python :: 3.6',
-        'PROGRAMMING LANGUAGE :: CYTHON',
-        'TOPIC :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',
-        'TOPIC :: OFFICE/BUSINESS :: SCHEDULING',
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Manufacturing',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: ISC License (ISCL)',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: MacOS',
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Cython',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Office/Business :: Scheduling',
     ],
     setup_requires=['numpy', 'cython'],
     install_requires=['numpy', 'plotly', 'progressbar', 'XlsxWriter'],
