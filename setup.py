@@ -4,8 +4,11 @@
 import os
 
 from setuptools import find_packages, setup, Extension
+import pathlib
 
 __version__ = '0.2.1'
+
+README = (pathlib.Path(__file__).parent / "README.md").read_text()
 
 
 class NumpyExtension(Extension):
@@ -39,14 +42,16 @@ setup(
     download_url='https://github.com/mcfadd/Job_Shop_Schedule_Problem/archive/' + __version__ + '.tar.gz',
     license='ISC',
     keywords=['Job Shop Schedule Problem', 'Optimization', 'Tabu Search', 'Genetic Algorithm'],
+    long_description=README,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Intended Audience :: Manufacturing',
         'Intended Audience :: Science/Research',
-        'License :: OSI APPROVED :: ISC LICENSE (ISCL)',
+        'License :: OSI Approved :: ISC License (ISCL)',
         'Operating System :: POSIX',
-        'Operating System :: UNIX',
+        'Operating System :: Unix',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS',
         'Programming Language :: Python :: 3 :: Only',
@@ -54,8 +59,8 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Cython',
-        'Topic :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',
-        'Topic :: OFFICE/BUSINESS :: SCHEDULING',
+        'Topic :: Scientific/Engineering :: Mathematics',
+        'Topic :: Office/Business :: Scheduling',
     ],
     setup_requires=['numpy', 'cython'],
     install_requires=['numpy', 'plotly', 'progressbar', 'XlsxWriter'],
