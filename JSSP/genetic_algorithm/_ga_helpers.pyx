@@ -12,13 +12,13 @@ cpdef int _placement(int[::] operation, int[:, ::] parent_operation_block):
     Checks if an operation is already in or belongs above/below a parent's selected block of operations.
     
     :type operation: 1d nparray
-    :param operation: The operation to check placement for
+    :param operation: operation to check placement for
     
     :type parent_operation_block: 2d nparray
-    :param parent_operation_block: The block of operations from the parent solution
+    :param parent_operation_block: block of operations from the parent solution
     
     :rtype: int
-    :returns: -1 or -2 if operation belongs above, 0 if operation is in, or 1 if operation belongs below parent block of operations
+    :returns: negative int if operation belongs above, 0 if operation is in, or positive int if operation belongs below parent block of operations
     """
     cdef int result = -2
     cdef Py_ssize_t row_index
@@ -43,29 +43,29 @@ cpdef crossover(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, 
     Crossover operation for GA.
     
     Randomly chooses a contiguous block of operations from parent1, 
-    fills the remaining operations from parent2 around the block to produce a feasible child solution,
+    fills the remaining operations from parent2 around the block to produce a child solution,
     then mutates the child solution if the mutation criteria is met.
     
     See https://en.wikipedia.org/wiki/Crossover_(genetic_algorithm) for more info on crossover
     See https://en.wikipedia.org/wiki/Mutation_(genetic_algorithm) for more info on mutation
     
     :type parent1: Solution
-    :param parent1: The parent to pick a block of operations from
+    :param parent1: parent to pick a block of operations from
     
     :type parent2: Solution
-    :param parent2: The parent to iterate over
+    :param parent2: parent to iterate over
     
     :type probability_mutate: float
-    :param probability_mutate: The probability of mutating a chromosome (i.e change an operation's machine)
+    :param probability_mutate: probability of mutating a chromosome (i.e change an operation's machine)
     
     :type dependency_matrix_index_encoding: nparray
-    :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
+    :param dependency_matrix_index_encoding: dependency matrix index encoding from static Data
     
     :type usable_machines_matrix: nparray
-    :param usable_machines_matrix: Usable machines matrix from static Data
+    :param usable_machines_matrix: usable machines matrix from static Data
     
     :rtype: Solution
-    :returns: Child Solution
+    :returns: child Solution
     """
 
     cdef Py_ssize_t random_x = np.random.randint(0, parent1.shape[0] - 1)

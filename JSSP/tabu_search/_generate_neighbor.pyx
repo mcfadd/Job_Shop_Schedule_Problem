@@ -12,19 +12,19 @@ cpdef generate_neighbor(solution, double probability_change_machine, int[:, ::1]
     Generates a Solution instance that is a neighbor of the solution parameter.
 
     :type solution: Solution
-    :param solution: The solution to generate a neighbor of
+    :param solution: solution to generate a neighbor of
     
     :type probability_change_machine: float
-    :param probability_change_machine: The probability of changing a chosen operation's machine in the neighbor
+    :param probability_change_machine: probability of changing a chosen operation's machine in the neighbor
     
     :type dependency_matrix_index_encoding: nparray
-    :param dependency_matrix_index_encoding: Dependency matrix index encoding from static Data
+    :param dependency_matrix_index_encoding: dependency matrix index encoding from static Data
     
     :type usable_machines_matrix: nparray
-    :param usable_machines_matrix: Usable machines matrix from static Data
+    :param usable_machines_matrix: usable machines matrix from static Data
     
     :rtype: Solution
-    :returns: A neighbor of the solution parameter
+    :returns: neighbor of the solution parameter
     """
     cdef int[:, ::1] result_operation_2d_array = np.copy(solution.operation_2d_array)
     cdef int[::1] operation, usable_machines

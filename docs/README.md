@@ -1,5 +1,5 @@
 Documentation
-=============
+-------------
 
 Project documentation is built using [Sphinx docs](https://www.sphinx-doc.org/), which uses [reST](http://docutils.sourceforge.net/rst.html) for markup. 
 This allows the docs to cover a vast amount of topics without using a thousand-line README file.
@@ -13,7 +13,7 @@ pip install -r requirements.txt
 This will install the requirements needed for the generating the docs. Afterwards you can run:
 
 ```bash
-make html
+./generate_docs.bash
 ```
 
 The docs will be generated, the output files will be placed in the `_build/html/` directory, and can be browsed (locally) with any browser.

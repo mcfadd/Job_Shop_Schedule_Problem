@@ -23,6 +23,9 @@ class Solution:
     an operation is a 1d nparray in the form [job_id, task_id, sequence, machine],
     a 1d nparray memory view of machine makespan times,
     and the makespan time.
+
+    :type operation_2d_array: nparray
+    :param operation_2d_array: 2d nparray of operations
     """
 
     def __init__(self, operation_2d_array):
@@ -32,11 +35,10 @@ class Solution:
         First it checks if the operation_2d_array parameter is feasible,
         then it computes the nparray of machine makespan times and the makespan time of the Solution.
 
-        :type operation_2d_array 2d nparray
-        :param operation_2d_array: 2d nparray of operations
-
         :raise: InfeasibleSolutionException if solution is infeasible
         :raise: IncompleteSolutionException if solution is incomplete
+
+        See help(Solution)
         """
         if operation_2d_array.shape[0] != Data.sequence_dependency_matrix.shape[0]:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
@@ -63,10 +65,10 @@ class Solution:
         Better is defined as having a lower makespan or machine_makespans if the makespans are equal.
 
         :type other_solution: Solution
-        :param other_solution: The solution to compare
+        :param other_solution: solution to compare
 
         :rtype: bool
-        :returns: True if self is "better" than other_solution
+        :returns: true if self is "better" than other_solution
         """
         if self.makespan < other_solution.makespan:
             return True
@@ -90,10 +92,10 @@ class Solution:
         Worse is defined as having a greater makespan or machine_makespans if the makespans are equal.
 
         :type other_solution: Solution
-        :param other_solution: The solution to compare
+        :param other_solution: solution to compare
 
         :rtype: bool
-        :returns: True if self is "worse" than other_solution
+        :returns: true if self is "worse" than other_solution
         """
         if self.makespan > other_solution.makespan:
             return True
@@ -113,9 +115,9 @@ class Solution:
 
     def __str__(self):
         return f"makespan = {self.makespan}\n" \
-            f"machine_makespans = {list(self.machine_makespans)}\n" \
-            f"operation_list =\n" \
-            f"{self.operation_2d_array}"
+               f"machine_makespans = {list(self.machine_makespans)}\n" \
+               f"operation_list =\n" \
+               f"{self.operation_2d_array}"
 
     def __getstate__(self):
         self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
@@ -134,48 +136,45 @@ class Solution:
         Creates an excel file in the output_dir directory that contains the schedule for each machine of this Solution.
 
         :type output_dir: str
-        :param output_dir: The directory to place the excel file into
+        :param output_dir: path to the directory to place the excel file into
 
         :type start_time: datetime.time
-        :param start_time: Start time of the work day
+        :param start_time: start time of the work day
 
         :type end_time: datetime.time
-        :param end_time: End time of the work day
+        :param end_time: end time of the work day
 
         :type filename: str
-        :param filename: The name of the excel file
+        :param filename: name of the excel file
 
         :type continuous: bool
-        :param continuous: If true a continuous schedule is created. (i.e. start_time and end_time are not used)
+        :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
         :returns: None
         """
         create_schedule_xlsx_file(self, output_dir, start_time=start_time, end_time=end_time, filename=filename,
                                   continuous=continuous)
 
-    def iplot_gantt_chart(self,
-                          title='Gantt Chart',
-                          start_date=datetime.datetime.now(),
-                          start_time=datetime.time(hour=8, minute=0),
-                          end_time=datetime.time(hour=20, minute=0),
+    def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.datetime.now(),
+                          start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
                           continuous=False):
         """
         Plots a gantt chart of this Solution in an ipyton notebook.
 
         :type title: str
-        :param title: The name of the gantt chart
+        :param title: name of the gantt chart
 
         :type start_date: datetime.datetime
-        :param start_date: Datetime to start the schedule from
+        :param start_date: datetime to start the schedule from
 
         :type start_time: datetime.time
-        :param start_time: Start time of the work day
+        :param start_time: start time of the work day
 
         :type end_time: datetime.time
-        :param end_time: End time of the work day
+        :param end_time: end time of the work day
 
         :type continuous: bool
-        :param continuous: If true a continuous schedule is created. (i.e. start_time and end_time are not used)
+        :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
         :returns: None
         """
@@ -185,34 +184,35 @@ class Solution:
                            continuous=continuous)
 
     def create_gantt_chart_html_file(self, output_dir, title='Gantt Chart', start_date=datetime.datetime.now(),
-                                     start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
+                                     start_time=datetime.time(hour=8, minute=0),
+                                     end_time=datetime.time(hour=20, minute=0),
                                      filename='Gantt_Chart.html', auto_open=False, continuous=False):
         """
         Creates a gantt chart html file of the solution parameters in the output_dir directory.
 
         :type output_dir: str
-        :param output_dir: The directory to place the excel file into
+        :param output_dir: path to the directory to place the excel file into
 
         :type title: str
-        :param title: The name of the gantt chart
+        :param title: name of the gantt chart
 
-        :type start_date: datetime.time
-        :param start_date: Datetime to start the schedule from
+        :type start_date: datetime.datetime
+        :param start_date: datetime to start the schedule from
 
         :type start_time: datetime.time
-        :param start_time: Start time of the work day
+        :param start_time: start time of the work day
 
         :type end_time: datetime.time
-        :param end_time: End time of the work day
+        :param end_time: end time of the work day
 
         :type filename: str
-        :param filename: The name of the excel file
+        :param filename: name of the html file
 
         :type auto_open: bool
-        :param auto_open: If true the gantt chart html file is automatically opened in a browser
+        :param auto_open: if true the gantt chart html file is automatically opened in a browser
 
         :type continuous: bool
-        :param continuous: If true a continuous schedule is created. (i.e. start_time and end_time are not used)
+        :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
         :returns: None
         """
@@ -232,10 +232,10 @@ class SolutionFactory:
         Gets n random Solution instances.
 
         :type n: int
-        :param n: The number of Solutions to get
+        :param n: number of Solutions to get
 
-        :rtype: list
-        :returns: n random Solution instances
+        :rtype: [Solution]
+        :returns: n randomly generated Solution instances
         """
         return [SolutionFactory.get_solution() for _ in range(n)]
 
@@ -245,7 +245,7 @@ class SolutionFactory:
         Gets a random Solution instance.
 
         :rtype: Solution
-        :returns: A random Solution instance
+        :returns: randomly generated Solution instance
         """
         return SolutionFactory._generate_solution()
 
@@ -255,10 +255,10 @@ class SolutionFactory:
         Gets n random Solution instances that are generated using longest processing time first criteria.
 
         :type n: int
-        :param n: The number of Solutions to get
+        :param n: number of Solutions to get
 
-        :rtype: list
-        :returns: n random Solution instances
+        :rtype: [Solution]
+        :returns: n randomly generated Solution instances
         """
         return [SolutionFactory._generate_solution_w_processing_time_criteria(lpt=True) for _ in range(n)]
 
@@ -268,7 +268,7 @@ class SolutionFactory:
         Gets a random Solution instance that is generated using longest processing time first criteria.
 
         :rtype: Solution
-        :returns: A random Solution instance
+        :returns: randomly generated Solution instance
         """
         return SolutionFactory._generate_solution_w_processing_time_criteria(lpt=True)
 
@@ -278,10 +278,10 @@ class SolutionFactory:
         Gets n random Solution instances that are generated using shortest processing time first criteria.
 
         :type n: int
-        :param n: The number of Solutions to get
+        :param n: number of Solutions to get
 
-        :rtype: list
-        :returns: n random Solution instances
+        :rtype: [Solution]
+        :returns: n randomly generated Solution instances
         """
         return [SolutionFactory._generate_solution_w_processing_time_criteria(lpt=False) for _ in range(n)]
 
@@ -291,7 +291,7 @@ class SolutionFactory:
         Gets a random Solution instance that is generated using shortest processing time first criteria.
 
         :rtype: Solution
-        :returns: A random Solution instance
+        :returns: randomly generated Solution instance
         """
         return SolutionFactory._generate_solution_w_processing_time_criteria(lpt=False)
 
@@ -301,7 +301,7 @@ class SolutionFactory:
         Generates a random Solution instance.
 
         :rtype: Solution
-        :returns: A random Solution instance
+        :returns: randomly generated Solution instance
         """
 
         operation_list = []
@@ -350,7 +350,7 @@ class SolutionFactory:
         Generates a random Solution instance with either shortest or longest processing time first criteria.
 
         :rtype: Solution
-        :returns: A random Solution instance
+        :returns: randomly generated Solution instance
         """
 
         operation_list = []
@@ -404,6 +404,10 @@ class SolutionFactory:
 
         return Solution(np.array(operation_list, dtype=np.intc))
 
+    """
+    Data structures
+    """
+
     class _JobTaskHeap:
         def __init__(self, maxheap=True):
             self.maxheap = maxheap
@@ -413,10 +417,12 @@ class SolutionFactory:
             for job in Data.jobs:
                 for task in job.get_tasks():
                     if task.get_sequence() == 0:
-                        heapq.heappush(self.heap, SolutionFactory._MaxHeapObj(task) if self.maxheap else SolutionFactory._MinHeapObj(task))
+                        heapq.heappush(self.heap, SolutionFactory._MaxHeapObj(
+                            task) if self.maxheap else SolutionFactory._MinHeapObj(task))
 
         def push_task(self, task):
-            heapq.heappush(self.heap, SolutionFactory._MaxHeapObj(task) if self.maxheap else SolutionFactory._MinHeapObj(task))
+            heapq.heappush(self.heap,
+                           SolutionFactory._MaxHeapObj(task) if self.maxheap else SolutionFactory._MinHeapObj(task))
             self.dict[task.get_job_id()].append(task)
 
         def pop_task(self):
@@ -435,9 +441,11 @@ class SolutionFactory:
             self_index = Data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
             other_index = Data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
 
-            self_processing_times = [processing_time for processing_time in Data.task_processing_times_matrix[self_index] if
+            self_processing_times = [processing_time for processing_time in
+                                     Data.task_processing_times_matrix[self_index] if
                                      processing_time != -1]
-            other_processing_times = [processing_time for processing_time in Data.task_processing_times_matrix[other_index]
+            other_processing_times = [processing_time for processing_time in
+                                      Data.task_processing_times_matrix[other_index]
                                       if
                                       processing_time != -1]
 
@@ -454,9 +462,11 @@ class SolutionFactory:
             self_index = Data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
             other_index = Data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
 
-            self_processing_times = [processing_time for processing_time in Data.task_processing_times_matrix[self_index] if
+            self_processing_times = [processing_time for processing_time in
+                                     Data.task_processing_times_matrix[self_index] if
                                      processing_time != -1]
-            other_processing_times = [processing_time for processing_time in Data.task_processing_times_matrix[other_index]
+            other_processing_times = [processing_time for processing_time in
+                                      Data.task_processing_times_matrix[other_index]
                                       if
                                       processing_time != -1]
 

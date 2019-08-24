@@ -12,7 +12,6 @@
 
 import os
 import sys
-import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath('../JSSP'))
 
@@ -24,7 +23,7 @@ copyright = '2019, Matt McFadden'
 author = 'Matt McFadden'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.0'
+release = '0.2.1'
 
 
 # -- General configuration ---------------------------------------------------

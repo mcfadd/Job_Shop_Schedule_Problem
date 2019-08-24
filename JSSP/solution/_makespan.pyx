@@ -17,19 +17,19 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
     Computes a 1d nparray of all the machine's makespan times given a 2d nparray of operations, where an operation
     is a 1d nparray of integers in the form [job_id, task_id, sequence, machine].
 
-    :type operation_2d_array: 2d nparray
-    :param operation_2d_array: The 2d nparray of operations to compute the machine makespans for
+    :type operation_2d_array: nparray
+    :param operation_2d_array: nparray of operations to compute the machine makespans for
     
     :type task_processing_times_matrix: nparray
-    :param task_processing_times_matrix: Task processing times matrix from static Data
+    :param task_processing_times_matrix: task processing times matrix from static Data
     
     :type sequence_dependency_matrix: nparray
-    :param sequence_dependency_matrix: Sequence dependency matrix from static Data
+    :param sequence_dependency_matrix: sequence dependency matrix from static Data
     
     :type job_task_index_matrix: nparray
-    :param job_task_index_matrix: Job task index matrix from static Data
+    :param job_task_index_matrix: job task index matrix from static Data
     
-    :rtype: 1d nparray
+    :rtype: nparray
     :returns: memory view of a 1d nparray of machine make span times, where makespan[i] = makespan of machine i
     :raise: InfeasibleSolutionException if the solution is infeasible
     """

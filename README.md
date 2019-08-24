@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
 [![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=latest)](https://job-shop-schedule-problem.readthedocs.io/en/latest/?badge=latest)
 
-#### Version 0.2.0  
+#### Version 0.2.1  
 
 JSSP is an optimization package for the Job Shop Schedule Problem.  
 JSSP has two different optimization algorithms:  
@@ -23,22 +23,22 @@ For more information as well as examples, [read the docs](https://readthedocs.or
 
 ## How to Install
 
-1. Download [JSSP-0.2.0.linux-x86_64.egg](https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases/download/0.2.0/JSSP-0.2.0.linux-x86_64.egg)
-2. Run `easy_install JSSP-0.2.0.linux-x86_64.egg`
-
-**For Developers**
-
 After cloning this repo, change directories to where `setup.py` exists and run 
-```
+```bash
 pip install --upgrade pip
 pip install -r requirements.txt
-python setup.py build_ext
+pip install .
 ```
 If you get an error about `python.h` not being found try installing [python3-dev](https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for).
 
+To build the C-extensions (i.e compile `.pyx` files) without installing JSSP run
+```bash
+python setup.py build_ext
+```
+
 ## How to Use
 
-After installation, JSSP can imported as a normal python package.  
+After installation, JSSP can imported as a normal python module.  
 For examples on how to use JSSP see the jupyter notebooks in the [examples](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/examples) folder or [see the docs](https://job-shop-schedule-problem.readthedocs.io/en/stable/Examples.html).
 
 **Important Note**

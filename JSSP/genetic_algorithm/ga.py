@@ -16,8 +16,10 @@ def _tournament_selection(*args):
     """
     Tournament style selection for the genetic algorithm.
 
-    This function selects 'args[1]' (i.e. selection_size) solutions from the population,
-    then removes the best solution out of the selection of solutions from the population and returns it.
+    This function selects args[1] (i.e. selection_size) solutions from the population,
+    then removes the best solution out of the selection from the population and returns it.
+
+    See https://en.wikipedia.org/wiki/Tournament_selection for more info.
 
     :param args: list where args[0] is the population of solutions and args[1] is the selection size
 
@@ -36,7 +38,9 @@ def _fitness_proportionate_selection(*args):
     """
     Fitness proportionate selection for the genetic algorithm (also called roulette wheel selection).
 
-    This function first normalizes the fitness values of the solutions in the population, then randomly removes a solution from the population and returns it.
+    This function first normalizes the fitness values (makespan) of the solutions in the population,
+    then randomly removes a solution from the population and returns it.
+
     See https://en.wikipedia.org/wiki/Fitness_proportionate_selection for more info.
 
     :param args: list where args[0] is the population
@@ -93,33 +97,36 @@ GA agent class
 class GeneticAlgorithmAgent:
     """
     Genetic algorithm optimization agent.
+
+    :type stopping_condition: float
+    :param stopping_condition: either the duration to run GA in seconds or the number of generations to iterate though
+
+    :type time_condition: bool
+    :param time_condition: if true GA is ran for stopping_condition number of seconds else it is ran for stopping_condition generations
+
+    :type population: [Solution]
+    :param population: initial population to start the GA from
+
+    :type selection_method_enum: GASelectionEnum
+    :param selection_method_enum: selection method to use for selecting parents from the population. (see GASelectionEnum for selection methods)
+
+    :type mutation_probability: float
+    :param mutation_probability: probability of mutating a child solution (i.e change a random operation's machine)
+
+    :type selection_size: int
+    :param selection_size: size of the selection group. (applicable only for tournament style selection)
+
+    :type benchmark: bool
+    :param benchmark: if true benchmark data is gathered
     """
+
     def __init__(self, stopping_condition, time_condition, population=None, population_size=200,
                  selection_method_enum=GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
                  selection_size=5, benchmark=False):
         """
         Initializes an instance of GeneticAlgorithmAgent.
 
-        :type stopping_condition: float
-        :param stopping_condition: Either the duration to run GA in seconds or the number of generations to iterate though
-
-        :type time_condition: bool
-        :param time_condition: If true GA is ran for 'stopping_condition' number of seconds else it is ran for 'stopping_condition' generations
-
-        :type population: list
-        :param population: The initial population to start the GA from
-
-        :type selection_method_enum: GASelectionEnum
-        :param selection_method_enum: The selection method to use for selecting parents from the population. (See ga.GASelectionEnum for selection methods)
-
-        :type mutation_probability: float
-        :param mutation_probability: The probability of mutating a child solution (i.e change a random operation's machine)
-
-        :type selection_size: int
-        :param selection_size: The size of the selection group. (Applicable only for tournament style selection)
-
-        :type benchmark: bool
-        :param benchmark: If true benchmark data is gathered
+        See help(GeneticAlgorithmAgent)
         """
         # parameters
         self.time_condition = time_condition
@@ -153,7 +160,7 @@ class GeneticAlgorithmAgent:
         Starts the genetic algorithm for this GeneticAlgorithmAgent.
 
         :rtype: Solution
-        :returns: The best Solution found
+        :returns: best Solution found
         """
 
         population = self.initial_population[:]

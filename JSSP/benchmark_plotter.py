@@ -11,11 +11,11 @@ def iplot_benchmark_results(ts_agent_list=None, ga_agent=None):
     """
     Plots the benchmark results in an ipython notebook.
 
-    :type ts_agent_list: list or None
-    :param ts_agent_list: TabuSearchAgent instances to plot the benchmark results for if not None
+    :type ts_agent_list: [TabuSearchAgent]
+    :param ts_agent_list: list of TabuSearchAgent instances to plot the benchmark results for
 
-    :type ga_agent: GeneticAlgorithmAgent or None
-    :param ga_agent: GeneticAlgorithmAgent to plot the results for if not None
+    :type ga_agent: GeneticAlgorithmAgent
+    :param ga_agent: GeneticAlgorithmAgent to plot the results for
 
     :returns: None
     """
@@ -50,20 +50,20 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
     """
     Outputs html files containing benchmark results in the output directory specified.
 
-    :type ts_agent_list: list or None
-    :param ts_agent_list: TabuSearchAgent instances to output the benchmark results for if not None
+    :type ts_agent_list: [TabuSearchAgent]
+    :param ts_agent_list: list of TabuSearchAgent instances to output the benchmark results for
 
-    :type ga_agent: GeneticAlgorithmAgent or None
-    :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for if not None
+    :type ga_agent: GeneticAlgorithmAgent
+    :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for
 
     :type output_dir: str
-    :param output_dir: The output directory to place the html files into
+    :param output_dir: path to the output directory to place the html files into
 
     :type name: str
-    :param name: The name of the benchmark run
+    :param name: name of the benchmark run
 
     :type auto_open: bool
-    :param auto_open: If true index.html is automatically opened in a browser
+    :param auto_open: if true index.html is automatically opened in a browser
 
     :returns: None
     """
@@ -115,11 +115,11 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
     """
     Formats TS benchmark results in an html file & creates plots (html files).
 
-    :type ts_agent_list: list
-    :param ts_agent_list: TabuSearchAgent instances to output the benchmark results for
+    :type ts_agent_list: [TabuSearchAgent]
+    :param ts_agent_list: list of TabuSearchAgent instances to output the benchmark results for
 
     :type output_directory: str
-    :param output_directory: The directory to place the html files containing plots
+    :param output_directory: path to the directory to place the html files containing plots into
 
     :rtype: str
     :returns: html containing benchmark results
@@ -211,7 +211,7 @@ def _ga_benchmark_results(ga_agent, output_directory):
     :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for
 
     :type output_directory: str
-    :param output_directory: The directory to place the html files containing plots
+    :param output_directory: path to the directory to place the html files containing plots
 
     :rtype: str
     :returns: html containing benchmark results
@@ -281,11 +281,11 @@ def _make_ts_traces(ts_agent_list):
     """
     Makes and returns traces and layouts of the benchmark results of the TabuSearchAgent instances in ts_agent_list.
 
-    :type ts_agent_list: list
-    :param ts_agent_list: TabuSearchAgent instances to make traces and layouts for
+    :type ts_agent_list: [TabuSearchAgent]
+    :param ts_agent_list: list of TabuSearchAgent instances to make traces and layouts for
 
-    :rtype: list
-    :returns: traces and layouts
+    :rtype: [trace, layout]
+    :returns: list of traces and layouts
     """
     # create traces for plots
     makespans_traces = [
@@ -325,8 +325,8 @@ def _make_ga_traces(ga_agent):
     :type ga_agent: GeneticAlgorithmAgent
     :param ga_agent: GeneticAlgorithmAgent instance to make traces and layouts for
 
-    :rtype: list
-    :returns: traces and layouts
+    :rtype: (trace, layout)
+    :returns: tuple containing (trace, layout)
     """
     # create traces for plot
     makespans_traces = [

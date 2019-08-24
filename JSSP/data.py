@@ -5,25 +5,30 @@ import re
 import numpy as np
 
 
-class _Task:
+class Task:
+    """
+    Task ADT.
+
+    :type job_id: int
+    :param job_id: job ID of this Task
+
+    :type task_id: int
+    :param task_id: task ID of this Task
+
+    :type sequence: int
+    :param sequence: sequence number of this Task
+
+    :type usable_machines: 1d nparray
+    :param usable_machines: usable machines that this Task can be processed on
+
+    :type pieces: int
+    :param pieces: number of pieces this Task has
+    """
     def __init__(self, job_id, task_id, sequence, usable_machines, pieces):
         """
         Initializes an instance of Task.
 
-        :type job_id: int
-        :param job_id: The job ID of this Task
-
-        :type task_id: int
-        :param task_id: The task ID of this Task
-
-        :type sequence: int
-        :param sequence: Sequence number of this Task
-
-        :type usable_machines: 1d nparray
-        :param usable_machines: Usable machines that this Task can be processed on
-
-        :type pieces: int
-        :param pieces: Number of pieces this Task has
+        See help(_Task)
         """
         self._jobId = job_id
         self._taskId = task_id
@@ -60,13 +65,18 @@ class _Task:
             f"{self._pieces}]"
 
 
-class _Job:
+class Job:
+    """
+    Job ADT.
+
+    :type job_id: int
+    :param job_id: job ID of this Job
+    """
     def __init__(self, job_id):
         """
         Initializes an instance of Job.
 
-        :type job_id: int
-        :param job_id: The job Id of this Job
+        See help(_Job)
         """
         self._jobId = job_id
         self._tasks = []
@@ -100,20 +110,40 @@ class Data:
     """
     Static class containing all of the static data that is read in.
     """
-    # paths to input files
+
     seq_dep_matrix_file_path = None
+    "path to the sequence dependency matrix csv file that was read in"
+
     machine_speeds_file_path = None
+    "path to the machine speeds csv file was read in"
+
     job_tasks_file_path = None
+    "path to the job-tasks csv file was read in"
+
     fjs_file_path = None
+    "path to the .fjs file was read in"
 
     # uninitialized static fields
     fjs_instance = False
+
     sequence_dependency_matrix = None
+    "2d nparray of sequence dependency matrix"
+
     job_task_index_matrix = None
+    "2d nparray of (job, task): index mapping"
+
     usable_machines_matrix = None
+    "2d nparray of usable machines"
+
     task_processing_times_matrix = None
+    "2d nparray of task processing times on machines"
+
     machine_speeds = None
+    "1d nparray of machine speeds"
+
     jobs = []
+    "list of all Job instances"
+
     total_number_of_jobs = 0
     total_number_of_tasks = 0
     total_number_of_machines = 0
@@ -148,13 +178,13 @@ class Data:
         Initializes all of the static data from the csv files.
 
         :type seq_dep_matrix_file: str
-        :param seq_dep_matrix_file: Path to the csv file containing the sequence dependency setup times
+        :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
 
         :type machine_speeds_file: str
-        :param machine_speeds_file: Path to the csv file containing all of the machine speeds
+        :param machine_speeds_file: path to the csv file containing all of the machine speeds
 
         :type job_tasks_file: str
-        :param job_tasks_file: Path to the csv file containing all of the job-tasks
+        :param job_tasks_file: path to the csv file containing all of the job-tasks
 
         :returns: None
         """
@@ -173,7 +203,7 @@ class Data:
         Initializes all of the static data from a fjs file.
 
         :type input_file: str
-        :param input_file: Path to the fjs file to read the data from
+        :param input_file: path to the fjs file to read the data from
 
         :returns: None
         """
@@ -213,7 +243,7 @@ class Data:
             for job_id, task_data in enumerate(lines[1:]):  # iterate over jobs
 
                 # create and append new Job
-                Data.jobs.append(_Job(job_id))
+                Data.jobs.append(Job(job_id))
 
                 task_id = 0
                 sequence = 0
@@ -236,7 +266,7 @@ class Data:
                         usable_machines.append(machine)
                         Data.task_processing_times_matrix[task_index, machine] = runtime
 
-                    Data.jobs[job_id].get_tasks().append(_Task(job_id, task_id, sequence, usable_machines, -1))
+                    Data.jobs[job_id].get_tasks().append(Task(job_id, task_id, sequence, usable_machines, -1))
                     Data.usable_machines_matrix[task_index] = np.resize(np.array(usable_machines, dtype=np.intc),
                                                                         Data.total_number_of_machines)
                     Data.job_task_index_matrix[job_id, task_id] = task_index
@@ -254,7 +284,7 @@ class Data:
         Populates Data.jobs by reading the job_tasks_file csv file.
 
         :type job_tasks_file: str
-        :param job_tasks_file: Path to the csv file that contains the job-task data
+        :param job_tasks_file: path to the csv file that contains the job-task data
 
         :returns: None
 
@@ -267,7 +297,7 @@ class Data:
             next(fin)
             for row in csv.reader(fin):
                 # create task object
-                task = _Task(
+                task = Task(
                     int(row[0]),  # job_id
                     int(row[1]),  # task_id
                     int(row[2]),  # seq num
@@ -276,7 +306,7 @@ class Data:
                 )
                 # create & append new job if we encounter job_id that has not been seen
                 if task.get_job_id() != prev_job_id:
-                    Data.jobs.append(_Job(task.get_job_id()))
+                    Data.jobs.append(Job(task.get_job_id()))
                     prev_job_id = task.get_job_id()
 
                 # update job's max sequence number
@@ -292,7 +322,7 @@ class Data:
         Populates Data.sequence_dependency_matrix by reading the seq_dep_matrix_file csv file.
 
         :type seq_dep_matrix_file: str
-        :param seq_dep_matrix_file: Path to the csv file that contains the sequence dependency matrix
+        :param seq_dep_matrix_file: path to the csv file that contains the sequence dependency matrix
 
         :returns: None
 
@@ -313,7 +343,7 @@ class Data:
         Populates Data.machine_speeds by reading the machine_speeds_file csv file.
 
         :type machine_speeds_file: str
-        :param machine_speeds_file: Path to the csv file that contains the machine run speeds
+        :param machine_speeds_file: path to the csv file that contains the machine run speeds
 
         :returns: None
 
@@ -397,13 +427,13 @@ class Data:
     def convert_fjs_to_csv(input_file, output_dir):
         """
         Converts a fjs file into three csv files, jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
-        then it puts them in the output directory:
+        then it puts them in the output directory.
 
         :type input_file: str
-        :param input_file: Path to the fjs file containing a flexible job shop schedule problem instance
+        :param input_file: path to the fjs file containing a flexible job shop schedule problem instance
 
         :type output_dir: str
-        :param output_dir: Path to the directory to place the csv files into
+        :param output_dir: path to the directory to place the csv files into
 
         :returns: None
         """

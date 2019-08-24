@@ -5,7 +5,7 @@ import os
 
 from setuptools import find_packages, setup, Extension
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 class NumpyExtension(Extension):
@@ -36,17 +36,26 @@ setup(
     author_email='mrfadd8@gmail.com',
     python_requires='>=3.6.0',
     url='https://github.com/mcfadd/Job_Shop_Schedule_Problem',
+    download_url='https://github.com/mcfadd/Job_Shop_Schedule_Problem/archive/' + __version__ + '.tar.gz',
     license='ISC',
-    keywords='Job Shop Schedule Problem',
+    keywords=['Job Shop Schedule Problem', 'Optimization', 'Tabu Search', 'Genetic Algorithm'],
     classifiers=[
-        'LICENSE :: OSI APPROVED :: ISC LICENSE (ISCL)',
-        'OPERATING SYSTEM :: POSIX',
-        'OPERATING SYSTEM :: UNIX',
-        'OPERATING SYSTEM :: WINDOWS',
-        'PROGRAMMING LANGUAGE :: Python :: 3.6',
-        'PROGRAMMING LANGUAGE :: CYTHON',
-        'TOPIC :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',
-        'TOPIC :: OFFICE/BUSINESS :: SCHEDULING',
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Manufacturing',
+        'Intended Audience :: Science/Research',
+        'License :: OSI APPROVED :: ISC LICENSE (ISCL)',
+        'Operating System :: POSIX',
+        'Operating System :: UNIX',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: MacOS',
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Cython',
+        'Topic :: SCIENTIFIC/ENGINEERING :: MATHEMATICS',
+        'Topic :: OFFICE/BUSINESS :: SCHEDULING',
     ],
     setup_requires=['numpy', 'cython'],
     install_requires=['numpy', 'plotly', 'progressbar', 'XlsxWriter'],
