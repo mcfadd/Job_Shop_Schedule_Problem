@@ -9,11 +9,12 @@ from tests import project_root
 """
 Test the following:
 
-1. ts.SolutionSet.add() function
-2. ts.SolutionSet.remove() function
-3. ts.SolutionSet.contains() function
-4. ts.TabuList.enqueue() function
-5. ts.TabuList.dequeue() function
+1. ts._SolutionSet.add() function
+2. ts._SolutionSet.remove() function
+3. ts._SolutionSet.contains() function
+4. ts._TabuList.enqueue() function
+5. ts._TabuList.dequeue() function
+6. ts._MaxHeap data structure
 
 """
 
@@ -34,7 +35,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
-        self.assertTrue(solution_set.contains(solution_obj1))
+        self.assertTrue(solution_obj1 in solution_set)
         self.assertEqual(solution_set.size, 1)
 
         # add another Solution
@@ -42,7 +43,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
-        self.assertTrue(solution_set.contains(solution_obj2))
+        self.assertTrue(solution_obj2 in solution_set)
         self.assertEqual(solution_set.size, 2)
 
     def test_solution_set_remove(self):
@@ -53,13 +54,13 @@ class TestTSStructures(unittest.TestCase):
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
-        self.assertTrue(solution_set.contains(solution_obj1))
+        self.assertTrue(solution_obj1 in solution_set)
 
         # remove the Solution
         solution_set.remove(solution_obj1)
 
         # make sure solution was removed
-        self.assertFalse(solution_set.contains(solution_obj1))
+        self.assertFalse(solution_obj1 in solution_set)
         self.assertEqual(solution_set.size, 0)
 
     def test_tabu_list_enqueue(self):
@@ -94,9 +95,9 @@ class TestTSStructures(unittest.TestCase):
         # check that solutions are dequeued in correct order
         i = 0
         while 0 < tabu_list.solutions.size:
-            self.assertTrue(tabu_list.solutions.contains(lst[i]))
+            self.assertTrue(lst[i] in tabu_list)
             self.assertEqual(lst[i], tabu_list.dequeue())
-            self.assertFalse(tabu_list.solutions.contains(lst[i]))
+            self.assertFalse(lst[i] in tabu_list)
             i += 1
 
     def test_max_heap(self):
@@ -104,14 +105,14 @@ class TestTSStructures(unittest.TestCase):
         heap_size = 50
         heap = _MaxHeap()
         for _ in range(heap_size):
-            heap.heappush(solution.SolutionFactory.get_solution())
+            heap.push(solution.SolutionFactory.get_solution())
 
         self.assertEqual(heap_size, len(heap), "The max heap size should be equal to heap_size")
 
         while len(heap) > 1:
-            sol = heap.heappop()
+            sol = heap.pop()
             self.assertGreaterEqual(sol, heap[0],
-                                    "The max heap items should be organized with the worst solutions (greatest) at h[0]")
+                                    "The max heap solutions should be organized with the worst solutions (greatest) at the top")
 
 
 if __name__ == '__main__':

@@ -111,7 +111,7 @@ class GeneticAlgorithmAgent:
     :param selection_method_enum: selection method to use for selecting parents from the population. (see GASelectionEnum for selection methods)
 
     :type mutation_probability: float
-    :param mutation_probability: probability of mutating a child solution (i.e change a random operation's machine)
+    :param mutation_probability: probability of mutating a child solution (i.e change a random operation's machine) in range [0, 1]
 
     :type selection_size: int
     :param selection_size: size of the selection group. (applicable only for tournament style selection)
@@ -122,15 +122,13 @@ class GeneticAlgorithmAgent:
 
     def __init__(self, stopping_condition, population, time_condition=False,
                  selection_method_enum=GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
-                 selection_size=5, benchmark=False):
+                 selection_size=2, benchmark=False):
         """
         Initializes an instance of GeneticAlgorithmAgent.
 
         See help(GeneticAlgorithmAgent)
         """
-        assert selection_method_enum in [GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM], "selection_method must be a GASelectionEnum"
         assert selection_size is not None and 1 < selection_size, "selection_size must be an integer greater than 1"
-        assert population is not None and isinstance(population, list) and all(isinstance(x, Solution) for x in population), "population must be a list of solutions"
 
         # parameters
         self.time_condition = time_condition

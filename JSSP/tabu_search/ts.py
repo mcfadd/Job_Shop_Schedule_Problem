@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 from JSSP.data import Data
-from JSSP.solution import SolutionFactory, InfeasibleSolutionException
+from JSSP.solution import InfeasibleSolutionException
 from ._generate_neighbor import generate_neighbor
 
 
@@ -44,10 +44,9 @@ class TabuSearchAgent:
     :type benchmark: bool
     :param benchmark: if true benchmark data is gathered
     """
-    def __init__(self, stopping_condition, time_condition, initial_solution=None, num_solutions_to_find=1,
+    def __init__(self, stopping_condition, time_condition, initial_solution, num_solutions_to_find=1,
                  tabu_list_size=50, neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
                  reset_threshold=100, benchmark=False):
-
         """
         Initializes an instance of TabuSearchAgent.
 
@@ -60,7 +59,7 @@ class TabuSearchAgent:
         else:
             self.iterations = stopping_condition
 
-        self.initial_solution = initial_solution if initial_solution is not None else SolutionFactory.get_solution()
+        self.initial_solution = initial_solution
         self.num_solutions_to_find = num_solutions_to_find
         self.tabu_list_size = tabu_list_size
         self.neighborhood_size = neighborhood_size
@@ -98,20 +97,20 @@ class TabuSearchAgent:
         :returns: Neighboring Solutions
         """
         stop_time = time.time() + self.neighborhood_wait
-        result = _SolutionSet()
-        while result.size < self.neighborhood_size and time.time() < stop_time:
+        neighborhood = _SolutionSet()
+        while neighborhood.size < self.neighborhood_size and time.time() < stop_time:
             try:
                 neighbor = generate_neighbor(seed_solution, self.probability_change_machine,
                                              dependency_matrix_index_encoding, usable_machines_matrix)
 
-                if not result.contains(neighbor):
-                    result.add(neighbor)
+                if neighbor not in neighborhood:
+                    neighborhood.add(neighbor)
 
             except InfeasibleSolutionException:
                 # this should not happen
                 # if it does don't add the infeasible solution to the neighborhood
                 pass
-        return result
+        return neighborhood
 
     def start(self, multi_process_queue=None):
         """
@@ -135,7 +134,7 @@ class TabuSearchAgent:
         seed_solution = self.initial_solution
         best_solutions_heap = _MaxHeap()
         for _ in range(self.num_solutions_to_find):
-            best_solutions_heap.heappush(self.initial_solution)
+            best_solutions_heap.push(self.initial_solution)
 
         # variables used for restarts
         lacking_solution = seed_solution
@@ -172,11 +171,11 @@ class TabuSearchAgent:
 
             for makespan, lst in sorted_neighborhood:  # sort neighbors in increasing order by makespan
                 for neighbor in sorted(lst):  # sort subset of neighbors with the same makespans
-                    if not tabu_list.contains(neighbor):
+                    if neighbor not in tabu_list:
                         # if new seed solution is not better than current seed solution add it to the tabu list
                         if neighbor.makespan >= seed_solution.makespan:
                             tabu_list.enqueue(seed_solution)
-                            if tabu_list.size > self.tabu_list_size:
+                            if len(tabu_list) > self.tabu_list_size:
                                 tabu_list.dequeue()
 
                         seed_solution = neighbor
@@ -187,8 +186,8 @@ class TabuSearchAgent:
                     break
 
             if seed_solution < best_solutions_heap[0]:
-                best_solutions_heap.heappop()  # remove the worst best solution from the heap
-                best_solutions_heap.heappush(seed_solution)  # add the new best solution to the heap
+                best_solutions_heap.pop()  # remove the worst best solution from the heap
+                best_solutions_heap.push(seed_solution)  # add the new best solution to the heap
                 if self.benchmark:
                     if seed_solution.makespan < absolute_best_solution_makespan:
                         absolute_best_solution_makespan = seed_solution.makespan
@@ -200,7 +199,7 @@ class TabuSearchAgent:
                 if not lacking_solution > seed_solution and len(sorted_neighborhood) > 10:
                     # add the seed solution to the tabu list
                     tabu_list.enqueue(seed_solution)
-                    if tabu_list.size > self.tabu_list_size:
+                    if len(tabu_list) > self.tabu_list_size:
                         tabu_list.dequeue()
                     # choose a worse solution from the neighborhood
                     seed_solution = sorted_neighborhood[random.randint(1, int(0.2 * len(sorted_neighborhood)))][1][0]
@@ -212,7 +211,7 @@ class TabuSearchAgent:
                 iterations += 1
                 neighborhood_size_v_iter.append(neighborhood.size)
                 seed_solution_makespan_v_iter.append(seed_solution.makespan)
-                tabu_size_v_iter.append(tabu_list.size)
+                tabu_size_v_iter.append(len(tabu_list))
             elif not self.time_condition:
                 iterations += 1
 
@@ -246,7 +245,7 @@ TS data structures
 '''
 
 
-class _MaxHeapObj(object):
+class _MaxHeapObj:
     """
     Wrapper class for Solution used in _MaxHeap.
     """
@@ -267,7 +266,7 @@ class _MaxHeap:
     def __init__(self):
         self.h = []
 
-    def heappush(self, solution):
+    def push(self, solution):
         """
         Pushes a solution onto this _MaxHeap.
 
@@ -278,7 +277,7 @@ class _MaxHeap:
         """
         heapq.heappush(self.h, _MaxHeapObj(solution))
 
-    def heappop(self):
+    def pop(self):
         """
         Pops a solution from the top of this _MaxHeap.
 
@@ -312,10 +311,6 @@ class _TabuList:
         self.solutions = _SolutionSet()
         self.solutions.add(initial_solution)
 
-    @property
-    def size(self):
-        return self.solutions.size
-
     def enqueue(self, solution):
         """
         Adds a solution to the end of this _TabuList.
@@ -325,7 +320,6 @@ class _TabuList:
 
         :returns: None
         """
-
         self.solutions.add(solution)
         new_node = _Node(data_val=solution)
         self.tail.next_node = new_node
@@ -338,23 +332,16 @@ class _TabuList:
         :rtype: Solution
         :returns: Solution that was removed
         """
-
         head_node = self.head
         self.head = self.head.next_node
         self.solutions.remove(head_node.data_val)
         return head_node.data_val
 
-    def contains(self, solution):
-        """
-        Returns true if the solution is in this _TabuList.
+    def __contains__(self, solution):
+        return solution in self.solutions
 
-        :type solution: Solution
-        :param solution: solution to look for
-
-        :rtype: bool
-        :returns: true if the solution is in this _TabuList
-        """
-        return self.solutions.contains(solution)
+    def __len__(self):
+        return self.solutions.size
 
 
 class _SolutionSet:
@@ -397,7 +384,7 @@ class _SolutionSet:
 
         self.size -= 1
 
-    def contains(self, solution):
+    def __contains__(self, solution):
         """
         Returns true if the solution is in this _SolutionSet.
 

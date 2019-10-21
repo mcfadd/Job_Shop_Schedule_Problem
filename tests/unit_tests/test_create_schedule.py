@@ -1,18 +1,17 @@
+import datetime
 import os
 import shutil
 import unittest
-import datetime
 
 from JSSP import solution
 from JSSP.data import Data
-from tests import project_root, tmp_dir
 from JSSP.solution._schedule_creator import _CustomDayHourMinute, UnacceptableScheduleTime
+from tests import project_root, tmp_dir
 
 """
 Test the following: 
 
 1. solution.create_schedule()
-2. solution.Solution inequality
 
 """
 
