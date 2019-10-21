@@ -7,7 +7,6 @@ import numpy as np
 from JSSP.data import Data
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
-from JSSP.genetic_algorithm import GASelectionEnum
 
 """
 Test that the static data read in from Data.initialize_data_from_fjs is the same as converting the fjs instance 

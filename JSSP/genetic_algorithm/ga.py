@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 from JSSP.data import Data
-from JSSP.solution import SolutionFactory, InfeasibleSolutionException
+from JSSP.solution import Solution, SolutionFactory, InfeasibleSolutionException
 from ._ga_helpers import crossover
 
 """
@@ -101,11 +101,11 @@ class GeneticAlgorithmAgent:
     :type stopping_condition: float
     :param stopping_condition: either the duration to run GA in seconds or the number of generations to iterate though
 
+    :type population: [Solution]
+    :param population: list of Solutions to start the GA from
+
     :type time_condition: bool
     :param time_condition: if true GA is ran for stopping_condition number of seconds else it is ran for stopping_condition generations
-
-    :type population: [Solution]
-    :param population: initial population to start the GA from
 
     :type selection_method_enum: GASelectionEnum
     :param selection_method_enum: selection method to use for selecting parents from the population. (see GASelectionEnum for selection methods)
@@ -120,7 +120,7 @@ class GeneticAlgorithmAgent:
     :param benchmark: if true benchmark data is gathered
     """
 
-    def __init__(self, stopping_condition, time_condition, population=None, population_size=200,
+    def __init__(self, stopping_condition, population, time_condition=False,
                  selection_method_enum=GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
                  selection_size=5, benchmark=False):
         """
@@ -128,6 +128,10 @@ class GeneticAlgorithmAgent:
 
         See help(GeneticAlgorithmAgent)
         """
+        assert selection_method_enum in [GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM], "selection_method must be a GASelectionEnum"
+        assert selection_size is not None and 1 < selection_size, "selection_size must be an integer greater than 1"
+        assert population is not None and isinstance(population, list) and all(isinstance(x, Solution) for x in population), "population must be a list of solutions"
+
         # parameters
         self.time_condition = time_condition
         if time_condition:
@@ -135,14 +139,11 @@ class GeneticAlgorithmAgent:
         else:
             self.iterations = stopping_condition
 
-        self.initial_population = [SolutionFactory.get_solution() for _ in
-                                   range(population_size)] if population is None else population[:] + [
-            SolutionFactory.get_solution() for _ in range(max(0, population_size - len(population)))]
-
-        self.population_size = population_size
+        self.initial_population = population
+        self.population_size = len(population)
         self.selection_method = selection_method_enum
         self.mutation_probability = mutation_probability
-        self.selection_size = selection_size if selection_method_enum is GASelectionEnum.TOURNAMENT else 2
+        self.selection_size = selection_size
         self.benchmark = benchmark
 
         # results

@@ -196,7 +196,8 @@ class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
         return result
 
 
-def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
+def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hour=8, minute=0),
+                              end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
     """
     Creates an excel file in the output_dir directory that contains the schedule for each machine of the solution parameter.
 
@@ -317,6 +318,7 @@ def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hou
             custom_day_hour_min_dict[machine].day += 1
             custom_day_hour_min_dict[machine].hour = custom_day_hour_min_dict[machine].start_time.hour
             custom_day_hour_min_dict[machine].min = custom_day_hour_min_dict[machine].start_time.minute
+            setup = 0
 
         start_of_operation_setup = custom_day_hour_min_dict[machine].__str__()
         custom_day_hour_min_dict[machine].add_minutes(setup)

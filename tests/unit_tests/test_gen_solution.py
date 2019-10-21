@@ -1,8 +1,9 @@
-import unittest
 import os
+import random
+import unittest
 
-from JSSP.solution import SolutionFactory, InfeasibleSolutionException
 from JSSP.data import Data
+from JSSP.solution import SolutionFactory, InfeasibleSolutionException
 from tests import project_root
 
 """
@@ -99,18 +100,20 @@ class TestGenSolution(unittest.TestCase):
         except InfeasibleSolutionException:
             self.assertTrue(False, "Infeasible solution was generated")
 
-    def test_generate_feasible_solution_spt(self):  # Note this test fails on given data. See py TODOs
-        for fjs_instance in self.fjs_data:
+    def test_generate_feasible_solution_spt(self):  # Note this test fails on data/given_data
+        for fjs_instance in random.choices(self.fjs_data, k=10):
             try:
+                print("test_generate_feasible_solution_spt with fjs data: " + fjs_instance)
                 Data.initialize_data_from_fjs(fjs_instance)
                 SolutionFactory.get_n_shortest_process_time_first_solution(50)
 
             except InfeasibleSolutionException:
                 self.assertTrue(False, "Infeasible solution was generated")
 
-    def test_generate_feasible_solution_lpt(self):  # Note this test fails on given data. See py TODOs
-        for fjs_instance in self.fjs_data:
+    def test_generate_feasible_solution_lpt(self):  # Note this test fails on data/given_data
+        for fjs_instance in random.choices(self.fjs_data, k=10):
             try:
+                print("test_generate_feasible_solution_lpt with fjs data: " + fjs_instance)
                 Data.initialize_data_from_fjs(fjs_instance)
                 SolutionFactory.get_n_longest_process_time_first_solution(50)
 

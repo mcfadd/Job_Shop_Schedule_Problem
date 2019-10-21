@@ -335,7 +335,7 @@ class Solver:
         :param runtime: seconds to run the GA
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -382,7 +382,7 @@ class Solver:
         :param iterations: number of generations to go through during the GA
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -428,7 +428,7 @@ class Solver:
         :param time_condition: if true GA is ran for stopping_condition number of seconds else GA is ran for stopping_condition number of iterations
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -455,13 +455,17 @@ class Solver:
         :returns: best solution found
         """
 
+        if population is None:
+            population = [SolutionFactory.get_solution() for _ in range(population_size)]
+        else:
+            population = population[:] + [SolutionFactory.get_solution() for _ in range(max(0, population_size - len(population)))]
+
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
-                                                                time_condition,
                                                                 population,
-                                                                population_size,
+                                                                time_condition,
                                                                 selection_method_enum,
                                                                 mutation_probability,
-                                                                selection_size if selection_method_enum is genetic_algorithm.GASelectionEnum.TOURNAMENT else None,
+                                                                selection_size,
                                                                 benchmark
                                                                 )
 

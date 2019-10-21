@@ -1,9 +1,11 @@
 import os
+import random
 import unittest
+
+from JSSP.genetic_algorithm._ga_helpers import crossover
 
 from JSSP.data import Data
 from JSSP.genetic_algorithm.ga import _tournament_selection, _fitness_proportionate_selection, _random_selection
-from JSSP.genetic_algorithm._ga_helpers import crossover
 from JSSP.solution import SolutionFactory, InfeasibleSolutionException
 from tests import project_root
 
@@ -75,7 +77,7 @@ class TestGACrossover(unittest.TestCase):
     def test_crossover(self):
 
         probability_mutation = 0.5
-        for i, fjs_instance in enumerate(self.fjs_data):
+        for i, fjs_instance in enumerate(random.choices(self.fjs_data, k=10)):
             print(f"testing GA crossover function for fjs instance {fjs_instance} ({i + 1} of {self.total_instances})")
             Data.initialize_data_from_fjs(fjs_instance)
             try:
