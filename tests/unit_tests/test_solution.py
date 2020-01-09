@@ -128,9 +128,6 @@ class TestPicklingSolution(unittest.TestCase):
             solution_obj_pickled = pickle.load(fin)
 
         self.assertEqual(solution_obj, solution_obj_pickled, "The pickled solution should be equal to solution_obj")
-        solution_obj.makespan -= 1
-        self.assertNotEqual(solution_obj, solution_obj_pickled,
-                            "The pickled solution should not be equal to solution_obj")
 
 
 if __name__ == '__main__':

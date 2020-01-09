@@ -52,9 +52,7 @@ class Solution:
         self.operation_2d_array = operation_2d_array
 
     def __eq__(self, other_solution):
-        return self.makespan == other_solution.makespan and np.array_equal(
-            self.machine_makespans, other_solution.machine_makespans) and np.array_equal(
-            self.operation_2d_array, other_solution.operation_2d_array)
+        return np.array_equal(self.operation_2d_array, other_solution.operation_2d_array)
 
     def __ne__(self, other_solution):
         return not self == other_solution
@@ -72,6 +70,8 @@ class Solution:
         """
         if self.makespan < other_solution.makespan:
             return True
+        elif self.makespan > other_solution.makespan:
+            return False
         else:
             self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
             other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
@@ -99,6 +99,8 @@ class Solution:
         """
         if self.makespan > other_solution.makespan:
             return True
+        elif self.makespan < other_solution.makespan:
+            return False
         else:
             self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
             other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
