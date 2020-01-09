@@ -132,13 +132,13 @@ class Solution:
         self.machine_makespans = state['machine_makespans']
         self.makespan = state['makespan']
 
-    def create_schedule_xlsx_file(self, output_dir, start_time=datetime.time(hour=8, minute=0),
-                                  end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
+    def create_schedule_xlsx_file(self, output_path, start_time=datetime.time(hour=8, minute=0),
+                                  end_time=datetime.time(hour=20, minute=0), continuous=False):
         """
         Creates an excel file in the output_dir directory that contains the schedule for each machine of this Solution.
 
-        :type output_dir: str
-        :param output_dir: path to the directory to place the excel file into
+        :type output_path: str
+        :param output_path: path to the excel file to create
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -146,16 +146,12 @@ class Solution:
         :type end_time: datetime.time
         :param end_time: end time of the work day
 
-        :type filename: str
-        :param filename: name of the excel file
-
         :type continuous: bool
         :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
         :returns: None
         """
-        create_schedule_xlsx_file(self, output_dir, start_time=start_time, end_time=end_time, filename=filename,
-                                  continuous=continuous)
+        create_schedule_xlsx_file(self, output_path, start_time=start_time, end_time=end_time, continuous=continuous)
 
     def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.datetime.now(),
                           start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),

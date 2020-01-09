@@ -196,25 +196,22 @@ class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
         return result
 
 
-def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hour=8, minute=0),
-                              end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
+def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(hour=8, minute=0),
+                              end_time=datetime.time(hour=20, minute=0), continuous=False):
     """
     Creates an excel file in the output_dir directory that contains the schedule for each machine of the solution parameter.
 
     :type solution: Solution
     :param solution: solution to create a schedule for
 
-    :type output_dir: str
-    :param output_dir: path to the directory to place the excel file into
+    :type output_path: str
+    :param output_path: path to the excel file to create
 
     :type start_time: datetime.time
     :param start_time: start time of the work day
 
     :type end_time: datetime.time
     :param end_time: end time of the work day
-
-    :type filename: str
-    :param filename: name of the excel file
 
     :type continuous: bool
     :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
@@ -224,8 +221,11 @@ def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hou
     custom_day_hour_min_dict = {machine_id: _CustomDayHourMinute(start_time, end_time) if not continuous else _ContinuousCustomDayHourMinute()
                                 for machine_id in range(Data.total_number_of_machines)}
 
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+    if not os.path.exists(os.path.dirname(output_path)):
+        os.makedirs(output_path)
+
+    if not output_path.endswith(".xlsx"):
+        output_path += ".xlsx"
 
     # get all the necessary data from the static Data class
     task_processing_times_matrix = Data.task_processing_times_matrix
@@ -235,7 +235,7 @@ def create_schedule_xlsx_file(solution, output_dir, start_time=datetime.time(hou
     num_machines = task_processing_times_matrix.shape[1]
 
     # create an excel workbook and worksheet in output directory
-    workbook = xlsxwriter.Workbook(f'{output_dir + "/" + filename + ".xlsx"}')
+    workbook = xlsxwriter.Workbook(f'{output_path}')
     colored = workbook.add_format({'bg_color': '#E7E6E6'})
     worksheet = workbook.add_worksheet('Schedule')
 

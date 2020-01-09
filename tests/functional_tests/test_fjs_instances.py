@@ -143,7 +143,7 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertIsNotNone(solver.solution, "TS should have produced a best solution")
 
             # output results
-            solver.solution.create_schedule_xlsx_file(tmp_dir, filename='fjs_ts_schedule')
+            solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'fjs_ts_schedule')
             self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ts_schedule.xlsx'),
                             "fjs_ts_schedule.xlsx was not produced")
 
@@ -193,7 +193,7 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertTrue(not any(sol in seen or seen.append(sol) for sol in solver.ga_agent.result_population))
 
             # output results
-            solver.solution.create_schedule_xlsx_file(tmp_dir, filename='fjs_ga_schedule')
+            solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'fjs_ga_schedule')
             self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ga_schedule.xlsx'),
                             "fjs_ga_schedule.xlsx was not produced")
 

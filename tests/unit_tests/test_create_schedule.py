@@ -29,13 +29,12 @@ class TestSchedule(unittest.TestCase):
 
     def test_create_schedule(self):
         solution_obj = solution.SolutionFactory.get_solution()
-        solution_obj.create_schedule_xlsx_file(tmp_dir, filename='test_schedule')
+        solution_obj.create_schedule_xlsx_file(tmp_dir + os.sep + 'test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'test_schedule.xlsx'))
 
     def test_create_schedule_w_start__and_end_times(self):
         solution_obj = solution.SolutionFactory.get_solution()
-        solution_obj.create_schedule_xlsx_file(tmp_dir, start_time=datetime.time(10, 0), end_time=datetime.time(21, 0),
-                                               filename='test_schedule')
+        solution_obj.create_schedule_xlsx_file(tmp_dir + os.sep + 'test_schedule', start_time=datetime.time(10, 0), end_time=datetime.time(21, 0))
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'test_schedule.xlsx'))
 
 

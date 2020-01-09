@@ -67,7 +67,7 @@ class TestGA(unittest.TestCase):
             self.assertLessEqual(solver.solution, initial_sol)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ga_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ga_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_schedule.xlsx'),
                         "ga_test_schedule.xlsx was not produced")
 
@@ -168,7 +168,7 @@ class TestGA(unittest.TestCase):
             self.assertLessEqual(solver.solution, initial_sol)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ga_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ga_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_schedule.xlsx'),
                         "ga_test_schedule.xlsx was not produced")
 

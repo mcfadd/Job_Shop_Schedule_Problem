@@ -66,7 +66,7 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ts_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
                         "ts_test_schedule.xlsx was not produced")
 
@@ -174,7 +174,7 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ts_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
                         "ts_test_schedule.xlsx was not produced")
 
