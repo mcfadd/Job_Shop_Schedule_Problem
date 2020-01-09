@@ -198,7 +198,7 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
     # create schedule
     best_solution = min([ts_agent.best_solution for ts_agent in ts_agent_list])
     best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ts_schedule', continuous=True)
-    best_solution.create_gantt_chart_html_file(output_directory, filename='ts_gantt_chart.html', continuous=True)
+    best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ts_gantt_chart.html', continuous=True)
 
     return html
 
@@ -272,7 +272,7 @@ def _ga_benchmark_results(ga_agent, output_directory):
 
     # create schedule
     ga_agent.best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ga_schedule', continuous=True)
-    ga_agent.best_solution.create_gantt_chart_html_file(output_directory, filename='ga_gantt_chart.html', continuous=True)
+    ga_agent.best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ga_gantt_chart.html', continuous=True)
 
     return html
 

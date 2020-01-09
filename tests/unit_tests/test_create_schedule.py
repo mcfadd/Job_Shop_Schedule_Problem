@@ -5,7 +5,7 @@ import unittest
 
 from JSSP import solution
 from JSSP.data import Data
-from JSSP.solution._schedule_creator import _CustomDayHourMinute, UnacceptableScheduleTime
+from JSSP.solution._schedule_creator import _DayHourMinute, UnacceptableScheduleTime
 from tests import project_root, tmp_dir
 
 """
@@ -44,7 +44,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
         try:
             start_time = datetime.time(23, 0)
             end_time = datetime.time(22, 0)
-            _CustomDayHourMinute(start_time, end_time)
+            _DayHourMinute(start_time, end_time)
             self.fail()
         except UnacceptableScheduleTime:
             pass
@@ -52,7 +52,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_minutes(self):
         start_time = datetime.time(8, 0)
         end_time = datetime.time(20, 0)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(0)
         self.assertEqual(schedule_time.min, 0)
@@ -95,7 +95,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_hours(self):
         start_time = datetime.time(8, 0)
         end_time = datetime.time(12, 0)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(60)
         self.assertEqual(schedule_time.min, 0)
@@ -120,7 +120,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_days(self):
         start_time = datetime.time(8, 0)
         end_time = datetime.time(20, 0)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(60 * (end_time.hour - start_time.hour) * 5)
         self.assertEqual(schedule_time.min, 0)
@@ -140,7 +140,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_minutes_w_start_minute(self):
         start_time = datetime.time(8, 30)
         end_time = datetime.time(20, 0)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(0)
         self.assertEqual(schedule_time.min, 30)
@@ -170,7 +170,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_hours_w_start_minute(self):
         start_time = datetime.time(8, 30)
         end_time = datetime.time(20, 0)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(60 * 12)
         self.assertEqual(schedule_time.min, 30)
@@ -200,7 +200,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_minutes_w_end_minute(self):
         start_time = datetime.time(8, 0)
         end_time = datetime.time(20, 30)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(60 * 12)
         self.assertEqual(schedule_time.min, 0)
@@ -230,7 +230,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
     def test_adding_hours_w_end_minute(self):
         start_time = datetime.time(8, 0)
         end_time = datetime.time(12, 30)
-        schedule_time = _CustomDayHourMinute(start_time, end_time)
+        schedule_time = _DayHourMinute(start_time, end_time)
 
         schedule_time.add_minutes(60 * 4)
         self.assertEqual(schedule_time.min, 0)

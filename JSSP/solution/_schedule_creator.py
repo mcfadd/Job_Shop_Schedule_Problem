@@ -56,7 +56,7 @@ def _convert_mins_to_formatted_str(minutes):
     return f"{int(days)}d {int(hours)}h {int(minutes)}m"
 
 
-class _CustomDayHourMinute:
+class _DayHourMinute:
     """
     Class for keeping track of the start & end times of operations in a schedule.
 
@@ -68,6 +68,7 @@ class _CustomDayHourMinute:
 
     See help(_CustomDayHourMinute.__init__)
     """
+
     def __init__(self, start_time, end_time):
         """
         Initializes a _CustomDayHourMinute with day = 1, hour = start_time.hour, min = start_time.minute,
@@ -123,7 +124,7 @@ class _CustomDayHourMinute:
         """
         :returns: a copy of this _CustomDayHourMinute
         """
-        result = _CustomDayHourMinute(self.start_time, self.end_time)
+        result = _DayHourMinute(self.start_time, self.end_time)
         result.day = self.day
         result.hour = self.hour
         result.min = self.min
@@ -143,12 +144,13 @@ class _CustomDayHourMinute:
         return "day {}  {:02d}:{:02d}:00".format(int(self.day), int(self.hour), int(self.min))
 
 
-class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
+class _ContinuousDayHourMinute(_DayHourMinute):
     """
     Class for keeping track of the start/end times of operations in a continuous schedule.
 
     See help(_ContinuousCustomDayHourMinute.__init__)
     """
+
     def __init__(self):
         """
         Initializes a _CustomDayHourMinute with day = 1, hour = 0, min = 0, and total_elapsed_minutes = 0.
@@ -189,7 +191,7 @@ class _ContinuousCustomDayHourMinute(_CustomDayHourMinute):
         """
         :returns: a copy of this _ContinuousCustomDayHourMinute
         """
-        result = _ContinuousCustomDayHourMinute()
+        result = _ContinuousDayHourMinute()
         result.day = self.day
         result.hour = self.hour
         result.min = self.min
@@ -218,8 +220,11 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
 
     :returns: None
     """
-    custom_day_hour_min_dict = {machine_id: _CustomDayHourMinute(start_time, end_time) if not continuous else _ContinuousCustomDayHourMinute()
-                                for machine_id in range(Data.total_number_of_machines)}
+    custom_day_hour_min_dict = {
+        machine_id: _ContinuousDayHourMinute() for machine_id in range(Data.total_number_of_machines)
+    } if continuous else {
+        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(Data.total_number_of_machines)
+    }
 
     if not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(output_path)
@@ -396,13 +401,15 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
     """
 
     df = []
-
-    custom_day_hour_min_dict = {machine_id: _CustomDayHourMinute(start_time, end_time) if not continuous else _ContinuousCustomDayHourMinute()
-                                for machine_id in range(Data.total_number_of_machines)}
+    custom_day_hour_min_dict = {
+        machine_id: _ContinuousDayHourMinute() for machine_id in range(Data.total_number_of_machines)
+    } if continuous else {
+        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(Data.total_number_of_machines)
+    }
     start_date_dict = {machine_id: start_date for machine_id in range(Data.total_number_of_machines)}
 
     if not iplot_bool and not os.path.exists(os.path.dirname(output_path)):
-        os.mkdir(os.path.dirname(output_path))
+        os.makedirs(os.path.dirname(output_path))
 
     # get all the necessary data from the static Data class
     task_processing_times_matrix = Data.task_processing_times_matrix
