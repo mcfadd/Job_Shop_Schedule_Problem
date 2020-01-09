@@ -358,7 +358,9 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
     workbook.close()
 
 
-def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_time, filename, iplot_bool, auto_open, continuous):
+def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=datetime.datetime.now(),
+                       start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
+                       iplot_bool=False, auto_open=False, continuous=False):
     """
     Creates a gantt chart html file of the solution parameters in the output_dir directory if iplot_bool is false,
     else it plots a gantt chart of the solution parameter in an ipyton notebook.
@@ -366,8 +368,8 @@ def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_
     :type solution: Solution
     :param solution: solution to create a schedule for
 
-    :type output_dir: str
-    :param output_dir: path to the directory to place the excel file into
+    :type output_path: str
+    :param output_path: path to the gantt chart file to create
 
     :type title: str
     :param title: name of the gantt chart
@@ -380,9 +382,6 @@ def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_
 
     :type end_time: datetime.time
     :param end_time: end time of the work day
-
-    :type filename: str
-    :param filename: name of the html file
 
     :type iplot_bool: bool
     :param iplot_bool: if true plots the gantt chart in an ipyton notebook
@@ -402,8 +401,8 @@ def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_
                                 for machine_id in range(Data.total_number_of_machines)}
     start_date_dict = {machine_id: start_date for machine_id in range(Data.total_number_of_machines)}
 
-    if not iplot_bool and not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+    if not iplot_bool and not os.path.exists(os.path.dirname(output_path)):
+        os.mkdir(os.path.dirname(output_path))
 
     # get all the necessary data from the static Data class
     task_processing_times_matrix = Data.task_processing_times_matrix
@@ -519,5 +518,4 @@ def create_gantt_chart(solution, output_dir, title, start_date, start_time, end_
     if iplot_bool:
         iplot(fig)
     else:
-        plot(fig, filename=output_dir + os.sep + filename, auto_open=auto_open)
-
+        plot(fig, filename=output_path, auto_open=auto_open)

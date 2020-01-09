@@ -178,18 +178,16 @@ class Solution:
         """
 
         create_gantt_chart(self, "", title=title, start_date=start_date, start_time=start_time,
-                           end_time=end_time, filename="", iplot_bool=True, auto_open=False,
-                           continuous=continuous)
+                           end_time=end_time, iplot_bool=True, continuous=continuous)
 
-    def create_gantt_chart_html_file(self, output_dir, title='Gantt Chart', start_date=datetime.datetime.now(),
+    def create_gantt_chart_html_file(self, output_path, title='Gantt Chart', start_date=datetime.datetime.now(),
                                      start_time=datetime.time(hour=8, minute=0),
-                                     end_time=datetime.time(hour=20, minute=0),
-                                     filename='Gantt_Chart.html', auto_open=False, continuous=False):
+                                     end_time=datetime.time(hour=20, minute=0), auto_open=False, continuous=False):
         """
         Creates a gantt chart html file of the solution parameters in the output_dir directory.
 
-        :type output_dir: str
-        :param output_dir: path to the directory to place the excel file into
+        :type output_path: str
+        :param output_path: path to the directory to place the excel file into
 
         :type title: str
         :param title: name of the gantt chart
@@ -203,9 +201,6 @@ class Solution:
         :type end_time: datetime.time
         :param end_time: end time of the work day
 
-        :type filename: str
-        :param filename: name of the html file
-
         :type auto_open: bool
         :param auto_open: if true the gantt chart html file is automatically opened in a browser
 
@@ -214,8 +209,8 @@ class Solution:
 
         :returns: None
         """
-        create_gantt_chart(self, output_dir, title=title, start_date=start_date, start_time=start_time,
-                           end_time=end_time, filename=filename, iplot_bool=False, auto_open=auto_open,
+        create_gantt_chart(self, output_path, title=title, start_date=start_date, start_time=start_time,
+                           end_time=end_time, iplot_bool=False, auto_open=auto_open,
                            continuous=continuous)
 
 
