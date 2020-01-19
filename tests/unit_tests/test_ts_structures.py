@@ -1,22 +1,10 @@
 import os
 import unittest
 
-from JSSP import solution
 from JSSP.data import Data
+from JSSP.solution import SolutionFactory
 from JSSP.tabu_search.ts import _SolutionSet, _TabuList, _MaxHeap
 from tests import project_root
-
-"""
-Test the following:
-
-1. ts._SolutionSet.add() function
-2. ts._SolutionSet.remove() function
-3. ts._SolutionSet.contains() function
-4. ts._TabuList.enqueue() function
-5. ts._TabuList.dequeue() function
-6. ts._MaxHeap data structure
-
-"""
 
 
 class TestTSStructures(unittest.TestCase):
@@ -31,7 +19,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = solution.SolutionFactory.get_solution()
+        solution_obj1 = SolutionFactory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -39,7 +27,7 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(solution_set.size, 1)
 
         # add another Solution
-        solution_obj2 = solution.SolutionFactory.get_solution()
+        solution_obj2 = SolutionFactory.get_solution()
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
@@ -50,7 +38,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = solution.SolutionFactory.get_solution()
+        solution_obj1 = SolutionFactory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -65,10 +53,10 @@ class TestTSStructures(unittest.TestCase):
 
     def test_tabu_list_enqueue(self):
         # add solutions to tabu list
-        tabu_list = _TabuList(solution.SolutionFactory.get_solution())
+        tabu_list = _TabuList(SolutionFactory.get_solution())
         size = 100
         while tabu_list.solutions.size < size:
-            tabu_list.enqueue(solution.SolutionFactory.get_solution())
+            tabu_list.enqueue(SolutionFactory.get_solution())
         self.assertNotEqual(tabu_list.head.data_val, tabu_list.tail.data_val)
 
         # count the number of solutions in tabu_list
@@ -81,14 +69,14 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(cnt, size)
 
     def test_tabu_list_dequeue(self):
-        initial_solution = solution.SolutionFactory.get_solution()
+        initial_solution = SolutionFactory.get_solution()
 
         # build tabu_list and solutions list
         tabu_list = _TabuList(initial_solution)
         lst = [initial_solution]
         size = 100
         while tabu_list.solutions.size < size:
-            solution_obj = solution.SolutionFactory.get_solution()
+            solution_obj = SolutionFactory.get_solution()
             tabu_list.enqueue(solution_obj)
             lst.append(solution_obj)
 
@@ -105,9 +93,9 @@ class TestTSStructures(unittest.TestCase):
         heap_size = 50
         heap = _MaxHeap()
         for _ in range(heap_size):
-            heap.push(solution.SolutionFactory.get_solution())
+            heap.push(SolutionFactory.get_solution())
 
-        self.assertEqual(heap_size, len(heap), "The max heap size should be equal to heap_size")
+        self.assertEqual(heap_size, len(heap), f"The max heap size should be equal to {heap_size}")
 
         while len(heap) > 1:
             sol = heap.pop()

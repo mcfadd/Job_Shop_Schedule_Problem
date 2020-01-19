@@ -5,11 +5,11 @@ import time
 
 from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
-from JSSP import benchmark_plotter
-from JSSP import genetic_algorithm
-from JSSP import tabu_search
-from JSSP.data import Data
-from JSSP.solution import SolutionFactory, Solution
+from . import benchmark_plotter
+from . import genetic_algorithm
+from . import tabu_search
+from .data import Data
+from .solution import SolutionFactory, Solution
 
 
 class _SpawnedProcess(mp.Process):

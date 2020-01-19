@@ -5,9 +5,9 @@ import time
 
 import numpy as np
 
-from JSSP.data import Data
-from JSSP.solution import InfeasibleSolutionException
 from ._generate_neighbor import generate_neighbor
+from ..data import Data
+from ..exception import InfeasibleSolutionException
 
 
 class TabuSearchAgent:

@@ -2,20 +2,15 @@ import os
 import pickle
 import unittest
 
-from JSSP.data import Data
 from JSSP.solution._makespan import compute_machine_makespans
-from tests import project_root
 
-"""
-Test integrity of solution.makespan.compute_machine_makespans() function for the given data (i.e. csv) 
-"""
+from JSSP.data import Data
+from tests import project_root
 
 
 class TestMakespan(unittest.TestCase):
 
-    def __init__(self, *args):
-        self.operation_matrices_dir = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'operation_matrices'
-        super(TestMakespan, self).__init__(*args)
+    operation_matrices_dir = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'operation_matrices'
 
     def setUp(self) -> None:
         Data.initialize_data_from_csv(

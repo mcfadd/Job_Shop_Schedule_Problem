@@ -6,11 +6,8 @@ import plotly.figure_factory as ff
 import xlsxwriter
 from plotly.offline import plot, iplot
 
-from JSSP.data import Data
-
-
-class UnacceptableScheduleTime(Exception):
-    pass
+from ..data import Data
+from ..exception import UnacceptableScheduleTimeException
 
 
 def _get_n_colors(n):
@@ -75,8 +72,7 @@ class _DayHourMinute:
         start_time = start_time, end_time = end_time, and total_elapsed_minutes = 0.
         """
         if end_time <= start_time:
-            raise UnacceptableScheduleTime(
-                f"start_time={start_time} is greater than or equal to end_time={end_time}")
+            raise UnacceptableScheduleTimeException(f"start_time={start_time} is greater than or equal to end_time={end_time}")
 
         self.day = 1
         self.hour = start_time.hour
@@ -227,7 +223,7 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
     }
 
     if not os.path.exists(os.path.dirname(output_path)):
-        os.makedirs(output_path)
+        os.makedirs(os.path.dirname(output_path))
 
     if not output_path.endswith(".xlsx"):
         output_path += ".xlsx"
@@ -410,6 +406,9 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
 
     if not iplot_bool and not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(os.path.dirname(output_path))
+
+    if not iplot_bool and not output_path.endswith(".html"):
+        output_path += ".html"
 
     # get all the necessary data from the static Data class
     task_processing_times_matrix = Data.task_processing_times_matrix

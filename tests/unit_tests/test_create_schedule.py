@@ -3,20 +3,15 @@ import os
 import shutil
 import unittest
 
-from JSSP import solution
 from JSSP.data import Data
-from JSSP.solution._schedule_creator import _DayHourMinute, UnacceptableScheduleTime
+from JSSP.solution import SolutionFactory
+from JSSP.solution._schedule_creator import _DayHourMinute, UnacceptableScheduleTimeException
 from tests import project_root, tmp_dir
-
-"""
-Test the following: 
-
-1. solution.create_schedule()
-
-"""
 
 
 class TestSchedule(unittest.TestCase):
+
+    output_file = f'{tmp_dir}{os.sep}test_output'
 
     def setUp(self) -> None:
         Data.initialize_data_from_csv(
@@ -27,18 +22,28 @@ class TestSchedule(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
-    def test_create_schedule(self):
-        solution_obj = solution.SolutionFactory.get_solution()
-        solution_obj.create_schedule_xlsx_file(tmp_dir + os.sep + 'test_schedule')
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'test_schedule.xlsx'))
+    def test_create_continuous_xlsx_schedule(self):
+        solution_obj = SolutionFactory.get_solution()
+        solution_obj.create_schedule_xlsx_file(self.output_file, continuous=True)
+        self.assertTrue(os.path.exists(self.output_file + '.xlsx'))
 
-    def test_create_schedule_w_start__and_end_times(self):
-        solution_obj = solution.SolutionFactory.get_solution()
-        solution_obj.create_schedule_xlsx_file(tmp_dir + os.sep + 'test_schedule', start_time=datetime.time(10, 0), end_time=datetime.time(21, 0))
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'test_schedule.xlsx'))
+    def test_create_schedule_w_start_and_end_times(self):
+        solution_obj = SolutionFactory.get_solution()
+        solution_obj.create_schedule_xlsx_file(self.output_file, start_time=datetime.time(10, 0), end_time=datetime.time(21, 0))
+        self.assertTrue(os.path.exists(self.output_file + '.xlsx'))
+
+    def test_create_continuous_gantt_chart(self):
+        solution_obj = SolutionFactory.get_solution()
+        solution_obj.create_gantt_chart_html_file(self.output_file, continuous=True)
+        self.assertTrue(os.path.exists(self.output_file + '.html'))
+
+    def test_create_gantt_chart_w_start_and_end_times(self):
+        solution_obj = SolutionFactory.get_solution()
+        solution_obj.create_gantt_chart_html_file(self.output_file, start_time=datetime.time(10, 0), end_time=datetime.time(21, 0))
+        self.assertTrue(os.path.exists(self.output_file + '.html'))
 
 
-class TestCustomDayHourMinute(unittest.TestCase):
+class TestDayHourMinute(unittest.TestCase):
 
     def test_invalid_start_and_end_time(self):
         try:
@@ -46,7 +51,7 @@ class TestCustomDayHourMinute(unittest.TestCase):
             end_time = datetime.time(22, 0)
             _DayHourMinute(start_time, end_time)
             self.fail()
-        except UnacceptableScheduleTime:
+        except UnacceptableScheduleTimeException:
             pass
 
     def test_adding_minutes(self):

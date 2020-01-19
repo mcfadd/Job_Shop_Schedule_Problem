@@ -7,10 +7,6 @@ from JSSP.genetic_algorithm import GASelectionEnum
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
 
-"""
-Test the genetic algorithm
-"""
-
 
 class TestGA(unittest.TestCase):
 
@@ -27,17 +23,13 @@ class TestGA(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ga_time(self):
-
         try:
-
-            # parameters
             runtime = 5  # seconds
             population = None
             population_size = 100
             mutation_probability = 0.8
             selection_size = 5
 
-            # run GA
             solver = Solver()
             solver.genetic_algorithm_time(runtime=runtime,
                                           population=population,
@@ -72,10 +64,7 @@ class TestGA(unittest.TestCase):
                         "ga_test_schedule.xlsx was not produced")
 
     def test_ga_time_benchmark(self):
-
         try:
-
-            # parameters
             runtime = 5  # seconds
             population = None
             population_size = 100
@@ -128,17 +117,13 @@ class TestGA(unittest.TestCase):
                         "GA benchmark results ga_schedule.xlsx was not produced")
 
     def test_ga_iter(self):
-
         try:
-
-            # parameters
             iterations = 50
             population = None
             population_size = 100
             mutation_probability = 0.8
             selection_size = 5
 
-            # run GA
             solver = Solver()
             solver.genetic_algorithm_iter(iterations=iterations,
                                           population=population,
@@ -173,10 +158,7 @@ class TestGA(unittest.TestCase):
                         "ga_test_schedule.xlsx was not produced")
 
     def test_ga_iter_benchmark(self):
-
         try:
-
-            # parameters
             iterations = 50
             population = None
             population_size = 100
@@ -249,7 +231,6 @@ class TestGASelectionMethods(unittest.TestCase):
 
 def test_selection(unit_test, selection_method):
     try:
-        # parameters
         iterations = 50
         population = None
         population_size = 100

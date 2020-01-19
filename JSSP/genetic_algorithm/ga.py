@@ -3,9 +3,10 @@ import statistics
 import time
 from enum import Enum
 
-from JSSP.data import Data
-from JSSP.solution import Solution, SolutionFactory, InfeasibleSolutionException
 from ._ga_helpers import crossover
+from ..data import Data
+from ..exception import InfeasibleSolutionException
+from ..solution import Solution, SolutionFactory
 
 """
 GA selection functions
@@ -48,15 +49,12 @@ def _fitness_proportionate_selection(*args):
     :rtype: Solution
     :returns: a Solution from the population
     """
-    fitness_sum = 0
-    for sol in args[0]:
-        fitness_sum += sol.makespan
-
+    fitness_sum = sum(sol.makespan for sol in args[0])
     s = random.uniform(0, fitness_sum)
     partial_sum = 0
     for sol in args[0]:
         partial_sum += sol.makespan
-        if partial_sum > s:
+        if partial_sum >= s:
             args[0].remove(sol)
             return sol
 

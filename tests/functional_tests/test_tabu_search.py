@@ -6,10 +6,6 @@ from JSSP.data import Data
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
 
-"""
-Test solver.tabu_search() function
-"""
-
 
 class TestTS(unittest.TestCase):
 
@@ -26,10 +22,7 @@ class TestTS(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ts_time(self):
-
         try:
-
-            # parameters
             runtime = 5  # seconds
             num_solutions_per_process = 1
             num_processes = 2
@@ -37,8 +30,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver()
             solver.tabu_search_time(runtime,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -71,9 +64,7 @@ class TestTS(unittest.TestCase):
                         "ts_test_schedule.xlsx was not produced")
 
     def test_ts_time_benchmark(self):
-
         try:
-            # parameters
             runtime = 5  # seconds
             num_solutions_per_process = 1
             num_processes = 2
@@ -81,8 +72,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver()
             solver.tabu_search_time(runtime,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -91,7 +82,6 @@ class TestTS(unittest.TestCase):
                                     neighborhood_wait=neighborhood_wait,
                                     probability_change_machine=probability_change_machine,
                                     benchmark=True)
-
         except Exception as e:
             self.fail('Unexpected exception raised:' + str(e))
 
@@ -133,10 +123,7 @@ class TestTS(unittest.TestCase):
                         "TS benchmark results ts_schedule.xlsx was not produced")
 
     def test_ts_iter(self):
-
         try:
-
-            # parameters
             iterations = 50
             num_solutions_per_process = 1
             num_processes = 2
@@ -144,8 +131,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver()
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -154,7 +141,6 @@ class TestTS(unittest.TestCase):
                                     neighborhood_wait=neighborhood_wait,
                                     probability_change_machine=probability_change_machine
                                     )
-
         except Exception as e:
             self.fail('Unexpected exception raised:' + str(e))
 
@@ -179,9 +165,7 @@ class TestTS(unittest.TestCase):
                         "ts_test_schedule.xlsx was not produced")
 
     def test_ts_iter_benchmark(self):
-
         try:
-            # parameters
             iterations = 50
             num_solutions_per_process = 1
             num_processes = 2
@@ -189,8 +173,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver()
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -240,8 +224,6 @@ class TestTS(unittest.TestCase):
                         "TS benchmark results ts_schedule.xlsx was not produced")
 
     def test_ts_multiple_solutions_per_process(self):
-
-        # parameters
         iterations = 10
         tabu_list_size = 50
         neighborhood_size = 200
@@ -254,9 +236,7 @@ class TestTS(unittest.TestCase):
         for num_processes in num_processes_list:
             for num_solutions_per_process in num_solutions_per_process_list:
                 try:
-
                     solver = Solver()
-
                     solver.tabu_search_iter(iterations,
                                             num_solutions_per_process=num_solutions_per_process,
                                             num_processes=num_processes,
@@ -265,7 +245,6 @@ class TestTS(unittest.TestCase):
                                             neighborhood_wait=neighborhood_wait,
                                             probability_change_machine=probability_change_machine
                                             )
-
                 except Exception as e:
                     self.fail('Unexpected exception raised:' + str(e))
 

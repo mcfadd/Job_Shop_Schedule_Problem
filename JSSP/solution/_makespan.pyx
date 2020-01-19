@@ -3,7 +3,17 @@ import numpy as np
 cimport numpy as np
 from libc.stdlib cimport abort, malloc, free
 
-import JSSP.solution as solution
+from ..exception import InfeasibleSolutionException
+cimport
+cython
+cimport
+numpy as np
+import numpy as np
+from libc.stdlib cimport
+
+abort, malloc, free
+
+from ..exception import InfeasibleSolutionException
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -86,7 +96,7 @@ cpdef double[::1] compute_machine_makespans(int[:, ::1] operation_2d_array,
             setup = 0
 
         if setup < 0 or sequence < job_seq_memory[job_id]:
-            raise solution.InfeasibleSolutionException()
+            raise InfeasibleSolutionException()
 
         if job_seq_memory[job_id] < sequence:
             prev_job_end_memory[job_id] = job_end_memory[job_id]

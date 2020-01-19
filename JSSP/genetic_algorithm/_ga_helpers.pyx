@@ -1,13 +1,20 @@
 cimport cython
 import numpy as np
 cimport numpy as np
-from JSSP.solution import Solution
+from ..solution import Solution
+cimport
+cython
+cimport
+numpy as np
+import numpy as np
+
+from ..solution import Solution
 
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cpdef int _placement(int[::] operation, int[:, ::] parent_operation_block):
+cpdef int _check_placement(int[::] operation, int[:, ::] parent_operation_block):
     """
     Checks if an operation is already in or belongs above/below a parent's selected block of operations.
     
@@ -80,14 +87,13 @@ cpdef crossover(int[:, ::] parent1, int[:, ::] parent2, int probability_mutate, 
     cdef int[:, ::] result
 
     for row in range(parent2.shape[0]):
-        placement = _placement(parent2[row], parent1[random_x:random_y])
-        if placement != 0:
-            if placement < 0:
-                toplist[end_toplist_index] = parent2[row]
-                end_toplist_index += 1
-            else:
-                bottomlist[end_bottomlist_index] = parent2[row]
-                end_bottomlist_index += 1
+        placement = _check_placement(parent2[row], parent1[random_x:random_y])
+        if placement < 0:
+            toplist[end_toplist_index] = parent2[row]
+            end_toplist_index += 1
+        elif placement > 0:
+            bottomlist[end_bottomlist_index] = parent2[row]
+            end_bottomlist_index += 1
 
     # build up result by concatenating top, middle, and bottom parts
     if end_toplist_index != 0:

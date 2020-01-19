@@ -6,34 +6,10 @@ import numpy as np
 
 from JSSP.data import Data
 from JSSP.solver import Solver
-from tests import project_root, tmp_dir
-
-"""
-Test that the static data read in from Data.initialize_data_from_fjs is the same as converting the fjs instance 
-to csv files using Data.convert_fjs_to_csv, then reading in the data from csv using Data.initialize_data_from_csv
-"""
-
-
-def get_all_fjs_files(path):
-    """
-    Gets a list of all the absolute file paths of all the .fjs files that are below the path in the directory tree.
-
-    :param path: The root path of the directory tree to search
-    :returns: A list of all the absolute file paths of all the .fjs files
-    """
-    result = []
-    for dirpath, dirs, files in os.walk(path):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.fjs'):
-                result.append(fname)
-
-    return result
-
+from tests import tmp_dir, get_all_fjs_files
 
 # directory used by tests
-fjs_data = get_all_fjs_files(project_root + os.sep + 'data' + os.sep + 'fjs_data')
-total_instances = len(fjs_data)
+fjs_data = get_all_fjs_files()
 
 
 class TestFJSConversionToCSV(unittest.TestCase):
@@ -48,7 +24,7 @@ class TestFJSConversionToCSV(unittest.TestCase):
     def test_reading_all_fjs_instances(self):
 
         for i, fjs_instance in enumerate(fjs_data):
-            print(f"testing fjs instance {fjs_instance} ({i + 1} of {total_instances})")
+            print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
             try:
                 # read in fjs data
                 Data.initialize_data_from_fjs(fjs_instance)
@@ -88,7 +64,7 @@ class TestFJSConversionToCSV(unittest.TestCase):
             np.testing.assert_array_equal(usable_machines_matrix, Data.usable_machines_matrix,
                                           err_msg=f'usable machines matrices are not equal for {fjs_instance}')
 
-            # note the task_processing_times_matrix will not alway be equal because of the way Data.convert_fjs_to_csv is implemented
+            # note the task_processing_times_matrix will not always be equal because of the way Data.convert_fjs_to_csv is implemented
             # np.testing.assert_array_equal(task_processing_times_matrix, Data.task_processing_times_matrix)
 
             self.assertEqual(task_processing_times_matrix.shape, Data.task_processing_times_matrix.shape,
@@ -123,7 +99,7 @@ class TestFJSOptimization(unittest.TestCase):
         probability_change_machine = 0.8
 
         for i, fjs_instance in enumerate(fjs_data):
-            print(f"testing fjs instance {fjs_instance} ({i + 1} of {total_instances})")
+            print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
             try:
                 Data.initialize_data_from_fjs(fjs_instance)
 
@@ -150,20 +126,18 @@ class TestFJSOptimization(unittest.TestCase):
     def test_ga_iter(self):
         # parameters
         iterations = 5  # keep this value small
-        population = None
         population_size = 50  # keep this value small
         mutation_probability = 0.8
         selection_size = 5
 
         for i, fjs_instance in enumerate(fjs_data):
-            print(f"testing fjs instance {fjs_instance} ({i + 1} of {total_instances})")
+            print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
             try:
                 Data.initialize_data_from_fjs(fjs_instance)
 
                 # run GA
                 solver = Solver()
                 solver.genetic_algorithm_iter(iterations=iterations,
-                                              population=population,
                                               population_size=population_size,
                                               mutation_probability=mutation_probability,
                                               selection_size=selection_size)

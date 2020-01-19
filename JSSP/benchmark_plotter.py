@@ -75,7 +75,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
         name = "benchmark_run_{}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))
 
     # output results
-    output_directory = os.path.abspath(output_dir + "/" + name)
+    output_directory = os.path.abspath(output_dir + os.sep + name)
 
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)

@@ -3,39 +3,18 @@ import random
 import unittest
 
 from JSSP.data import Data
-from JSSP.solution import SolutionFactory, InfeasibleSolutionException
-from tests import project_root
-
-"""
-Test generating random feasible solutions  
-"""
+from JSSP.exception import InfeasibleSolutionException
+from JSSP.solution import SolutionFactory
+from tests import project_root, get_all_fjs_files
 
 
-def get_all_fjs_files(path):
-    """
-    Gets a list of all the absolute file paths of all the .fjs files that are below the path in the directory tree.
-
-    :param path: The root path of the directory tree to search
-    :returns: A list of all the absolute file paths of all the .fjs files
-    """
-    result = []
-    for dirpath, dirs, files in os.walk(path):
-        for filename in files:
-            fname = os.path.join(dirpath, filename)
-            if fname.endswith('.fjs'):
-                result.append(fname)
-
-    return result
-
-
-class TestGenSolution(unittest.TestCase):
+class TestHeap(unittest.TestCase):
 
     def setUp(self) -> None:
         Data.initialize_data_from_csv(
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
-        self.fjs_data = get_all_fjs_files(project_root + os.sep + 'data' + os.sep + 'fjs_data')
 
     def test_min_heap_class(self):
         task1 = Data.jobs[0].get_task(0)
@@ -93,8 +72,18 @@ class TestGenSolution(unittest.TestCase):
         for i in range(len(tmp_list) - 1):
             self.assertGreaterEqual(tmp_list[i][1], tmp_list[i + 1][1])
 
+
+class TestGenSolution(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.fjs_data = get_all_fjs_files()
+
     def test_generate_feasible_solution(self):
         try:
+            Data.initialize_data_from_csv(
+                project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
+                project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
+                project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
             SolutionFactory.get_n_solutions(500)
 
         except InfeasibleSolutionException:
