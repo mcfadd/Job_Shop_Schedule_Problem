@@ -1,4 +1,4 @@
-from JSSP.solution import Solution
+from ..solution import Solution
 cimport cython
 import numpy as np
 cimport numpy as np

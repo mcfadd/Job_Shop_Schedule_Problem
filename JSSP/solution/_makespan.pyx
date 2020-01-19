@@ -1,19 +1,9 @@
+from ..exception import InfeasibleSolutionException
 cimport cython
 import numpy as np
 cimport numpy as np
 from libc.stdlib cimport abort, malloc, free
 
-from ..exception import InfeasibleSolutionException
-cimport
-cython
-cimport
-numpy as np
-import numpy as np
-from libc.stdlib cimport
-
-abort, malloc, free
-
-from ..exception import InfeasibleSolutionException
 
 @cython.boundscheck(False)
 @cython.wraparound(False)

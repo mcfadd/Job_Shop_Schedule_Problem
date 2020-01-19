@@ -1,14 +1,7 @@
+from ..solution import Solution
 cimport cython
 import numpy as np
 cimport numpy as np
-from ..solution import Solution
-cimport
-cython
-cimport
-numpy as np
-import numpy as np
-
-from ..solution import Solution
 
 
 @cython.boundscheck(False)

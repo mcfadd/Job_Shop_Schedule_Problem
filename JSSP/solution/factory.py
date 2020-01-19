@@ -4,7 +4,7 @@ import random
 import numpy as np
 
 from ..data import Data
-from ..solution import Solution
+from .solution import Solution
 
 
 class SolutionFactory:
