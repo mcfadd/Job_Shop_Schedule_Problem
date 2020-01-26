@@ -147,42 +147,39 @@ class Data:
         self.total_number_of_machines = 0
         self.max_tasks_for_a_job = 0
 
-    def print_data(self):
-        """
-        Prints all of the static data that was read in.
+    def __str__(self):
+        result = f"total jobs = {self.total_number_of_jobs}\n" \
+                 f"total tasks = {self.total_number_of_tasks}\n" \
+                 f"total machines = {self.total_number_of_machines}\n" \
+                 f"max tasks for a job = {self.max_tasks_for_a_job}\n" \
+                 f"tasks:\n" \
+                 f"[jobId, taskId, sequence, usable_machines, pieces]\n"
 
-        :returns: None
-        """
-        print("total jobs =", self.total_number_of_jobs)
-        print("total tasks =", self.total_number_of_tasks)
-        print("total machines =", self.total_number_of_machines)
-        print("max tasks for a job =", self.max_tasks_for_a_job)
-        print("tasks:", end="\n\n")
-        print("[jobId, taskId, sequence, usable_machines, pieces]", end="\n\n")
         for job in self.jobs:
             for task in job.get_tasks():
-                print(task)
-        print()
+                result += str(task) + '\n'
 
         if self.sequence_dependency_matrix is not None:
-            print("sequence_dependency_matrix:", self.sequence_dependency_matrix.shape, end="\n\n")
-            print(self.sequence_dependency_matrix, end="\n")
+            result += f"sequence_dependency_matrix: {self.sequence_dependency_matrix.shape}\n\n" \
+                      f"{self.sequence_dependency_matrix}\n\n"
 
         if self.job_task_index_matrix is not None:
-            print("dependency_matrix_index_encoding:", self.job_task_index_matrix.shape, end="\n\n")
-            print(self.job_task_index_matrix, end="\n")
+            result += f"dependency_matrix_index_encoding: {self.job_task_index_matrix.shape}\n\n" \
+                      f"{self.job_task_index_matrix}\n\n"
 
         if self.usable_machines_matrix is not None:
-            print("usable_machines_matrix:", self.usable_machines_matrix.shape, end="\n\n")
-            print(self.usable_machines_matrix, end="\n")
+            result += f"usable_machines_matrix: {self.usable_machines_matrix.shape}\n\n" \
+                      f"{self.usable_machines_matrix}\n\n"
 
         if self.task_processing_times_matrix is not None:
-            print("task_processing_times:", self.task_processing_times_matrix.shape, end="\n\n")
-            print(self.task_processing_times_matrix, end="\n")
+            result += f"task_processing_times: {self.task_processing_times_matrix.shape}\n\n" \
+                      f"{self.task_processing_times_matrix}\n\n"
 
         if self.machine_speeds is not None:
-            print("machine_speeds:", self.machine_speeds.shape, end="\n\n")
-            print(self.machine_speeds)
+            result += f"machine_speeds: {self.machine_speeds.shape}\n\n" \
+                      f"{self.machine_speeds}"
+
+        return result
 
     @staticmethod
     def convert_fjs_to_csv(input_file, output_dir):

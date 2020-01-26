@@ -136,7 +136,7 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
         <b>Parameters:</b>
         <br>
         {"runtime = " + str(ts_agent_list[0].runtime) + " seconds" if ts_agent_list[0].time_condition
-    else "generations = " + str(ts_agent_list[0].iterations)}<br>
+    else "iterations = " + str(ts_agent_list[0].iterations)}<br>
         number of processes = {len(ts_agent_list)}<br>
         number of solutions to return per processes = {ts_agent_list[0].num_solutions_to_find}<br>
         tabu list size = {ts_agent_list[0].tabu_list_size}<br>

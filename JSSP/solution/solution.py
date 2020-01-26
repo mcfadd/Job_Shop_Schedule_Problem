@@ -4,8 +4,8 @@ import numpy as np
 
 from ._makespan import compute_machine_makespans
 from ._schedule_creator import create_schedule_xlsx_file, create_gantt_chart
-from ..exception import IncompleteSolutionException
 from ..data import Data
+from ..exception import IncompleteSolutionException
 
 
 class Solution:
@@ -154,7 +154,7 @@ class Solution:
                           start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
                           continuous=False):
         """
-        Plots a gantt chart of this Solution in an ipyton notebook.
+        Plots a gantt chart of this Solution in an ipython notebook.
 
         :type title: str
         :param title: name of the gantt chart

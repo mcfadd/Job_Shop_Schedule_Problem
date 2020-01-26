@@ -31,7 +31,7 @@ class TestData(unittest.TestCase):
         self.assertIsNotNone(csv_data.total_number_of_machines)
         self.assertIsNotNone(csv_data.max_tasks_for_a_job)
 
-        csv_data.print_data()
+        print(csv_data)
 
     def test_create_fjs_data(self):
         fjs_lst = get_all_fjs_files()

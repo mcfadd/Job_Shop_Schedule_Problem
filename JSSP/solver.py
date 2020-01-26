@@ -1,5 +1,4 @@
 import multiprocessing as mp
-import os
 import pickle
 import time
 
@@ -289,6 +288,7 @@ class Solver:
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
+            # TODO test parallel ts on Windows
             # # if os is windows use spawn process
             # _SpawnedProcess(Data.sequence_dependency_matrix,
             #                 Data.job_task_index_matrix,
