@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-from JSSP.data import Data
+from JSSP import data
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
 
@@ -13,7 +13,7 @@ class TestTS(unittest.TestCase):
         if not os.path.exists(tmp_dir):
             os.mkdir(tmp_dir)
 
-        Data.initialize_data_from_csv(
+        self.data = data.CSVData(
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
@@ -31,7 +31,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.tabu_search_time(runtime,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -73,7 +73,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.tabu_search_time(runtime,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -132,7 +132,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -174,7 +174,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -236,7 +236,7 @@ class TestTS(unittest.TestCase):
         for num_processes in num_processes_list:
             for num_solutions_per_process in num_solutions_per_process_list:
                 try:
-                    solver = Solver()
+                    solver = Solver(self.data)
                     solver.tabu_search_iter(iterations,
                                             num_solutions_per_process=num_solutions_per_process,
                                             num_processes=num_processes,

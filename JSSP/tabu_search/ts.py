@@ -6,7 +6,6 @@ import time
 import numpy as np
 
 from ._generate_neighbor import generate_neighbor
-from ..data import Data
 from ..exception import InfeasibleSolutionException
 
 
@@ -126,8 +125,8 @@ class TabuSearchAgent:
         """
 
         # get static data
-        dependency_matrix_index_encoding = Data.job_task_index_matrix
-        usable_machines_matrix = Data.usable_machines_matrix
+        dependency_matrix_index_encoding = self.initial_solution.data.job_task_index_matrix
+        usable_machines_matrix = self.initial_solution.data.usable_machines_matrix
 
         # ts variables
         tabu_list = _TabuList(self.initial_solution)

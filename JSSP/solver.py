@@ -8,7 +8,6 @@ from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 from . import benchmark_plotter
 from . import genetic_algorithm
 from . import tabu_search
-from .data import Data
 from .solution import SolutionFactory, Solution
 
 
@@ -64,12 +63,16 @@ def _run_progress_bar(seconds):
 class Solver:
     """
     The main solver class which calls tabu search and/or the genetic algorithm.
+
+    :type data: Data
+    :param data: JSSP instance data
     """
 
-    def __init__(self):
+    def __init__(self, data):
         """
         Initializes an instance of Solver.
         """
+        self.data = data
         self.solution = None
         self.ts_agent_list = None
         self.ga_agent = None
@@ -245,9 +248,9 @@ class Solver:
             raise TypeError("initial_solutions must be a list of solutions or None")
 
         if initial_solutions is None:
-            initial_solutions = [SolutionFactory.get_solution() for _ in range(num_processes)]
+            initial_solutions = [SolutionFactory(self.data).get_solution() for _ in range(num_processes)]
         else:
-            initial_solutions += [SolutionFactory.get_solution() for _ in
+            initial_solutions += [SolutionFactory(self.data).get_solution() for _ in
                                   range(max(0, num_processes - len(initial_solutions)))]
 
         ts_agent_list = [tabu_search.TabuSearchAgent(stopping_condition,
@@ -286,15 +289,15 @@ class Solver:
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
-            # if os is windows use spawn process
-            _SpawnedProcess(Data.sequence_dependency_matrix,
-                            Data.job_task_index_matrix,
-                            Data.usable_machines_matrix,
-                            Data.task_processing_times_matrix,
-                            ts_agent,
-                            child_results_queue)
-            if os.name == 'nt' else
-            # else use normal process
+            # # if os is windows use spawn process
+            # _SpawnedProcess(Data.sequence_dependency_matrix,
+            #                 Data.job_task_index_matrix,
+            #                 Data.usable_machines_matrix,
+            #                 Data.task_processing_times_matrix,
+            #                 ts_agent,
+            #                 child_results_queue)
+            # if os.name == 'nt' else
+            # # else use normal process
             mp.Process(target=ts_agent.start,
                        args=[child_results_queue])
             for ts_agent in ts_agent_list
@@ -456,9 +459,9 @@ class Solver:
         """
 
         if population is None:
-            population = [SolutionFactory.get_solution() for _ in range(population_size)]
+            population = [SolutionFactory(self.data).get_solution() for _ in range(population_size)]
         else:
-            population = population[:] + [SolutionFactory.get_solution() for _ in range(max(0, population_size - len(population)))]
+            population = population[:] + [SolutionFactory(self.data).get_solution() for _ in range(max(0, population_size - len(population)))]
 
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
                                                                 population,

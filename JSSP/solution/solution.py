@@ -4,8 +4,8 @@ import numpy as np
 
 from ._makespan import compute_machine_makespans
 from ._schedule_creator import create_schedule_xlsx_file, create_gantt_chart
-from ..data import Data
 from ..exception import IncompleteSolutionException
+from ..data import Data
 
 
 class Solution:
@@ -15,11 +15,14 @@ class Solution:
     a 1d nparray memory view of machine makespan times,
     and the makespan time.
 
+    :type data: Data
+    :param data: JSSP instance data
+
     :type operation_2d_array: nparray
     :param operation_2d_array: 2d nparray of operations
     """
 
-    def __init__(self, operation_2d_array):
+    def __init__(self, data, operation_2d_array):
         """
         Initializes an instance of Solution.
 
@@ -31,16 +34,17 @@ class Solution:
 
         See help(Solution)
         """
-        if operation_2d_array.shape[0] != Data.sequence_dependency_matrix.shape[0]:
+        if operation_2d_array.shape[0] != data.total_number_of_tasks:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
-                                              f"Should be {Data.sequence_dependency_matrix.shape[0]}")
+                                              f"Should be {data.total_number_of_tasks}")
 
         self.machine_makespans = compute_machine_makespans(operation_2d_array,
-                                                           Data.task_processing_times_matrix,
-                                                           Data.sequence_dependency_matrix,
-                                                           Data.job_task_index_matrix)
+                                                           data.task_processing_times_matrix,
+                                                           data.sequence_dependency_matrix,
+                                                           data.job_task_index_matrix)
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
+        self.data = data
 
     def __eq__(self, other_solution):
         return np.array_equal(self.operation_2d_array, other_solution.operation_2d_array)
@@ -116,12 +120,14 @@ class Solution:
         self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
         return {'operation_2d_array': self.operation_2d_array,
                 'machine_makespans': self.machine_makespans,
-                'makespan': self.makespan}
+                'makespan': self.makespan,
+                'data': self.data}
 
     def __setstate__(self, state):
         self.operation_2d_array = state['operation_2d_array']
         self.machine_makespans = state['machine_makespans']
         self.makespan = state['makespan']
+        self.data = state['data']
 
     def create_schedule_xlsx_file(self, output_path, start_time=datetime.time(hour=8, minute=0),
                                   end_time=datetime.time(hour=20, minute=0), continuous=False):

@@ -4,7 +4,6 @@ import time
 from enum import Enum
 
 from ._ga_helpers import crossover
-from ..data import Data
 from ..exception import InfeasibleSolutionException
 from ..solution import Solution, SolutionFactory
 
@@ -100,7 +99,7 @@ class GeneticAlgorithmAgent:
     :param stopping_condition: either the duration to run GA in seconds or the number of generations to iterate though
 
     :type population: [Solution]
-    :param population: list of Solutions to start the GA from
+    :param population: list of Solutions to start the GA from, must not be empty
 
     :type time_condition: bool
     :param time_condition: if true GA is ran for stopping_condition number of seconds else it is ran for stopping_condition generations
@@ -165,8 +164,8 @@ class GeneticAlgorithmAgent:
         iterations = 0
 
         # get static data
-        dependency_matrix_index_encoding = Data.job_task_index_matrix
-        usable_machines_matrix = Data.usable_machines_matrix
+        dependency_matrix_index_encoding = self.initial_population[0].data.job_task_index_matrix
+        usable_machines_matrix = self.initial_population[0].data.usable_machines_matrix
 
         # variables used for benchmarks
         best_solution_makespan_v_iter = []
@@ -203,7 +202,7 @@ class GeneticAlgorithmAgent:
                     # the try except block is because sometimes the crossover operation results in a setup of -1
                     # which then produces an infeasible solution. This is due to the sequence dependency setup times matrix not allowing for wait time.
                     try:
-                        child1 = crossover(parent1.operation_2d_array, parent2.operation_2d_array,
+                        child1 = crossover(parent1, parent2,
                                            self.mutation_probability, dependency_matrix_index_encoding,
                                            usable_machines_matrix)
                         if child1 != parent1 and child1 != parent2:
@@ -217,7 +216,7 @@ class GeneticAlgorithmAgent:
                 feasible_child = False
                 while not feasible_child:
                     try:
-                        child2 = crossover(parent2.operation_2d_array, parent1.operation_2d_array,
+                        child2 = crossover(parent2, parent1,
                                            self.mutation_probability, dependency_matrix_index_encoding,
                                            usable_machines_matrix)
                         if child2 != parent1 and child2 != parent2:

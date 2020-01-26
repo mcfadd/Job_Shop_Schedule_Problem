@@ -6,7 +6,6 @@ import plotly.figure_factory as ff
 import xlsxwriter
 from plotly.offline import plot, iplot
 
-from ..data import Data
 from ..exception import UnacceptableScheduleTimeException
 
 
@@ -217,9 +216,9 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
     :returns: None
     """
     custom_day_hour_min_dict = {
-        machine_id: _ContinuousDayHourMinute() for machine_id in range(Data.total_number_of_machines)
+        machine_id: _ContinuousDayHourMinute() for machine_id in range(solution.data.total_number_of_machines)
     } if continuous else {
-        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(Data.total_number_of_machines)
+        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(solution.data.total_number_of_machines)
     }
 
     if not os.path.exists(os.path.dirname(output_path)):
@@ -229,9 +228,9 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
         output_path += ".xlsx"
 
     # get all the necessary data from the static Data class
-    task_processing_times_matrix = Data.task_processing_times_matrix
-    job_task_index_matrix = Data.job_task_index_matrix
-    sequence_dependency_matrix = Data.sequence_dependency_matrix
+    task_processing_times_matrix = solution.data.task_processing_times_matrix
+    job_task_index_matrix = solution.data.job_task_index_matrix
+    sequence_dependency_matrix = solution.data.sequence_dependency_matrix
     num_jobs = sequence_dependency_matrix.shape[0]
     num_machines = task_processing_times_matrix.shape[1]
 
@@ -398,11 +397,11 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
 
     df = []
     custom_day_hour_min_dict = {
-        machine_id: _ContinuousDayHourMinute() for machine_id in range(Data.total_number_of_machines)
+        machine_id: _ContinuousDayHourMinute() for machine_id in range(solution.data.total_number_of_machines)
     } if continuous else {
-        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(Data.total_number_of_machines)
+        machine_id: _DayHourMinute(start_time, end_time) for machine_id in range(solution.data.total_number_of_machines)
     }
-    start_date_dict = {machine_id: start_date for machine_id in range(Data.total_number_of_machines)}
+    start_date_dict = {machine_id: start_date for machine_id in range(solution.data.total_number_of_machines)}
 
     if not iplot_bool and not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(os.path.dirname(output_path))
@@ -411,9 +410,9 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         output_path += ".html"
 
     # get all the necessary data from the static Data class
-    task_processing_times_matrix = Data.task_processing_times_matrix
-    job_task_index_matrix = Data.job_task_index_matrix
-    sequence_dependency_matrix = Data.sequence_dependency_matrix
+    task_processing_times_matrix = solution.data.task_processing_times_matrix
+    job_task_index_matrix = solution.data.job_task_index_matrix
+    sequence_dependency_matrix = solution.data.sequence_dependency_matrix
     num_jobs = sequence_dependency_matrix.shape[0]
     num_machines = task_processing_times_matrix.shape[1]
 
@@ -517,7 +516,7 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         machine_current_row[machine] += 2
 
     colors = {'setup': 'rgb(107, 127, 135)'}
-    for i, rgb in enumerate(_get_n_colors(Data.total_number_of_jobs)):
+    for i, rgb in enumerate(_get_n_colors(solution.data.total_number_of_jobs)):
         colors[f'Job {i}'] = f'rgb{rgb}'
 
     fig = ff.create_gantt(df, colors, show_colorbar=True, index_col='Resource', title=title, showgrid_x=True, showgrid_y=True, group_tasks=True)

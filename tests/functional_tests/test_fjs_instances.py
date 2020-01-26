@@ -2,82 +2,12 @@ import os
 import shutil
 import unittest
 
-import numpy as np
-
-from JSSP.data import Data
+from JSSP import data
 from JSSP.solver import Solver
 from tests import tmp_dir, get_all_fjs_files
 
 # directory used by tests
 fjs_data = get_all_fjs_files()
-
-
-class TestFJSConversionToCSV(unittest.TestCase):
-
-    def setUp(self) -> None:
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
-
-    def tearDown(self) -> None:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-
-    def test_reading_all_fjs_instances(self):
-
-        for i, fjs_instance in enumerate(fjs_data):
-            print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
-            try:
-                # read in fjs data
-                Data.initialize_data_from_fjs(fjs_instance)
-            except Exception as e:
-                self.fail(f'Failed to read in {fjs_instance}. Exception raised: ' + str(e))
-
-            # copy all of the data that was read in
-            sequence_dependency_matrix = np.copy(Data.sequence_dependency_matrix)
-            job_task_index_matrix = np.copy(Data.job_task_index_matrix)
-            usable_machines_matrix = np.copy(Data.usable_machines_matrix)
-            task_processing_times_matrix = np.copy(Data.task_processing_times_matrix)
-            jobs = Data.jobs[:]
-            total_number_of_jobs = Data.total_number_of_jobs
-            total_number_of_tasks = Data.total_number_of_tasks
-            total_number_of_machines = Data.total_number_of_machines
-            max_tasks_for_a_job = Data.max_tasks_for_a_job
-
-            try:
-                # convert fjs data to csv
-                Data.convert_fjs_to_csv(fjs_instance, tmp_dir)
-            except Exception as e:
-                self.fail(f'Failed to convert fjs data to csv for {fjs_instance}. Exception raised: ' + str(e))
-
-            try:
-                # read in converted csv file
-                Data.initialize_data_from_csv(tmp_dir + os.sep + 'sequenceDependencyMatrix.csv',
-                                              tmp_dir + os.sep + 'machineRunSpeed.csv',
-                                              tmp_dir + os.sep + 'jobTasks.csv')
-            except Exception as e:
-                self.fail(f'Failed to read converted fjs data for {fjs_instance}. Exception raised: ' + str(e))
-
-            # make sure the data is the same
-            np.testing.assert_array_equal(sequence_dependency_matrix, Data.sequence_dependency_matrix,
-                                          err_msg=f'sequence dependency matrices are not equal for {fjs_instance}')
-            np.testing.assert_array_equal(job_task_index_matrix, Data.job_task_index_matrix,
-                                          err_msg=f'job-task index matrices are not equal for {fjs_instance}')
-            np.testing.assert_array_equal(usable_machines_matrix, Data.usable_machines_matrix,
-                                          err_msg=f'usable machines matrices are not equal for {fjs_instance}')
-
-            # note the task_processing_times_matrix will not always be equal because of the way Data.convert_fjs_to_csv is implemented
-            # np.testing.assert_array_equal(task_processing_times_matrix, Data.task_processing_times_matrix)
-
-            self.assertEqual(task_processing_times_matrix.shape, Data.task_processing_times_matrix.shape,
-                             f'task processing times matrices are not same shape for {fjs_instance}')
-            self.assertEqual(jobs, Data.jobs, f'jobs lists are not equal for {fjs_instance}')
-            self.assertEqual(total_number_of_jobs, Data.total_number_of_jobs,
-                             f'total number of jobs are not equal for {fjs_instance}')
-            self.assertEqual(total_number_of_tasks, Data.total_number_of_tasks,
-                             f'total number of tasks are not equal for {fjs_instance}')
-            self.assertEqual(total_number_of_machines, Data.total_number_of_machines,
-                             f'total number of machines are not equal for {fjs_instance}')
-            self.assertEqual(max_tasks_for_a_job, Data.max_tasks_for_a_job,
-                             f'max tasks for a job are not equal for {fjs_instance}')
 
 
 class TestFJSOptimization(unittest.TestCase):
@@ -101,9 +31,9 @@ class TestFJSOptimization(unittest.TestCase):
         for i, fjs_instance in enumerate(fjs_data):
             print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
             try:
-                Data.initialize_data_from_fjs(fjs_instance)
+                data_instance = data.FJSData(fjs_instance)
 
-                solver = Solver()
+                solver = Solver(data_instance)
                 solver.tabu_search_iter(iterations,
                                         num_solutions_per_process=1,
                                         num_processes=num_processes,
@@ -133,10 +63,10 @@ class TestFJSOptimization(unittest.TestCase):
         for i, fjs_instance in enumerate(fjs_data):
             print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_data)})")
             try:
-                Data.initialize_data_from_fjs(fjs_instance)
+                data_instance = data.FJSData(fjs_instance)
 
                 # run GA
-                solver = Solver()
+                solver = Solver(data_instance)
                 solver.genetic_algorithm_iter(iterations=iterations,
                                               population_size=population_size,
                                               mutation_probability=mutation_probability,

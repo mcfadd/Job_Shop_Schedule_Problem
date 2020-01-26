@@ -2,7 +2,7 @@ import os
 import shutil
 import unittest
 
-from JSSP.data import Data
+from JSSP import data
 from JSSP.genetic_algorithm import GASelectionEnum
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
@@ -14,7 +14,7 @@ class TestGA(unittest.TestCase):
         if not os.path.exists(tmp_dir):
             os.mkdir(tmp_dir)
 
-        Data.initialize_data_from_csv(
+        self.data = data.CSVData(
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
@@ -30,7 +30,7 @@ class TestGA(unittest.TestCase):
             mutation_probability = 0.8
             selection_size = 5
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.genetic_algorithm_time(runtime=runtime,
                                           population=population,
                                           population_size=population_size,
@@ -71,7 +71,7 @@ class TestGA(unittest.TestCase):
             mutation_probability = 0.8
             selection_size = 5
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.genetic_algorithm_time(runtime=runtime,
                                           population=population,
                                           population_size=population_size,
@@ -124,7 +124,7 @@ class TestGA(unittest.TestCase):
             mutation_probability = 0.8
             selection_size = 5
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.genetic_algorithm_iter(iterations=iterations,
                                           population=population,
                                           population_size=population_size,
@@ -165,7 +165,7 @@ class TestGA(unittest.TestCase):
             mutation_probability = 0.8
             selection_size = 5
 
-            solver = Solver()
+            solver = Solver(self.data)
             solver.genetic_algorithm_iter(iterations=iterations,
                                           population=population,
                                           population_size=population_size,
@@ -214,22 +214,22 @@ class TestGA(unittest.TestCase):
 class TestGASelectionMethods(unittest.TestCase):
 
     def setUp(self) -> None:
-        Data.initialize_data_from_csv(
+        self.data = data.CSVData(
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
 
     def test_tournament_selection(self):
-        test_selection(self, GASelectionEnum.TOURNAMENT)
+        test_selection(self, GASelectionEnum.TOURNAMENT, self.data)
 
     def test_fitness_proportionate_selection(self):
-        test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE)
+        test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE, self.data)
 
     def test_random_selection(self):
-        test_selection(self, GASelectionEnum.RANDOM)
+        test_selection(self, GASelectionEnum.RANDOM, self.data)
 
 
-def test_selection(unit_test, selection_method):
+def test_selection(unit_test, selection_method, instance_data):
     try:
         iterations = 50
         population = None
@@ -237,7 +237,7 @@ def test_selection(unit_test, selection_method):
         mutation_probability = 0.8
 
         # run GA
-        solver = Solver()
+        solver = Solver(instance_data)
         solver.genetic_algorithm_iter(iterations=iterations,
                                       population=population,
                                       population_size=population_size,
