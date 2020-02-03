@@ -22,26 +22,23 @@ class TestTS(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ts_time(self):
-        try:
-            runtime = 5  # seconds
-            num_solutions_per_process = 1
-            num_processes = 2
-            tabu_list_size = 50
-            neighborhood_size = 200
-            neighborhood_wait = 0.1
-            probability_change_machine = 0.8
+        runtime = 5  # seconds
+        num_solutions_per_process = 1
+        num_processes = 2
+        tabu_list_size = 50
+        neighborhood_size = 200
+        neighborhood_wait = 0.1
+        probability_change_machine = 0.8
 
-            solver = Solver(self.data)
-            solver.tabu_search_time(runtime,
-                                    num_solutions_per_process=num_solutions_per_process,
-                                    num_processes=num_processes,
-                                    tabu_list_size=tabu_list_size,
-                                    neighborhood_size=neighborhood_size,
-                                    neighborhood_wait=neighborhood_wait,
-                                    probability_change_machine=probability_change_machine
-                                    )
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.tabu_search_time(runtime,
+                                num_solutions_per_process=num_solutions_per_process,
+                                num_processes=num_processes,
+                                tabu_list_size=tabu_list_size,
+                                neighborhood_size=neighborhood_size,
+                                neighborhood_wait=neighborhood_wait,
+                                probability_change_machine=probability_change_machine
+                                )
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ts_agent_list)
@@ -64,26 +61,23 @@ class TestTS(unittest.TestCase):
                         "ts_test_schedule.xlsx was not produced")
 
     def test_ts_time_benchmark(self):
-        try:
-            runtime = 5  # seconds
-            num_solutions_per_process = 1
-            num_processes = 2
-            tabu_list_size = 50
-            neighborhood_size = 200
-            neighborhood_wait = 0.1
-            probability_change_machine = 0.8
+        runtime = 5  # seconds
+        num_solutions_per_process = 1
+        num_processes = 2
+        tabu_list_size = 50
+        neighborhood_size = 200
+        neighborhood_wait = 0.1
+        probability_change_machine = 0.8
 
-            solver = Solver(self.data)
-            solver.tabu_search_time(runtime,
-                                    num_solutions_per_process=num_solutions_per_process,
-                                    num_processes=num_processes,
-                                    tabu_list_size=tabu_list_size,
-                                    neighborhood_size=neighborhood_size,
-                                    neighborhood_wait=neighborhood_wait,
-                                    probability_change_machine=probability_change_machine,
-                                    benchmark=True)
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.tabu_search_time(runtime,
+                                num_solutions_per_process=num_solutions_per_process,
+                                num_processes=num_processes,
+                                tabu_list_size=tabu_list_size,
+                                neighborhood_size=neighborhood_size,
+                                neighborhood_wait=neighborhood_wait,
+                                probability_change_machine=probability_change_machine,
+                                benchmark=True)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ts_agent_list)
@@ -235,18 +229,15 @@ class TestTS(unittest.TestCase):
 
         for num_processes in num_processes_list:
             for num_solutions_per_process in num_solutions_per_process_list:
-                try:
-                    solver = Solver(self.data)
-                    solver.tabu_search_iter(iterations,
-                                            num_solutions_per_process=num_solutions_per_process,
-                                            num_processes=num_processes,
-                                            tabu_list_size=tabu_list_size,
-                                            neighborhood_size=neighborhood_size,
-                                            neighborhood_wait=neighborhood_wait,
-                                            probability_change_machine=probability_change_machine
-                                            )
-                except Exception as e:
-                    self.fail('Unexpected exception raised:' + str(e))
+                solver = Solver(self.data)
+                solver.tabu_search_iter(iterations,
+                                        num_solutions_per_process=num_solutions_per_process,
+                                        num_processes=num_processes,
+                                        tabu_list_size=tabu_list_size,
+                                        neighborhood_size=neighborhood_size,
+                                        neighborhood_wait=neighborhood_wait,
+                                        probability_change_machine=probability_change_machine
+                                        )
 
                 self.assertIsNotNone(solver.solution)
                 self.assertIsNotNone(solver.ts_agent_list)
@@ -268,7 +259,7 @@ class TestTS(unittest.TestCase):
                     all_solutions += ts_agent.all_solutions
 
                 self.assertEqual(len(all_solutions), num_processes * num_solutions_per_process,
-                                 "Parallel TS should have produced (num_processes * num_solutions_to_get) solutions")
+                                 f"Parallel TS should have produced {num_processes * num_solutions_per_process} solutions")
 
 
 if __name__ == '__main__':

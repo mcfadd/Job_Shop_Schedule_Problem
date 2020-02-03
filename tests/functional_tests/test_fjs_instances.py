@@ -1,4 +1,5 @@
 import os
+import random
 import shutil
 import unittest
 
@@ -7,7 +8,7 @@ from JSSP.solver import Solver
 from tests import tmp_dir, get_all_fjs_files
 
 # directory used by tests
-fjs_data = get_all_fjs_files()
+fjs_data = random.choices(get_all_fjs_files(), k=20)
 
 
 class TestFJSOptimization(unittest.TestCase):
@@ -21,7 +22,7 @@ class TestFJSOptimization(unittest.TestCase):
 
     def test_ts_iter(self):
         # parameters
-        iterations = 10  # keep this value small
+        iterations = 50  # keep this value small
         num_processes = 1
         tabu_list_size = 10
         neighborhood_size = 25
@@ -55,7 +56,7 @@ class TestFJSOptimization(unittest.TestCase):
 
     def test_ga_iter(self):
         # parameters
-        iterations = 5  # keep this value small
+        iterations = 10  # keep this value small
         population_size = 50  # keep this value small
         mutation_probability = 0.8
         selection_size = 5

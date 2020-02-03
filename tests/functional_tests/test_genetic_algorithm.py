@@ -23,21 +23,18 @@ class TestGA(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ga_time(self):
-        try:
-            runtime = 5  # seconds
-            population = None
-            population_size = 100
-            mutation_probability = 0.8
-            selection_size = 5
+        runtime = 5  # seconds
+        population = None
+        population_size = 100
+        mutation_probability = 0.8
+        selection_size = 5
 
-            solver = Solver(self.data)
-            solver.genetic_algorithm_time(runtime=runtime,
-                                          population=population,
-                                          population_size=population_size,
-                                          mutation_probability=mutation_probability,
-                                          selection_size=selection_size)
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.genetic_algorithm_time(runtime=runtime,
+                                      population=population,
+                                      population_size=population_size,
+                                      mutation_probability=mutation_probability,
+                                      selection_size=selection_size)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ga_agent)
@@ -64,22 +61,19 @@ class TestGA(unittest.TestCase):
                         "ga_test_schedule.xlsx was not produced")
 
     def test_ga_time_benchmark(self):
-        try:
-            runtime = 5  # seconds
-            population = None
-            population_size = 100
-            mutation_probability = 0.8
-            selection_size = 5
+        runtime = 5  # seconds
+        population = None
+        population_size = 100
+        mutation_probability = 0.8
+        selection_size = 5
 
-            solver = Solver(self.data)
-            solver.genetic_algorithm_time(runtime=runtime,
-                                          population=population,
-                                          population_size=population_size,
-                                          mutation_probability=mutation_probability,
-                                          selection_size=selection_size,
-                                          benchmark=True)
-        except Exception as e:
-            self.fail("Unexpected exception raised:" + str(e))
+        solver = Solver(self.data)
+        solver.genetic_algorithm_time(runtime=runtime,
+                                      population=population,
+                                      population_size=population_size,
+                                      mutation_probability=mutation_probability,
+                                      selection_size=selection_size,
+                                      benchmark=True)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ga_agent)
@@ -117,21 +111,18 @@ class TestGA(unittest.TestCase):
                         "GA benchmark results ga_schedule.xlsx was not produced")
 
     def test_ga_iter(self):
-        try:
-            iterations = 50
-            population = None
-            population_size = 100
-            mutation_probability = 0.8
-            selection_size = 5
+        iterations = 50
+        population = None
+        population_size = 100
+        mutation_probability = 0.8
+        selection_size = 5
 
-            solver = Solver(self.data)
-            solver.genetic_algorithm_iter(iterations=iterations,
-                                          population=population,
-                                          population_size=population_size,
-                                          mutation_probability=mutation_probability,
-                                          selection_size=selection_size)
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.genetic_algorithm_iter(iterations=iterations,
+                                      population=population,
+                                      population_size=population_size,
+                                      mutation_probability=mutation_probability,
+                                      selection_size=selection_size)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ga_agent)
@@ -158,22 +149,19 @@ class TestGA(unittest.TestCase):
                         "ga_test_schedule.xlsx was not produced")
 
     def test_ga_iter_benchmark(self):
-        try:
-            iterations = 50
-            population = None
-            population_size = 100
-            mutation_probability = 0.8
-            selection_size = 5
+        iterations = 50
+        population = None
+        population_size = 100
+        mutation_probability = 0.8
+        selection_size = 5
 
-            solver = Solver(self.data)
-            solver.genetic_algorithm_iter(iterations=iterations,
-                                          population=population,
-                                          population_size=population_size,
-                                          mutation_probability=mutation_probability,
-                                          selection_size=selection_size,
-                                          benchmark=True)
-        except Exception as e:
-            self.fail("Unexpected exception raised:" + str(e))
+        solver = Solver(self.data)
+        solver.genetic_algorithm_iter(iterations=iterations,
+                                      population=population,
+                                      population_size=population_size,
+                                      mutation_probability=mutation_probability,
+                                      selection_size=selection_size,
+                                      benchmark=True)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ga_agent)
@@ -230,22 +218,19 @@ class TestGASelectionMethods(unittest.TestCase):
 
 
 def test_selection(unit_test, selection_method, instance_data):
-    try:
-        iterations = 50
-        population = None
-        population_size = 100
-        mutation_probability = 0.8
+    iterations = 50
+    population = None
+    population_size = 100
+    mutation_probability = 0.8
 
-        # run GA
-        solver = Solver(instance_data)
-        solver.genetic_algorithm_iter(iterations=iterations,
-                                      population=population,
-                                      population_size=population_size,
-                                      selection_method_enum=selection_method,
-                                      mutation_probability=mutation_probability,
-                                      selection_size=2 if selection_method is not GASelectionEnum.TOURNAMENT else 5)
-    except Exception as e:
-        unit_test.fail('Unexpected exception raised:' + str(e))
+    # run GA
+    solver = Solver(instance_data)
+    solver.genetic_algorithm_iter(iterations=iterations,
+                                  population=population,
+                                  population_size=population_size,
+                                  selection_method_enum=selection_method,
+                                  mutation_probability=mutation_probability,
+                                  selection_size=2 if selection_method is not GASelectionEnum.TOURNAMENT else 5)
 
     unit_test.assertIsNotNone(solver.solution)
     unit_test.assertIsNotNone(solver.ga_agent)
