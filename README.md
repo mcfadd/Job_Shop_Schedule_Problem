@@ -1,6 +1,6 @@
 # Job Shop Schedule Problem (JSSP)
 
-[![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
+[![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/development.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/development)
 [![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=latest)](https://job-shop-schedule-problem.readthedocs.io/en/latest/?badge=latest)
 
 #### Version 0.2.1  
