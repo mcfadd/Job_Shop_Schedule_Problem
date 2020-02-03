@@ -8,6 +8,11 @@ default_steps: &default_steps
   steps:
     - checkout
     - run:
+        name: Test pip install
+        command: |
+          pip install .
+          pip uninstall -y JSSP
+    - run:
         name: Get Dependencies
         command: pip install -r requirements.txt
     - run:
