@@ -10,37 +10,6 @@ from . import tabu_search
 from .solution import SolutionFactory, Solution
 
 
-class _SpawnedProcess(mp.Process):
-    """
-    Extension of mp.Process which is used when mp.context is set to spawn.
-    """
-
-    def __init__(self, sequence_dependency_matrix, job_task_index_matrix, usable_machines_matrix,
-                 task_processing_times_matrix, ts_agent, child_results_queue):
-        super(_SpawnedProcess, self).__init__()
-
-        self.sequence_dependency_matrix = sequence_dependency_matrix
-        self.job_task_index_matrix = job_task_index_matrix
-        self.usable_machines_matrix = usable_machines_matrix
-        self.task_processing_times_matrix = task_processing_times_matrix
-        self.ts_agent = ts_agent
-        self.child_results_queue = child_results_queue
-
-    def run(self):
-        """
-        Re-initializes static Data before running tabu search.
-
-        :return: None
-        """
-        from JSSP.data import Data
-        Data.sequence_dependency_matrix = self.sequence_dependency_matrix
-        Data.job_task_index_matrix = self.job_task_index_matrix
-        Data.usable_machines_matrix = self.usable_machines_matrix
-        Data.task_processing_times_matrix = self.task_processing_times_matrix
-
-        self.ts_agent.start(self.child_results_queue)
-
-
 def _run_progress_bar(seconds):
     """
     Runs a progress bar for a certain duration.
@@ -288,16 +257,6 @@ class Solver:
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
-            # TODO test parallel ts on Windows
-            # # if os is windows use spawn process
-            # _SpawnedProcess(Data.sequence_dependency_matrix,
-            #                 Data.job_task_index_matrix,
-            #                 Data.usable_machines_matrix,
-            #                 Data.task_processing_times_matrix,
-            #                 ts_agent,
-            #                 child_results_queue)
-            # if os.name == 'nt' else
-            # # else use normal process
             mp.Process(target=ts_agent.start,
                        args=[child_results_queue])
             for ts_agent in ts_agent_list

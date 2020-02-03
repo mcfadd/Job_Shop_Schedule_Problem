@@ -150,8 +150,8 @@ class SolutionFactory:
             # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
             # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
             tmp_task_list = []
-            # TODO the heap (i.e. list) is depleted in this while loop which causes an index out of bound exception
-            # This shouldn't happen if the sequence dependency matrix is correct and accounts for wait time
+            # TODO the heap (i.e. list) is depleted in this while loop which causes an index out of bound exception.
+            #  This shouldn't happen if the sequence dependency matrix is correct and accounts for wait time
             if isinstance(self.jssp_instance_data, CSVData):
                 while last_task_scheduled_on_machine[rand_machine] is not None \
                         and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
