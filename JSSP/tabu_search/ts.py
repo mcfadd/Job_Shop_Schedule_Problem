@@ -187,10 +187,9 @@ class TabuSearchAgent:
             if seed_solution < best_solutions_heap[0]:
                 best_solutions_heap.pop()  # remove the worst best solution from the heap
                 best_solutions_heap.push(seed_solution)  # add the new best solution to the heap
-                if self.benchmark:
-                    if seed_solution.makespan < absolute_best_solution_makespan:
-                        absolute_best_solution_makespan = seed_solution.makespan
-                        absolute_best_solution_iteration = iterations
+                if self.benchmark and seed_solution.makespan < absolute_best_solution_makespan:
+                    absolute_best_solution_makespan = seed_solution.makespan
+                    absolute_best_solution_iteration = iterations
 
             # if solution is not being improved after a number of iterations, force a move to a worse one
             counter += 1
