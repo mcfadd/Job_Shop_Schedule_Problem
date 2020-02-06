@@ -44,11 +44,11 @@ class Solver:
         self.solution = None
         self.ts_agent_list = None
         self.ga_agent = None
+        self.solution_factory = SolutionFactory(data)
 
     def tabu_search_time(self, runtime, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
-                         neighborhood_size=300,
-                         neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
-                         initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
+                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
+                         reset_threshold=100, initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
         """
         Performs parallel tabu search for a certain number of seconds.
 
@@ -106,8 +106,7 @@ class Solver:
 
     def tabu_search_iter(self, iterations, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
                          neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
-                         reset_threshold=100,
-                         initial_solutions=None, benchmark=False, verbose=False):
+                         reset_threshold=100, initial_solutions=None, benchmark=False, verbose=False):
         """
         Performs parallel tabu search for a certain number of iterations.
 
@@ -212,13 +211,11 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        if initial_solutions is not None and not all(isinstance(s, Solution) for s in initial_solutions):
-            raise TypeError("initial_solutions must be a list of solutions or None")
 
         if initial_solutions is None:
-            initial_solutions = [SolutionFactory(self.data).get_solution() for _ in range(num_processes)]
+            initial_solutions = [self.solution_factory.get_solution() for _ in range(num_processes)]
         else:
-            initial_solutions += [SolutionFactory(self.data).get_solution() for _ in
+            initial_solutions += [self.solution_factory.get_solution() for _ in
                                   range(max(0, num_processes - len(initial_solutions)))]
 
         ts_agent_list = [tabu_search.TabuSearchAgent(stopping_condition,
@@ -418,9 +415,9 @@ class Solver:
         """
 
         if population is None:
-            population = [SolutionFactory(self.data).get_solution() for _ in range(population_size)]
+            population = [self.solution_factory.get_solution() for _ in range(population_size)]
         else:
-            population = population[:] + [SolutionFactory(self.data).get_solution() for _ in range(max(0, population_size - len(population)))]
+            population = population[:] + [self.solution_factory.get_solution() for _ in range(max(0, population_size - len(population)))]
 
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
                                                                 population,

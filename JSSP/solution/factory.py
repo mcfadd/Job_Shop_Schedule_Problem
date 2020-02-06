@@ -226,10 +226,9 @@ class _MaxHeapObj:
         self.data = data
         self.val = val
 
-    def __lt__(self, other):
+    def _get_avg_processing_time(self, other):
         self_index = self.data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
         other_index = self.data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
-
         self_processing_times = [processing_time for processing_time in
                                  self.data.task_processing_times_matrix[self_index] if
                                  processing_time != -1]
@@ -237,10 +236,12 @@ class _MaxHeapObj:
                                   self.data.task_processing_times_matrix[other_index]
                                   if
                                   processing_time != -1]
-
         self_avg_processing_time = sum(self_processing_times) / len(self_processing_times)
         other_avg_processing_time = sum(other_processing_times) / len(other_processing_times)
+        return other_avg_processing_time, self_avg_processing_time
 
+    def __lt__(self, other):
+        other_avg_processing_time, self_avg_processing_time = self._get_avg_processing_time(other)
         return self_avg_processing_time > other_avg_processing_time
 
     def __eq__(self, other):
@@ -249,18 +250,5 @@ class _MaxHeapObj:
 
 class _MinHeapObj(_MaxHeapObj):
     def __lt__(self, other):
-        self_index = self.data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
-        other_index = self.data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
-
-        self_processing_times = [processing_time for processing_time in
-                                 self.data.task_processing_times_matrix[self_index] if
-                                 processing_time != -1]
-        other_processing_times = [processing_time for processing_time in
-                                  self.data.task_processing_times_matrix[other_index]
-                                  if
-                                  processing_time != -1]
-
-        self_avg_processing_time = sum(self_processing_times) / len(self_processing_times)
-        other_avg_processing_time = sum(other_processing_times) / len(other_processing_times)
-
+        other_avg_processing_time, self_avg_processing_time = self._get_avg_processing_time(other)
         return self_avg_processing_time < other_avg_processing_time
