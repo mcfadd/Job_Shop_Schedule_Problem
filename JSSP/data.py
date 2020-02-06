@@ -147,6 +147,33 @@ class Data:
         self.total_number_of_machines = 0
         self.max_tasks_for_a_job = 0
 
+    def get_setup_time(self, job1_id, job1_task_id, job2_id, job2_task_id):
+        """
+        TODO
+        :param job1_id:
+        :param job1_task_id:
+        :param job2_id:
+        :param job2_task_id:
+        :return:
+        """
+        if min(job1_id, job1_task_id, job2_id, job2_task_id) < 0:
+            return 0
+
+        return self.sequence_dependency_matrix[
+            self.job_task_index_matrix[job1_id, job1_task_id],
+            self.job_task_index_matrix[job2_id, job2_task_id]
+        ]
+
+    def get_runtime(self, job_id, task_id, machine):
+        """
+        TODO
+        :param job_id:
+        :param task_id:
+        :param machine:
+        :return:
+        """
+        return self.task_processing_times_matrix[self.job_task_index_matrix[job_id, task_id], machine]
+
     def __str__(self):
         result = f"total jobs = {self.total_number_of_jobs}\n" \
                  f"total tasks = {self.total_number_of_tasks}\n" \

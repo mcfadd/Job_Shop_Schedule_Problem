@@ -92,6 +92,10 @@ class _DayHourMinute:
         if minutes_to_add <= 0:
             return
 
+        prev_day = self.day
+        prev_hour = self.hour
+        prev_min = self.min
+
         days_to_add = minutes_to_add // (60 * self.end_time.hour + self.end_time.minute - 60 * self.start_time.hour - self.start_time.minute)
         minutes_to_add %= (60 * self.end_time.hour + self.end_time.minute - 60 * self.start_time.hour - self.start_time.minute)
         hours_to_add = minutes_to_add // 60
@@ -100,7 +104,6 @@ class _DayHourMinute:
         self.day += days_to_add
         self.hour += hours_to_add
         self.min += minutes_to_add
-        self.total_elapsed_minutes += days_to_add * (self.end_time.hour + self.end_time.minute / 60 - self.start_time.hour - self.start_time.minute / 60) + hours_to_add * 60 + minutes_to_add
 
         if days_to_add > 0:
             self.hour = self.start_time.hour
@@ -114,6 +117,34 @@ class _DayHourMinute:
             self.day += 1
             self.hour = self.start_time.hour
             self.min = self.start_time.minute
+
+        self.total_elapsed_minutes += (self.day - prev_day) * 24 * 60 + (self.hour - prev_hour) * 60 + (self.min - prev_min)
+
+    def check_add_minutes(self, minutes_to_add):
+        """
+        TODO
+        :param minutes_to_add:
+        :return:
+        """
+        days_to_add = minutes_to_add // (60 * self.end_time.hour + self.end_time.minute - 60 * self.start_time.hour - self.start_time.minute)
+        minutes_to_add %= (60 * self.end_time.hour + self.end_time.minute - 60 * self.start_time.hour - self.start_time.minute)
+        hours_to_add = minutes_to_add // 60
+        minutes_to_add %= 60
+
+        if days_to_add > 0:
+            return True
+
+        forecast_min = self.min + minutes_to_add
+        forecast_hour = self.hour + hours_to_add
+
+        if forecast_min >= 60:
+            forecast_hour += 1
+            forecast_min -= 60
+
+        if forecast_hour > self.end_time.hour or (forecast_hour == self.end_time.hour and forecast_min >= self.end_time.minute):
+            return True
+
+        return False
 
     def copy(self):
         """
@@ -182,6 +213,9 @@ class _ContinuousDayHourMinute(_DayHourMinute):
             self.day += 1
             self.hour -= 24
 
+    def check_add_minutes(self, minutes_to_add):
+        return False
+
     def copy(self):
         """
         :returns: a copy of this _ContinuousCustomDayHourMinute
@@ -227,13 +261,6 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
     if not output_path.endswith(".xlsx"):
         output_path += ".xlsx"
 
-    # get all the necessary data from the static Data class
-    task_processing_times_matrix = solution.data.task_processing_times_matrix
-    job_task_index_matrix = solution.data.job_task_index_matrix
-    sequence_dependency_matrix = solution.data.sequence_dependency_matrix
-    num_jobs = sequence_dependency_matrix.shape[0]
-    num_machines = task_processing_times_matrix.shape[1]
-
     # create an excel workbook and worksheet in output directory
     workbook = xlsxwriter.Workbook(f'{output_path}')
     colored = workbook.add_format({'bg_color': '#E7E6E6'})
@@ -242,7 +269,7 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
     col = 0
 
     # Write headers to excel worksheet and format cells
-    for i in range(num_machines):
+    for i in range(solution.data.total_number_of_machines):
         worksheet.set_column(col, col, 12)
         worksheet.write(0, col, f'Machine {i}')
         worksheet.write_row(4, col, ["Job_Task", "Start", "End"])
@@ -252,6 +279,10 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
         col += 4
 
     worksheet.set_row(4, 16, cell_format=colored)
+
+    data = solution.data
+    num_jobs = data.total_number_of_jobs
+    num_machines = data.total_number_of_machines
 
     # get the operation matrix
     operation_2d_array = solution.operation_2d_array
@@ -287,15 +318,8 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
         sequence = operation_2d_array[row, 2]
         machine = operation_2d_array[row, 3]
 
-        # get the setup time for the current operation
-        if machine_jobs_memory[machine] != (-1, -1):
-            cur_task_index = job_task_index_matrix[job_id, task_id]
-            prev_task_index = job_task_index_matrix[machine_jobs_memory[machine]]
-            setup = sequence_dependency_matrix[cur_task_index, prev_task_index]
-        else:
-            setup = 0
+        setup = data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
 
-        # update previous job sequence end t if a new sequence if
         if job_seq_memory[job_id] < sequence:
             prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
 
@@ -304,38 +328,28 @@ def create_schedule_xlsx_file(solution, output_path, start_time=datetime.time(ho
         else:
             wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
 
-        runtime = task_processing_times_matrix[job_task_index_matrix[job_id, task_id], machine]
-
+        runtime = data.get_runtime(job_id, task_id, machine)
         custom_day_hour_min_dict[machine].add_minutes(wait)
-        tmp_custom_day_hour_min = custom_day_hour_min_dict[machine].copy()
-        day_before_addition = tmp_custom_day_hour_min.day
-        tmp_custom_day_hour_min.add_minutes(wait + setup + runtime)
 
-        if not continuous and day_before_addition < tmp_custom_day_hour_min.day:
-            custom_day_hour_min_dict[machine].total_elapsed_minutes += \
-                24 * 60 - (custom_day_hour_min_dict[machine].hour * 60 + custom_day_hour_min_dict[machine].min) + \
-                custom_day_hour_min_dict[machine].start_time.hour * 60 + custom_day_hour_min_dict[machine].start_time.minute
-            custom_day_hour_min_dict[machine].day += 1
-            custom_day_hour_min_dict[machine].hour = custom_day_hour_min_dict[machine].start_time.hour
-            custom_day_hour_min_dict[machine].min = custom_day_hour_min_dict[machine].start_time.minute
+        if custom_day_hour_min_dict[machine].check_add_minutes(setup + runtime):
+            custom_day_hour_min_dict[machine].add_minutes(24 * 60)
             setup = 0
 
-        start_of_operation_setup = custom_day_hour_min_dict[machine].__str__()
+        start_of_operation_setup = str(custom_day_hour_min_dict[machine])
         custom_day_hour_min_dict[machine].add_minutes(setup)
 
         # write Job_Task setup
         worksheet.write_row(machine_current_row[machine], machine * 4, [f"{job_id}_{task_id} setup",
                                                                         start_of_operation_setup,
-                                                                        custom_day_hour_min_dict[machine].__str__()])
+                                                                        str(custom_day_hour_min_dict[machine])])
 
-        end_of_operation_setup = custom_day_hour_min_dict[machine].__str__()
+        end_of_operation_setup = str(custom_day_hour_min_dict[machine])
         custom_day_hour_min_dict[machine].add_minutes(runtime)
 
         # write Job_Task run
         worksheet.write_row(machine_current_row[machine] + 1, machine * 4, [f"{job_id}_{task_id} run",
                                                                             end_of_operation_setup,
-                                                                            custom_day_hour_min_dict[
-                                                                                machine].__str__()])
+                                                                            str(custom_day_hour_min_dict[machine])])
 
         # compute total added time and update memory modules
         machine_makespan_memory[machine] += runtime + wait + setup
@@ -409,18 +423,12 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
     if not iplot_bool and not output_path.endswith(".html"):
         output_path += ".html"
 
-    # get all the necessary data from the static Data class
-    task_processing_times_matrix = solution.data.task_processing_times_matrix
-    job_task_index_matrix = solution.data.job_task_index_matrix
-    sequence_dependency_matrix = solution.data.sequence_dependency_matrix
-    num_jobs = sequence_dependency_matrix.shape[0]
-    num_machines = task_processing_times_matrix.shape[1]
+    data = solution.data
+    num_jobs = data.total_number_of_jobs
+    num_machines = data.total_number_of_machines
 
     # get the operation matrix
     operation_2d_array = solution.operation_2d_array
-
-    # all of the row entries (i.e. Job_Task, Start, End) start at row 3 in the excel file
-    machine_current_row = [5] * num_machines
 
     # memory for keeping track of all machine's make span times
     machine_makespan_memory = [0] * num_machines
@@ -450,15 +458,8 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         sequence = operation_2d_array[row, 2]
         machine = operation_2d_array[row, 3]
 
-        # get the setup time for the current operation
-        if machine_jobs_memory[machine] != (-1, -1):
-            cur_task_index = job_task_index_matrix[job_id, task_id]
-            prev_task_index = job_task_index_matrix[machine_jobs_memory[machine]]
-            setup = sequence_dependency_matrix[cur_task_index, prev_task_index]
-        else:
-            setup = 0
+        setup = data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
 
-        # update previous job sequence end t if a new sequence if
         if job_seq_memory[job_id] < sequence:
             prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
 
@@ -467,27 +468,19 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         else:
             wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
 
-        runtime = task_processing_times_matrix[job_task_index_matrix[job_id, task_id], machine]
-
+        runtime = data.get_runtime(job_id, task_id, machine)
         custom_day_hour_min_dict[machine].add_minutes(wait)
-        tmp_custom_day_hour_min = custom_day_hour_min_dict[machine].copy()
-        day_before_addition = tmp_custom_day_hour_min.day
-        tmp_custom_day_hour_min.add_minutes(wait + setup + runtime)
 
-        if not continuous and day_before_addition < tmp_custom_day_hour_min.day:
-            custom_day_hour_min_dict[machine].total_elapsed_minutes += \
-                24 * 60 - (custom_day_hour_min_dict[machine].hour * 60 + custom_day_hour_min_dict[machine].min) + \
-                custom_day_hour_min_dict[machine].start_time.hour * 60 + custom_day_hour_min_dict[machine].start_time.minute
-            custom_day_hour_min_dict[machine].day += 1
-            custom_day_hour_min_dict[machine].hour = start_time.hour
-            custom_day_hour_min_dict[machine].min = start_time.minute
+        if custom_day_hour_min_dict[machine].check_add_minutes(setup + runtime):
+            custom_day_hour_min_dict[machine].add_minutes(24 * 60)
+            setup = 0
             start_date_dict[machine] += datetime.timedelta(days=1)
             start_date_dict[machine] = start_date_dict[machine].replace(hour=start_time.hour, minute=start_time.minute)
 
         start_of_operation_setup = custom_day_hour_min_dict[machine].copy()
         start_date_of_operation_setup = start_date_dict[machine]
         custom_day_hour_min_dict[machine].add_minutes(setup)
-        start_date_dict[machine] = start_date_dict[machine] + datetime.timedelta(minutes=int(setup))
+        start_date_dict[machine] += datetime.timedelta(minutes=int(setup))
 
         df.append(dict(Task=f"Machine-{machine}",
                        Start=f"{start_date_of_operation_setup.strftime('%Y-%m-%d')} {start_of_operation_setup.get_hour_min_sec_str()}",
@@ -497,7 +490,7 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         end_of_operation_setup = custom_day_hour_min_dict[machine].copy()
         end_date_of_operation_setup = start_date_dict[machine]
         custom_day_hour_min_dict[machine].add_minutes(runtime)
-        start_date_dict[machine] = start_date_dict[machine] + datetime.timedelta(minutes=int(runtime))
+        start_date_dict[machine] += datetime.timedelta(minutes=int(runtime))
 
         df.append(dict(Task=f"Machine-{machine}",
                        Start=f"{end_date_of_operation_setup.strftime('%Y-%m-%d')} {end_of_operation_setup.get_hour_min_sec_str()}",
@@ -511,9 +504,6 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
         job_seq_memory[job_id] = sequence
         machine_jobs_memory[machine] = (job_id, task_id)
-
-        # increment current row for machine by 2
-        machine_current_row[machine] += 2
 
     colors = {'setup': 'rgb(107, 127, 135)'}
     for i, rgb in enumerate(_get_n_colors(solution.data.total_number_of_jobs)):
