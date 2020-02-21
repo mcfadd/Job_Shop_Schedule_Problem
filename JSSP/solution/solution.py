@@ -129,13 +129,16 @@ class Solution:
         self.makespan = state['makespan']
         self.data = state['data']
 
-    def create_schedule_xlsx_file(self, output_path, start_time=datetime.time(hour=8, minute=0),
+    def create_schedule_xlsx_file(self, output_path, start_date=datetime.date.today(), start_time=datetime.time(hour=8, minute=0),
                                   end_time=datetime.time(hour=20, minute=0), continuous=False):
         """
         Creates an excel file in the output_dir directory that contains the schedule for each machine of this Solution.
 
         :type output_path: str
         :param output_path: path to the excel file to create
+
+        :type start_date: datetime.date
+        :param start_time: start date of the schedule
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -148,9 +151,9 @@ class Solution:
 
         :returns: None
         """
-        create_schedule_xlsx_file(self, output_path, start_time=start_time, end_time=end_time, continuous=continuous)
+        create_schedule_xlsx_file(self, output_path, start_date=start_date, start_time=start_time, end_time=end_time, continuous=continuous)
 
-    def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.datetime.now(),
+    def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.date.today(),
                           start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
                           continuous=False):
         """
@@ -159,8 +162,8 @@ class Solution:
         :type title: str
         :param title: name of the gantt chart
 
-        :type start_date: datetime.datetime
-        :param start_date: datetime to start the schedule from
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -177,7 +180,7 @@ class Solution:
         create_gantt_chart(self, "", title=title, start_date=start_date, start_time=start_time,
                            end_time=end_time, iplot_bool=True, continuous=continuous)
 
-    def create_gantt_chart_html_file(self, output_path, title='Gantt Chart', start_date=datetime.datetime.now(),
+    def create_gantt_chart_html_file(self, output_path, title='Gantt Chart', start_date=datetime.date.today(),
                                      start_time=datetime.time(hour=8, minute=0),
                                      end_time=datetime.time(hour=20, minute=0), auto_open=False, continuous=False):
         """
@@ -189,8 +192,8 @@ class Solution:
         :type title: str
         :param title: name of the gantt chart
 
-        :type start_date: datetime.datetime
-        :param start_date: datetime to start the schedule from
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -209,3 +212,80 @@ class Solution:
         create_gantt_chart(self, output_path, title=title, start_date=start_date, start_time=start_time,
                            end_time=end_time, iplot_bool=False, auto_open=auto_open,
                            continuous=continuous)
+
+    def get_operation_list_for_machine(self, machine_id=None):
+        """
+        TODO
+        :param machine_id:
+        :return:
+        """
+        result = []
+        data = self.data
+        num_jobs = data.total_number_of_jobs
+        num_machines = data.total_number_of_machines
+
+        # get the operation matrix
+        operation_2d_array = self.operation_2d_array
+
+        # memory for keeping track of all machine's make span times
+        machine_makespan_memory = [0] * num_machines
+
+        # memory for keeping track of total setup time on a machine
+        machine_setup_time_memory = [0] * num_machines
+
+        # memory for keeping track of all machine's latest (job, task) that was processed
+        machine_jobs_memory = [(-1, -1)] * num_machines
+
+        # memory for keeping track of all job's latest task's sequence that was processed
+        job_seq_memory = [0] * num_jobs
+
+        # memory for keeping track of all job's previous sequence end time (used for calculating wait times)
+        prev_job_seq_end_memory = [0] * num_jobs
+
+        # memory for keeping track of all job's latest end time (used for updating prev_job_seq_end_memory)
+        job_end_memory = [0] * num_jobs
+
+        for row in range(operation_2d_array.shape[0]):
+
+            job_id = operation_2d_array[row, 0]
+            task_id = operation_2d_array[row, 1]
+            sequence = operation_2d_array[row, 2]
+            machine = operation_2d_array[row, 3]
+
+            setup = data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
+
+            if job_seq_memory[job_id] < sequence:
+                prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
+
+            if prev_job_seq_end_memory[job_id] <= machine_makespan_memory[machine]:
+                wait = 0
+            else:
+                wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
+
+            runtime = data.get_runtime(job_id, task_id, machine)
+
+            if machine_id is None or machine_id == machine:
+                result.append(Operation(job_id, task_id, machine, wait, int(setup), runtime))
+
+            # compute total added time and update memory modules
+            machine_makespan_memory[machine] += runtime + wait + setup
+            machine_setup_time_memory[machine] += setup
+            job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
+            job_seq_memory[job_id] = sequence
+            machine_jobs_memory[machine] = (job_id, task_id)
+
+        return result
+
+
+class Operation:
+    def __init__(self, job_id, task_id, machine, wait, setup, runtime):
+        self.job_id = job_id
+        self.task_id = task_id
+        self.machine = machine
+        self.wait = wait
+        self.setup = setup
+        self.runtime = runtime
+
+    def __repr__(self):
+        return f"job_id={self.job_id}, task_id={self.task_id}, machine={self.machine}, " \
+               f"wait={self.wait}, setup={self.setup}, runtime={self.runtime}\n"

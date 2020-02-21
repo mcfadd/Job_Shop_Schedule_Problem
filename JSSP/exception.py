@@ -5,7 +5,3 @@ class InfeasibleSolutionException(Exception):
 
 class IncompleteSolutionException(Exception):
     pass
-
-
-class UnacceptableScheduleTimeException(Exception):
-    pass

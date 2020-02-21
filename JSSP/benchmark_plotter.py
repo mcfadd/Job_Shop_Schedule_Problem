@@ -77,11 +77,8 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
     # output results
     output_directory = os.path.abspath(output_dir + os.sep + name)
 
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-
     if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
+        os.makedirs(output_directory)
 
     index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
                     <html>
