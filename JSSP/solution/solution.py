@@ -213,25 +213,26 @@ class Solution:
                            end_time=end_time, iplot_bool=False, auto_open=auto_open,
                            continuous=continuous)
 
-    def get_operation_list_for_machine(self, machine_id=None):
+    def get_operation_list_for_machine(self, start_date=datetime.date.today(), start_time=datetime.time(hour=8),
+                                       end_time=datetime.time(hour=20), continuous=False, machine_id=None):
         """
         TODO
+        :param start_date:
+        :param start_time:
+        :param end_time:
+        :param continuous:
         :param machine_id:
         :return:
         """
         result = []
-        data = self.data
-        num_jobs = data.total_number_of_jobs
-        num_machines = data.total_number_of_machines
-
-        # get the operation matrix
-        operation_2d_array = self.operation_2d_array
+        num_jobs = self.data.total_number_of_jobs
+        num_machines = self.data.total_number_of_machines
+        start_datetime = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,
+                                           hour=start_time.hour, minute=start_time.minute, second=start_time.second)
+        machine_datetime_dict = {machine_id: start_datetime for machine_id in range(num_machines)}
 
         # memory for keeping track of all machine's make span times
         machine_makespan_memory = [0] * num_machines
-
-        # memory for keeping track of total setup time on a machine
-        machine_setup_time_memory = [0] * num_machines
 
         # memory for keeping track of all machine's latest (job, task) that was processed
         machine_jobs_memory = [(-1, -1)] * num_machines
@@ -245,14 +246,14 @@ class Solution:
         # memory for keeping track of all job's latest end time (used for updating prev_job_seq_end_memory)
         job_end_memory = [0] * num_jobs
 
-        for row in range(operation_2d_array.shape[0]):
+        for row in range(self.operation_2d_array.shape[0]):
 
-            job_id = operation_2d_array[row, 0]
-            task_id = operation_2d_array[row, 1]
-            sequence = operation_2d_array[row, 2]
-            machine = operation_2d_array[row, 3]
+            job_id = self.operation_2d_array[row, 0]
+            task_id = self.operation_2d_array[row, 1]
+            sequence = self.operation_2d_array[row, 2]
+            machine = self.operation_2d_array[row, 3]
 
-            setup = data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
+            setup = self.data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
 
             if job_seq_memory[job_id] < sequence:
                 prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
@@ -262,14 +263,36 @@ class Solution:
             else:
                 wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
 
-            runtime = data.get_runtime(job_id, task_id, machine)
+            runtime = self.data.get_runtime(job_id, task_id, machine)
+
+            tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=wait)
+            if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
+                machine_datetime_dict[machine] += datetime.timedelta(days=1)
+                machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute,
+                                                       second=start_time.second)
+            else:
+                machine_datetime_dict[machine] += datetime.timedelta(minutes=wait)
+
+            tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=setup + runtime)
+            if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
+                machine_datetime_dict[machine] += datetime.timedelta(days=1)
+                machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute,
+                                                       second=start_time.second)
+                setup = 0
 
             if machine_id is None or machine_id == machine:
-                result.append(Operation(job_id, task_id, machine, wait, int(setup), runtime))
+                result.append(Operation(job_id,
+                                        task_id,
+                                        machine,
+                                        float(wait),
+                                        float(setup),
+                                        float(runtime),
+                                        machine_datetime_dict[machine]))  # start time
+
+            machine_datetime_dict[machine] += datetime.timedelta(minutes=setup + runtime)
 
             # compute total added time and update memory modules
             machine_makespan_memory[machine] += runtime + wait + setup
-            machine_setup_time_memory[machine] += setup
             job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
             job_seq_memory[job_id] = sequence
             machine_jobs_memory[machine] = (job_id, task_id)
@@ -278,13 +301,16 @@ class Solution:
 
 
 class Operation:
-    def __init__(self, job_id, task_id, machine, wait, setup, runtime):
+    def __init__(self, job_id, task_id, machine, wait, setup, runtime, start_time):
         self.job_id = job_id
         self.task_id = task_id
         self.machine = machine
         self.wait = wait
         self.setup = setup
         self.runtime = runtime
+        self.setup_start_time = start_time
+        self.setup_end_time = self.setup_start_time + datetime.timedelta(minutes=setup)
+        self.runtime_end_time = self.setup_end_time + datetime.timedelta(minutes=runtime)
 
     def __repr__(self):
         return f"job_id={self.job_id}, task_id={self.task_id}, machine={self.machine}, " \

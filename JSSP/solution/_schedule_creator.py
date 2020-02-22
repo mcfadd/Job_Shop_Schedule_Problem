@@ -48,67 +48,6 @@ def _check_output_path(output_path, file_ext):
         return output_path
 
 
-def _create_schedule(setup_func, rtime_func, solution, start_date, start_time, end_time, continuous):
-    """
-    TODO
-    :param setup_func:
-    :param rtime_func:
-    :param solution:
-    :param start_date:
-    :param start_time:
-    :param end_time:
-    :param continuous:
-    :return:
-    """
-    start_datetime = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,
-                                       hour=start_time.hour, minute=start_time.minute, second=start_time.second)
-    machine_datetime_dict = {machine_id: start_datetime for machine_id in range(solution.data.total_number_of_machines)}
-
-    strftime = "%Y-%m-%d %H:%M:%S"
-    operations_list = solution.get_operation_list_for_machine()
-    for operation in operations_list:
-
-        job_id = operation.job_id
-        task_id = operation.task_id
-        machine = operation.machine
-        wait = operation.wait
-        setup = operation.setup
-        runtime = operation.runtime
-
-        tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=wait)
-        if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
-            machine_datetime_dict[machine] += datetime.timedelta(days=1)
-            machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute, second=start_time.second)
-        else:
-            machine_datetime_dict[machine] += datetime.timedelta(minutes=wait)
-
-        tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=setup + runtime)
-        if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
-            machine_datetime_dict[machine] += datetime.timedelta(days=1)
-            machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute, second=start_time.second)
-            setup = 0
-
-        # add setup
-        setup_func(machine,
-                   f"{machine_datetime_dict[machine].strftime(strftime)}",
-                   f"{(machine_datetime_dict[machine] + datetime.timedelta(minutes=setup)).strftime(strftime)}",
-                   job_id,
-                   task_id)
-
-        machine_datetime_dict[machine] += datetime.timedelta(minutes=setup)
-
-        # add runtime
-        rtime_func(machine,
-                   f"{machine_datetime_dict[machine].strftime(strftime)}",
-                   f"{(machine_datetime_dict[machine] + datetime.timedelta(minutes=runtime)).strftime(strftime)}",
-                   job_id,
-                   task_id)
-
-        machine_datetime_dict[machine] += datetime.timedelta(minutes=runtime)
-
-    return machine_datetime_dict, start_datetime
-
-
 def create_schedule_xlsx_file(solution, output_path, start_date=datetime.date.today(), start_time=datetime.time(hour=8, minute=0),
                               end_time=datetime.time(hour=20, minute=0), continuous=False):
     """
@@ -154,24 +93,32 @@ def create_schedule_xlsx_file(solution, output_path, start_date=datetime.date.to
 
     worksheet.set_row(2, 16, cell_format=colored)
     machine_current_row = [3] * solution.data.total_number_of_machines
+    strftime = "%Y-%m-%d %H:%M:%S"
+    operations = solution.get_operation_list_for_machine(start_date, start_time, end_time, continuous=continuous)
+    for operation in operations:
+        job_id = operation.job_id
+        task_id = operation.task_id
+        machine = operation.machine
+        setup_start = operation.setup_start_time.strftime(strftime)
+        setup_end = operation.setup_end_time.strftime(strftime)
+        runtime_end = operation.runtime_end_time.strftime(strftime)
 
-    def add_setup(machine, start_str, end_str, job_id, task_id):
         worksheet.write_row(machine_current_row[machine],
                             machine * 4,
-                            [f"{job_id}_{task_id} setup", start_str, end_str])
-        machine_current_row[machine] += 1
+                            [f"{job_id}_{task_id} setup", setup_start, setup_end])
 
-    def add_runtime(machine, start_str, end_str, job_id, task_id):
-        worksheet.write_row(machine_current_row[machine],
+        worksheet.write_row(machine_current_row[machine] + 1,
                             machine * 4,
-                            [f"{job_id}_{task_id} run", start_str, end_str])
-        machine_current_row[machine] += 1
+                            [f"{job_id}_{task_id} run", setup_end, runtime_end])
 
-    machine_dt_dict, start_datetime = _create_schedule(add_setup, add_runtime, solution, start_date, start_time, end_time, continuous)
+        machine_current_row[machine] += 2
 
     col = 0
     for machine in range(solution.data.total_number_of_machines):
-        worksheet.write_row(1, col, ["Makespan =", str(machine_dt_dict[machine] - start_datetime)])
+        machine_operations = [op for op in operations if op.machine == machine]
+        s = machine_operations[0].setup_start_time
+        e = machine_operations[-1].runtime_end_time
+        worksheet.write_row(1, col, ["Makespan =", str(e - s)])
         col += 4
 
     workbook.close()
@@ -218,20 +165,24 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
         output_path = _check_output_path(output_path, ".html")
 
     df = []
+    strftime = "%Y-%m-%d %H:%M:%S"
+    operations = solution.get_operation_list_for_machine(start_date, start_time, end_time, continuous=continuous)
+    for operation in operations:
+        job_id = operation.job_id
+        machine = operation.machine
+        setup_start = operation.setup_start_time.strftime(strftime)
+        setup_end = operation.setup_end_time.strftime(strftime)
+        runtime_end = operation.runtime_end_time.strftime(strftime)
 
-    def add_setup(machine, start_str, end_str, *args):
         df.append(dict(Task=f"Machine-{machine}",
-                       Start=start_str,
-                       Finish=end_str,
+                       Start=setup_start,
+                       Finish=setup_end,
                        Resource="setup"))
 
-    def add_runtime(machine, start_str, end_str, job_id, *args):
         df.append(dict(Task=f"Machine-{machine}",
-                       Start=start_str,
-                       Finish=end_str,
+                       Start=setup_end,
+                       Finish=runtime_end,
                        Resource=f"Job {job_id}"))
-
-    _create_schedule(add_setup, add_runtime, solution, start_date, start_time, end_time, continuous)
 
     colors = {'setup': 'rgb(107, 127, 135)'}
     for i, rgb in enumerate(_get_n_colors(solution.data.total_number_of_jobs)):

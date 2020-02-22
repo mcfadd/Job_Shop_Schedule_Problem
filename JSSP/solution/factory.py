@@ -3,8 +3,8 @@ import random
 
 import numpy as np
 
-from ..data import Data, CSVData
 from .solution import Solution
+from ..data import Data, CSVData
 
 
 class SolutionFactory:
@@ -116,12 +116,12 @@ class SolutionFactory:
 
             available[rand_job_id].remove(rand_task)
             if len(available[rand_job_id]) == 0:
-                if rand_task.get_sequence() == self.jssp_instance_data.jobs[rand_job_id].get_max_sequence():
+                if rand_task.get_sequence() == self.jssp_instance_data.get_job(rand_job_id).get_max_sequence():
                     # all of the tasks in the job have been scheduled
                     del available[rand_job_id]
                 else:
                     # add all the tasks in the same job with the next sequence number
-                    available[rand_job_id] = [t for t in self.jssp_instance_data.jobs[rand_job_id].get_tasks() if
+                    available[rand_job_id] = [t for t in self.jssp_instance_data.get_job(rand_job_id).get_tasks() if
                                               t.get_sequence() == rand_task.get_sequence() + 1]
 
             last_task_scheduled_on_machine[rand_machine] = rand_task
@@ -173,12 +173,12 @@ class SolutionFactory:
                 available_heap.push_task(task)
 
             if len(available_heap.dict[rand_job_id]) == 0:
-                if rand_task.get_sequence() == self.jssp_instance_data.jobs[rand_job_id].get_max_sequence():
+                if rand_task.get_sequence() == self.jssp_instance_data.jobs.get_job(rand_job_id).get_max_sequence():
                     # all of the tasks in the job have been scheduled
                     del available_heap.dict[rand_job_id]
                 else:
                     # add all the tasks in the same job with the next sequence number
-                    for t in self.jssp_instance_data.jobs[rand_job_id].get_tasks():
+                    for t in self.jssp_instance_data.jobs.get_job(rand_job_id).get_tasks():
                         if t.get_sequence() == rand_task.get_sequence() + 1:
                             # available_heap.dict[rand_job_id].append(t)
                             available_heap.push_task(t)

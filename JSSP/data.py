@@ -174,6 +174,9 @@ class Data:
         """
         return self.task_processing_times_matrix[self.job_task_index_matrix[job_id, task_id], machine]
 
+    def get_job(self, job_id):
+        return self.jobs[job_id]
+
     def __str__(self):
         result = f"total jobs = {self.total_number_of_jobs}\n" \
                  f"total tasks = {self.total_number_of_tasks}\n" \
