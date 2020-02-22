@@ -88,7 +88,6 @@ class SolutionFactory:
         :rtype: Solution
         :returns: randomly generated Solution instance
         """
-
         operation_list = []
         last_task_scheduled_on_machine = [None] * self.jssp_instance_data.total_number_of_machines
         available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
@@ -136,7 +135,6 @@ class SolutionFactory:
         :rtype: Solution
         :returns: randomly generated Solution instance
         """
-
         operation_list = []
         last_task_scheduled_on_machine = [None] * self.jssp_instance_data.total_number_of_machines
         available_heap = _JobTaskHeap(self.jssp_instance_data, maxheap=lpt)
@@ -173,12 +171,12 @@ class SolutionFactory:
                 available_heap.push_task(task)
 
             if len(available_heap.dict[rand_job_id]) == 0:
-                if rand_task.get_sequence() == self.jssp_instance_data.jobs.get_job(rand_job_id).get_max_sequence():
+                if rand_task.get_sequence() == self.jssp_instance_data.get_job(rand_job_id).get_max_sequence():
                     # all of the tasks in the job have been scheduled
                     del available_heap.dict[rand_job_id]
                 else:
                     # add all the tasks in the same job with the next sequence number
-                    for t in self.jssp_instance_data.jobs.get_job(rand_job_id).get_tasks():
+                    for t in self.jssp_instance_data.get_job(rand_job_id).get_tasks():
                         if t.get_sequence() == rand_task.get_sequence() + 1:
                             # available_heap.dict[rand_job_id].append(t)
                             available_heap.push_task(t)
