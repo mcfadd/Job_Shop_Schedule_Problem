@@ -1,6 +1,7 @@
 # Job Shop Schedule Problem (JSSP)
 
 [![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/master)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mcfadd_Job_Shop_Schedule_Problem&metric=alert_status)](https://sonarcloud.io/dashboard?id=mcfadd_Job_Shop_Schedule_Problem)
 [![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=stable)](https://job-shop-schedule-problem.readthedocs.io/en/stable/?badge=stable)
 
 #### Version 1.0.0 
