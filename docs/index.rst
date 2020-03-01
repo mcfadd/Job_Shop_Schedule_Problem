@@ -2,12 +2,11 @@
    :maxdepth: 2
    :hidden:
 
-   Problem_description
-   Input_data
-   Algorithms
-   Getting_started
-   Examples
-   doc/JSSP
+   problem_description
+   input_data
+   getting_started
+   examples
+   api
 
 
 Welcome to JSSP's Documentation!

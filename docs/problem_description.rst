@@ -62,23 +62,7 @@ Here is an example of an infeasible solution:
 The solution is infeasible because job 0, task 1 with sequence # = 1 is
 scheduled on machine 0 before job 0, task 0 with sequence # = 0.
 
-Solution Makespan
------------------
-
-To compute the makespan (cost) of a feasible solution,
-take the max of [(total run time + total wait time + total setup
-time) for each machine], where
-
--  run time = time required to process a task on a machine
--  wait time = time a machine has to wait for a task with sequence # < current task's sequence # to be processed
--  setup time = set up time before processing a task on a machine
-
-For a more detailed description of how this works see the `source code`_.
-
-.. _source code: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/JSSP/solution/_makespan.pyx
 .. _`https://en.wikipedia.org/wiki/Job_shop_scheduling`: https://en.wikipedia.org/wiki/Job_shop_scheduling
-.. _jobTasks.csv: https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/data_set2/jobTasks.csv
-.. _machineRunSpeed.csv: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/data/given_data/machineRunSpeed.csv
 .. _sequenceDependencyMatrix.csv: https://github.com/mcfadd/Job_Shop_Schedule_Problem/blob/master/data/given_data/sequenceDependencyMatrix.csv
 
 .. |br| raw:: html

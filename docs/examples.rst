@@ -8,27 +8,27 @@ Tabu Search & Genetic Algorithm Example
 ---------------------------------------
 
 The example below demonstrates how to utilize both parallel tabu search and the genetic algorithm to solve an instance of a job shop schedule problem.
-In the example, after initializing the static data from the three csv files, 4 tabu search processes are ran in parallel with each returning 5 solutions.
+In the example, after initializing the data object from the three csv files, 4 tabu search processes are ran in parallel with each returning 5 solutions.
 Next the resulting solutions from parallel tabu search are added to the initial population for the genetic algorithm. The ``solver.genetic_algorithm_time``
 function adds randomly generated solutions to the initial population until it has ``population_size`` solutions.
 Lastly, an excel file of the production schedule (i.e. solution) is created in the ``./example_output`` directory.
 
 .. code-block:: python
 
-    from JSSP.data import Data
+    from JSSP.data import CSVData
     from JSSP import Solver
     from JSSP.genetic_algorithm import GASelectionEnum
 
     # initialize data
-    Data.initialize_data_from_csv('data/given_data/sequenceDependencyMatrix.csv',
-                                  'data/given_data/machineRunSpeed.csv',
-                                  'data/given_data/jobTasks.csv')
+    data = CSVData('data/given_data/sequenceDependencyMatrix.csv',
+                   'data/given_data/machineRunSpeed.csv',
+                   'data/given_data/jobTasks.csv')
 
     # create solver
-    solver = Solver()
+    solver = Solver(data)
 
     # run tabu seach
-    solver.tabu_search_time(runtime=300, # seconds
+    solver.tabu_search_time(runtime=30, # seconds
                             num_processes=4,
                             num_solutions_per_process=5,
                             tabu_list_size=15,
@@ -44,14 +44,14 @@ Lastly, an excel file of the production schedule (i.e. solution) is created in t
         population += ts_agent.all_solutions
 
     # run genetic algorithm
-    solution = solver.genetic_algorithm_time(runtime=300, # seconds
+    solution = solver.genetic_algorithm_time(runtime=30, # seconds
                                              population_size=100,
                                              selection_method_enum=GASelectionEnum.FITNESS_PROPORTIONATE,
                                              mutation_probability=0.1
                                              )
 
     # create an excel file of the schedule
-    solution.create_schedule_xlsx_file('./example_output')
+    solution.create_schedule_xlsx_file('./Schedule.xlsx')
 
 **Output**
 
@@ -67,7 +67,7 @@ The example below demonstrates how to create a gantt chart given a Solution.
 .. code-block:: python
 
     # create a gantt chart html file
-    solution.create_gantt_chart_html_file('./output', continuous=True)
+    solution.create_gantt_chart_html_file('./gantt_chart.html', continuous=True)
 
     # alternatively you can plot a gantt chart in an ipython notebook
     solution.iplot_gantt_chart(continuous=True)
@@ -84,31 +84,31 @@ The example below demonstrates how to run a benchmark (i.e. create plots & stati
 
 .. code-block:: python
 
-    from JSSP.data import Data
+    from JSSP.data import FJSData
     from JSSP.genetic_algorithm import GASelectionEnum
     from JSSP.solution import SolutionFactory
 
     # initialize fjs data
-    Data.initialize_data_from_fjs('data/fjs_data/Brandimarte/Brandimarte_Mk10.fjs')
+    data = FJSData('data/fjs_data/Brandimarte/Brandimarte_Mk10.fjs')
 
     # ts parameters
-    ts_iterations = 300
+    ts_iterations = 200
     num_solutions_per_process = 20
     num_processes = 5
     tabu_list_size = 15
     neighborhood_size = 300
     neighborhood_wait = 0.15
     probability_change_machine = 0.8
-    reset_threshold = 100
 
     # ga parameters
-    ga_iterations = 500
+    ga_iterations = 200
     population_size = 400
     selection_method = GASelectionEnum.FITNESS_PROPORTIONATE
+    selection_size = 10
     mutation_probability = 0.2
 
     # create solver
-    solver = Solver()
+    solver = Solver(data)
 
     # run tabu search
     solver.tabu_search_iter(ts_iterations,
@@ -127,14 +127,16 @@ The example below demonstrates how to run a benchmark (i.e. create plots & stati
     for ts_agent in solver.ts_agent_list:
         population += ts_agent.all_solutions
 
+    solution_factory = SolutionFactory(data)
+
     # add 25% spt solutions to population
-    population += SolutionFactory.get_n_shortest_process_time_first_solution(int(.25 * population_size))
+    population += solution_factory.get_n_shortest_process_time_first_solution(int(.25 * population_size))
 
     # add 25% lpt solutions to population
-    population += SolutionFactory.get_n_longest_process_time_first_solution(int(.25 * population_size))
+    population += solution_factory.get_n_longest_process_time_first_solution(int(.25 * population_size))
 
     # add 25% random solutions to population
-    population += SolutionFactory.get_n_solutions(int(.25 * population_size))
+    population += solution_factory.get_n_solutions(int(.25 * population_size))
 
     # run genetic algorithm
     solver.genetic_algorithm_iter(ga_iterations,
@@ -148,7 +150,7 @@ The example below demonstrates how to run a benchmark (i.e. create plots & stati
                                   )
 
     # output benchmark results
-    solver.output_benchmark_results('./example_output', name='example_benchmark')
+    solver.output_benchmark_results('./example_benchmark', name='Example Benchmark')
 
     # alternatively you can output the results in an ipython notebook
     solver.iplot_benchmark_results()
@@ -159,7 +161,7 @@ The example below demonstrates how to run a benchmark (i.e. create plots & stati
 
     Running benchmark of TS
     Parameters:
-    stopping_condition = 300
+    stopping_condition = 200 iterations
     time_condition = False
     num_solutions_per_process = 20
     num_processes = 5
@@ -170,25 +172,26 @@ The example below demonstrates how to run a benchmark (i.e. create plots & stati
     reset_threshold = 100
 
     Initial Solution's makespans:
-    [587, 611, 707, 709, 618]
+    [613, 730, 684, 671, 633]
 
-    child TS process started. pid = 21060
-    child TS process started. pid = 21061
-    child TS process started. pid = 21062
-    child TS process started. pid = 21063
-    child TS process started. pid = 21064
-    child TS process finished. pid = 21060
-    child TS process finished. pid = 21061
-    child TS process finished. pid = 21062
-    child TS process finished. pid = 21063
-    child TS process finished. pid = 21064
+    child TS process started. pid = 6453
+    child TS process started. pid = 6454
+    child TS process started. pid = 6462
+    child TS process started. pid = 6463
+    child TS process started. pid = 6464
+    child TS process finished. pid = 6453
+    child TS process finished. pid = 6454
+    child TS process finished. pid = 6462
+    child TS process finished. pid = 6463
+    child TS process finished. pid = 6464
     Running benchmark of GA
     Parameters:
-    stopping_condition = 100
+    stopping_condition = 200 iterations
     time_condition = False
     population_size = 400
     selection_method = _fitness_proportionate_selection
     mutation_probability = 0.2
+
 
 To view the benchmark results see `example_benchmark <_static/example_benchmark/index.html>`_.
 
