@@ -41,8 +41,7 @@ class TestFJSOptimization(unittest.TestCase):
                                         tabu_list_size=tabu_list_size,
                                         neighborhood_size=neighborhood_size,
                                         neighborhood_wait=neighborhood_wait,
-                                        probability_change_machine=probability_change_machine
-                                        )
+                                        probability_change_machine=probability_change_machine)
 
             except Exception as e:
                 self.fail(f'Unexpected exception raised while running TS for {fjs_instance}:' + str(e))
@@ -75,8 +74,8 @@ class TestFJSOptimization(unittest.TestCase):
                                         tabu_list_size=tabu_list_size,
                                         neighborhood_size=neighborhood_size,
                                         neighborhood_wait=neighborhood_wait,
-                                        probability_change_machine=probability_change_machine
-                                        )
+                                        probability_change_machine=probability_change_machine,
+                                        benchmark=True)
 
             except Exception as e:
                 self.fail(f'Unexpected exception raised while running TS for {fjs_instance}:' + str(e))
@@ -84,7 +83,7 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertIsNotNone(solver.solution, "TS should have produced a best solution")
 
             # output results
-            solver.output_benchmark_results(tmp_dir, name='fjs_ts_benchmark')
+            solver.output_benchmark_results(tmp_dir, name='fjs_ts_benchmark', auto_open=False)
             self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ts_benchmark'),
                             "fjs_ts_benchmark was not produced")
 
@@ -153,7 +152,8 @@ class TestFJSOptimization(unittest.TestCase):
                 solver.genetic_algorithm_iter(iterations=iterations,
                                               population_size=population_size,
                                               mutation_probability=mutation_probability,
-                                              selection_size=selection_size)
+                                              selection_size=selection_size,
+                                              benchmark=True)
             except Exception as e:
                 self.fail(f'Unexpected exception raised while running GA for {fjs_instance}:' + str(e))
 
@@ -163,7 +163,7 @@ class TestFJSOptimization(unittest.TestCase):
             # test parameters were set
             self.assertEqual(iterations, solver.ga_agent.iterations)
             self.assertFalse(solver.ga_agent.time_condition)
-            self.assertFalse(solver.ga_agent.benchmark)
+            self.assertTrue(solver.ga_agent.benchmark)
             self.assertEqual(population_size, solver.ga_agent.population_size)
             self.assertEqual(mutation_probability, solver.ga_agent.mutation_probability)
             self.assertEqual(selection_size, solver.ga_agent.selection_size)
@@ -180,7 +180,7 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertTrue(not any(sol in seen or seen.append(sol) for sol in solver.ga_agent.result_population))
 
             # output results
-            solver.output_benchmark_results(tmp_dir, name='fjs_ga_benchmark')
+            solver.output_benchmark_results(tmp_dir, name='fjs_ga_benchmark', auto_open=False)
             self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ga_benchmark'),
                             "fjs_ga_benchmark was not produced")
 

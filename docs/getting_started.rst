@@ -4,8 +4,9 @@ Getting Started
 How to Install
 --------------
 
-1. Download the latest stable release of `JSSP <https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases>`_ from GitHub
+1. Download the latest stable release of `JSSP <https://github.com/mcfadd/Job_Shop_Schedule_Problem/releases>`_ from GitHub |br|
 2. Run ``easy_install JSSP-<release>.<os>.egg`` |br|
+
 If you downloaded the source code, ``cd`` to the directory where ``setup.py`` is and run ``pip install .``
 
 If you get an error about ``python.h`` not being found try installing `python3-dev <https://stackoverflow.com/questions/31002091/what-is-python-dev-package-used-for>`_.

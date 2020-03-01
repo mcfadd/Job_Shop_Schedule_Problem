@@ -20,8 +20,6 @@ JSSP has two different optimization algorithms: |br|
 1. Parallel Tabu Search
 2. Genetic Algorithm
 
-For more information on these algorithms see the `Algorithms <Algorithms.html>`_ page.
-
 ========
 Features
 ========
