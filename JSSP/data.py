@@ -149,12 +149,22 @@ class Data:
 
     def get_setup_time(self, job1_id, job1_task_id, job2_id, job2_task_id):
         """
-        TODO
-        :param job1_id:
-        :param job1_task_id:
-        :param job2_id:
-        :param job2_task_id:
-        :return:
+        Gets the setup time for scheduling (job2_id, job2_task_id) after (job1_id, job1_task_id).
+
+        :type job1_id: int
+        :param job1_id: job id of job 1
+
+        :type job1_task_id: int
+        :param job1_task_id: task id of job 1
+
+        :type job2_id: int
+        :param job2_id: job id of job 2
+
+        :type job2_task_id: int
+        :param job2_task_id: task id of job 2
+
+        :rtype: int
+        :return: setup time in minutes
         """
         if min(job1_id, job1_task_id, job2_id, job2_task_id) < 0:
             return 0
@@ -166,11 +176,19 @@ class Data:
 
     def get_runtime(self, job_id, task_id, machine):
         """
-        TODO
-        :param job_id:
-        :param task_id:
-        :param machine:
-        :return:
+        Gets the run time for running (job_id, task_id) on machine.
+
+        :type job_id: int
+        :param job_id: job id
+
+        :type task_id: int
+        :param task_id: task id
+
+        :type machine: int
+        :param machine: id of machine
+
+        :rtype: float
+        :return: run time
         """
         return self.task_processing_times_matrix[self.job_task_index_matrix[job_id, task_id], machine]
 

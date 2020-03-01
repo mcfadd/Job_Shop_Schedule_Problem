@@ -158,14 +158,16 @@ class GeneticAlgorithmAgent:
         :rtype: Solution
         :returns: best Solution found
         """
-
         population = self.initial_population[:]
         best_solution = min(population)
         iterations = 0
 
         # get static data
-        dependency_matrix_index_encoding = self.initial_population[0].data.job_task_index_matrix
-        usable_machines_matrix = self.initial_population[0].data.usable_machines_matrix
+        data = self.initial_population[0].data
+        dependency_matrix_index_encoding = data.job_task_index_matrix
+        usable_machines_matrix = data.usable_machines_matrix
+
+        factory = SolutionFactory(data)
 
         # variables used for benchmarks
         best_solution_makespan_v_iter = []
@@ -239,7 +241,7 @@ class GeneticAlgorithmAgent:
 
                     # if parent1, parent2, child1, and child2 are all in next_population, add random solutions
                     while added < 2:
-                        next_population.append(SolutionFactory.get_solution())
+                        next_population.append(factory.get_solution())
                         added += 1
                 else:
                     next_population.append(parent1)

@@ -96,7 +96,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._tabu_search(runtime, time_condition=True, num_solutions_per_process=num_solutions_per_process,
                                  num_processes=num_processes, tabu_list_size=tabu_list_size,
                                  neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
@@ -211,7 +210,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         if initial_solutions is None:
             initial_solutions = [self.solution_factory.get_solution() for _ in range(num_processes)]
         else:
@@ -237,7 +235,7 @@ class Solver:
             else:
                 print("Running TS")
             print("Parameters:")
-            print("stopping_condition =", stopping_condition)
+            print(f"stopping_condition = {stopping_condition} {'seconds' if time_condition else 'iterations'}")
             print("time_condition =", time_condition)
             print("num_solutions_per_process =", num_solutions_per_process)
             print("num_processes =", num_processes)
@@ -254,8 +252,7 @@ class Solver:
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
-            mp.Process(target=ts_agent.start,
-                       args=[child_results_queue])
+            mp.Process(target=ts_agent.start, args=[child_results_queue])
             for ts_agent in ts_agent_list
         ]
 
@@ -320,7 +317,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._genetic_algorithm(runtime, time_condition=True, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
@@ -364,7 +360,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._genetic_algorithm(iterations, time_condition=False, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
@@ -413,7 +408,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         if population is None:
             population = [self.solution_factory.get_solution() for _ in range(population_size)]
         else:
@@ -434,7 +428,7 @@ class Solver:
             else:
                 print("Running GA")
             print("Parameters:")
-            print("stopping_condition =", stopping_condition)
+            print(f"stopping_condition = {stopping_condition} {'seconds' if time_condition else 'iterations'}")
             print("time_condition =", time_condition)
             print("population_size =", population_size)
             print("selection_method =", selection_method_enum.__name__)

@@ -89,11 +89,8 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
                         </head>
                         <body>
                             <h2>{name}</h2>
-                            {_ts_benchmark_results(ts_agent_list,
-                                                   output_directory) if ts_agent_list and all(
-        ts_agent.benchmark for ts_agent in ts_agent_list) else ''}
-                            {_ga_benchmark_results(ga_agent,
-                                                   output_directory) if ga_agent and ga_agent.benchmark else ''}
+                            {_ts_benchmark_results(ts_agent_list, output_directory) if ts_agent_list and all(ts_agent.benchmark for ts_agent in ts_agent_list) else ''}
+                            {_ga_benchmark_results(ga_agent, output_directory) if ga_agent and ga_agent.benchmark else ''}
                         {'<br>' * 10}
                         </body>
                     </html>

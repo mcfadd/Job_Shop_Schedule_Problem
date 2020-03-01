@@ -8,6 +8,23 @@ from ..data import Data
 from ..exception import IncompleteSolutionException
 
 
+class Operation:
+    def __init__(self, job_id, task_id, machine, wait, setup, runtime, start_time):
+        self.job_id = job_id
+        self.task_id = task_id
+        self.machine = machine
+        self.wait = wait
+        self.setup = setup
+        self.runtime = runtime
+        self.setup_start_time = start_time
+        self.setup_end_time = self.setup_start_time + datetime.timedelta(minutes=setup)
+        self.runtime_end_time = self.setup_end_time + datetime.timedelta(minutes=runtime)
+
+    def __repr__(self):
+        return f"job_id={self.job_id}, task_id={self.task_id}, machine={self.machine}, " \
+               f"wait={self.wait}, setup={self.setup}, runtime={self.runtime}\n"
+
+
 class Solution:
     """
     Solution class which is composed of a 2d nparray of operations where
@@ -176,7 +193,6 @@ class Solution:
 
         :returns: None
         """
-
         create_gantt_chart(self, "", title=title, start_date=start_date, start_time=start_time,
                            end_time=end_time, iplot_bool=True, continuous=continuous)
 
@@ -214,15 +230,27 @@ class Solution:
                            continuous=continuous)
 
     def get_operation_list_for_machine(self, start_date=datetime.date.today(), start_time=datetime.time(hour=8),
-                                       end_time=datetime.time(hour=20), continuous=False, machine_id=None):
+                                       end_time=datetime.time(hour=20), continuous=False, machines=None):
         """
-        TODO
-        :param start_date:
-        :param start_time:
-        :param end_time:
-        :param continuous:
-        :param machine_id:
-        :return:
+        Gets a list of Operations for a machine or set of machines.
+
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
+
+        :type start_time: datetime.time
+        :param start_time: start time of the work day
+
+        :type end_time: datetime.time
+        :param end_time: end time of the work day
+
+        :type continuous: bool
+        :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
+
+        :type machines: [int]
+        :param machines: list of machine ids, or None
+
+        :rtype [Operation]
+        :return: list of Operations
         """
         result = []
         num_jobs = self.data.total_number_of_jobs
@@ -280,7 +308,7 @@ class Solution:
                                                        second=start_time.second)
                 setup = 0
 
-            if machine_id is None or machine_id == machine:
+            if machines is None or machine in machines:
                 result.append(Operation(job_id,
                                         task_id,
                                         machine,
@@ -298,20 +326,3 @@ class Solution:
             machine_jobs_memory[machine] = (job_id, task_id)
 
         return result
-
-
-class Operation:
-    def __init__(self, job_id, task_id, machine, wait, setup, runtime, start_time):
-        self.job_id = job_id
-        self.task_id = task_id
-        self.machine = machine
-        self.wait = wait
-        self.setup = setup
-        self.runtime = runtime
-        self.setup_start_time = start_time
-        self.setup_end_time = self.setup_start_time + datetime.timedelta(minutes=setup)
-        self.runtime_end_time = self.setup_end_time + datetime.timedelta(minutes=runtime)
-
-    def __repr__(self):
-        return f"job_id={self.job_id}, task_id={self.task_id}, machine={self.machine}, " \
-               f"wait={self.wait}, setup={self.setup}, runtime={self.runtime}\n"

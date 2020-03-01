@@ -11,6 +11,7 @@ def _get_n_colors(n):
     """
     Gets n random rgb values (colors).
 
+    :type n: int
     :param n: number of colors to return
 
     :rtype: list
@@ -34,10 +35,16 @@ def _get_n_colors(n):
 
 def _check_output_path(output_path, file_ext):
     """
-    TODO
-    :param output_path:
-    :param file_ext:
-    :return:
+    Creates the output path if it doesnt exist.
+
+    :type output_path: str
+    :param output_path: the output path to create
+
+    :type file_ext: str
+    :param file_ext: file extension of the output path
+
+    :rtype: str
+    :return: the output path with the file extension
     """
     if not os.path.exists(os.path.dirname(output_path)):
         os.makedirs(os.path.dirname(output_path))
@@ -116,9 +123,13 @@ def create_schedule_xlsx_file(solution, output_path, start_date=datetime.date.to
     col = 0
     for machine in range(solution.data.total_number_of_machines):
         machine_operations = [op for op in operations if op.machine == machine]
-        s = machine_operations[0].setup_start_time
-        e = machine_operations[-1].runtime_end_time
-        worksheet.write_row(1, col, ["Makespan =", str(e - s)])
+        if len(machine_operations) > 0:
+            s = machine_operations[0].setup_start_time
+            e = machine_operations[-1].runtime_end_time
+            makespan = str(e - s)
+        else:
+            makespan = "0"
+        worksheet.write_row(1, col, ["Makespan =", makespan])
         col += 4
 
     workbook.close()
