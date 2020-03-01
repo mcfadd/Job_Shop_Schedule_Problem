@@ -6,7 +6,7 @@ import os
 from setuptools import find_packages, setup, Extension
 import pathlib
 
-__version__ = '0.2.1'
+__version__ = '1.0.0'
 
 README = (pathlib.Path(__file__).parent / "README.md").read_text()
 

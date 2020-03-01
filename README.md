@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/development.svg?style=svg)](https://circleci.com/gh/mcfadd/Job_Shop_Schedule_Problem/tree/development)
 [![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=latest)](https://job-shop-schedule-problem.readthedocs.io/en/latest/?badge=latest)
 
-#### Version 0.2.1  
+#### Version 1.0.0 
 
 JSSP is an optimization package for the Job Shop Schedule Problem.  
 JSSP has two different optimization algorithms:  
@@ -51,35 +51,31 @@ The following example minimally demonstrates how to run parallel tabu search to 
 
 ```python
 from JSSP.solver import Solver
-from JSSP.data import Data
+from JSSP.data import CSVData
 
 # initialize data
-data_directory = 'data/given_data'
-Data.initialize_data_from_csv(data_directory + '/sequenceDependencyMatrix.csv',
-                              data_directory + '/machineRunSpeed.csv',
-                              data_directory + '/jobTasks.csv')
+data = CSVData('data/given_data/sequenceDependencyMatrix.csv',
+               'data/given_data/machineRunSpeed.csv',
+               'data/given_data/jobTasks.csv')
 
-# run tabu search
-solver = Solver()
+# run parallel Tabu Search
+solver = Solver(data)
 solution = solver.tabu_search_iter(iterations=500,
                                    num_processes=4,
                                    tabu_list_size=20,
-                                   neighborhood_size=250,
-                                   )
-# print solution
-print(solution)
+                                   neighborhood_size=250)
 
-# create Schedule.xlsx in 'output' directory
-solution.create_schedule_xlsx_file('output')                   
+# create Schedule
+solution.create_schedule_xlsx_file('output/Schedule.xlsx')                   
 ```
 
 **Flexible Job Shop**
 
 To read in a flexible job shop problem instance from a .fjs file (see [data/fjs_data](https://github.com/mcfadd/Job_Shop_Schedule_Problem/tree/master/data/fjs_data)) do the following:
 ```python
-from JSSP.data import Data
+from JSSP.data import FJSData
 
-Data.initialize_data_from_fjs('data/fjs_data/Barnes/Barnes_mt10c1.fjs')
+data = FJSData('data/fjs_data/Barnes/Barnes_mt10c1.fjs')
 ```
 
 ## How to Contribute
