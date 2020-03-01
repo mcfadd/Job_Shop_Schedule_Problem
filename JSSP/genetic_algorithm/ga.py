@@ -3,9 +3,9 @@ import statistics
 import time
 from enum import Enum
 
-from JSSP.data import Data
-from JSSP.solution import SolutionFactory, InfeasibleSolutionException
 from ._ga_helpers import crossover
+from ..exception import InfeasibleSolutionException
+from ..solution import Solution, SolutionFactory
 
 """
 GA selection functions
@@ -48,15 +48,12 @@ def _fitness_proportionate_selection(*args):
     :rtype: Solution
     :returns: a Solution from the population
     """
-    fitness_sum = 0
-    for sol in args[0]:
-        fitness_sum += sol.makespan
-
+    fitness_sum = sum(sol.makespan for sol in args[0])
     s = random.uniform(0, fitness_sum)
     partial_sum = 0
     for sol in args[0]:
         partial_sum += sol.makespan
-        if partial_sum > s:
+        if partial_sum >= s:
             args[0].remove(sol)
             return sol
 
@@ -101,17 +98,17 @@ class GeneticAlgorithmAgent:
     :type stopping_condition: float
     :param stopping_condition: either the duration to run GA in seconds or the number of generations to iterate though
 
+    :type population: [Solution]
+    :param population: list of Solutions to start the GA from, must not be empty
+
     :type time_condition: bool
     :param time_condition: if true GA is ran for stopping_condition number of seconds else it is ran for stopping_condition generations
-
-    :type population: [Solution]
-    :param population: initial population to start the GA from
 
     :type selection_method_enum: GASelectionEnum
     :param selection_method_enum: selection method to use for selecting parents from the population. (see GASelectionEnum for selection methods)
 
     :type mutation_probability: float
-    :param mutation_probability: probability of mutating a child solution (i.e change a random operation's machine)
+    :param mutation_probability: probability of mutating a child solution (i.e change a random operation's machine) in range [0, 1]
 
     :type selection_size: int
     :param selection_size: size of the selection group. (applicable only for tournament style selection)
@@ -120,14 +117,16 @@ class GeneticAlgorithmAgent:
     :param benchmark: if true benchmark data is gathered
     """
 
-    def __init__(self, stopping_condition, time_condition, population=None, population_size=200,
+    def __init__(self, stopping_condition, population, time_condition=False,
                  selection_method_enum=GASelectionEnum.TOURNAMENT, mutation_probability=0.8,
-                 selection_size=5, benchmark=False):
+                 selection_size=2, benchmark=False):
         """
         Initializes an instance of GeneticAlgorithmAgent.
 
         See help(GeneticAlgorithmAgent)
         """
+        assert selection_size is not None and 1 < selection_size, "selection_size must be an integer greater than 1"
+
         # parameters
         self.time_condition = time_condition
         if time_condition:
@@ -135,14 +134,11 @@ class GeneticAlgorithmAgent:
         else:
             self.iterations = stopping_condition
 
-        self.initial_population = [SolutionFactory.get_solution() for _ in
-                                   range(population_size)] if population is None else population[:] + [
-            SolutionFactory.get_solution() for _ in range(max(0, population_size - len(population)))]
-
-        self.population_size = population_size
+        self.initial_population = population
+        self.population_size = len(population)
         self.selection_method = selection_method_enum
         self.mutation_probability = mutation_probability
-        self.selection_size = selection_size if selection_method_enum is GASelectionEnum.TOURNAMENT else 2
+        self.selection_size = selection_size
         self.benchmark = benchmark
 
         # results
@@ -162,14 +158,16 @@ class GeneticAlgorithmAgent:
         :rtype: Solution
         :returns: best Solution found
         """
-
         population = self.initial_population[:]
         best_solution = min(population)
         iterations = 0
 
         # get static data
-        dependency_matrix_index_encoding = Data.job_task_index_matrix
-        usable_machines_matrix = Data.usable_machines_matrix
+        data = self.initial_population[0].data
+        dependency_matrix_index_encoding = data.job_task_index_matrix
+        usable_machines_matrix = data.usable_machines_matrix
+
+        factory = SolutionFactory(data)
 
         # variables used for benchmarks
         best_solution_makespan_v_iter = []
@@ -206,7 +204,7 @@ class GeneticAlgorithmAgent:
                     # the try except block is because sometimes the crossover operation results in a setup of -1
                     # which then produces an infeasible solution. This is due to the sequence dependency setup times matrix not allowing for wait time.
                     try:
-                        child1 = crossover(parent1.operation_2d_array, parent2.operation_2d_array,
+                        child1 = crossover(parent1, parent2,
                                            self.mutation_probability, dependency_matrix_index_encoding,
                                            usable_machines_matrix)
                         if child1 != parent1 and child1 != parent2:
@@ -220,7 +218,7 @@ class GeneticAlgorithmAgent:
                 feasible_child = False
                 while not feasible_child:
                     try:
-                        child2 = crossover(parent2.operation_2d_array, parent1.operation_2d_array,
+                        child2 = crossover(parent2, parent1,
                                            self.mutation_probability, dependency_matrix_index_encoding,
                                            usable_machines_matrix)
                         if child2 != parent1 and child2 != parent2:
@@ -243,7 +241,7 @@ class GeneticAlgorithmAgent:
 
                     # if parent1, parent2, child1, and child2 are all in next_population, add random solutions
                     while added < 2:
-                        next_population.append(SolutionFactory.get_solution())
+                        next_population.append(factory.get_solution())
                         added += 1
                 else:
                     next_population.append(parent1)

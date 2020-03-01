@@ -2,13 +2,9 @@ import os
 import shutil
 import unittest
 
-from JSSP.data import Data
+from JSSP import data
 from JSSP.solver import Solver
 from tests import project_root, tmp_dir
-
-"""
-Test solver.tabu_search() function
-"""
 
 
 class TestTS(unittest.TestCase):
@@ -17,7 +13,7 @@ class TestTS(unittest.TestCase):
         if not os.path.exists(tmp_dir):
             os.mkdir(tmp_dir)
 
-        Data.initialize_data_from_csv(
+        self.data = data.CSVData(
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
             project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
@@ -26,29 +22,23 @@ class TestTS(unittest.TestCase):
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
     def test_ts_time(self):
+        runtime = 5  # seconds
+        num_solutions_per_process = 1
+        num_processes = 2
+        tabu_list_size = 50
+        neighborhood_size = 200
+        neighborhood_wait = 0.1
+        probability_change_machine = 0.8
 
-        try:
-
-            # parameters
-            runtime = 5  # seconds
-            num_solutions_per_process = 1
-            num_processes = 2
-            tabu_list_size = 50
-            neighborhood_size = 200
-            neighborhood_wait = 0.1
-            probability_change_machine = 0.8
-            solver = Solver()
-
-            solver.tabu_search_time(runtime,
-                                    num_solutions_per_process=num_solutions_per_process,
-                                    num_processes=num_processes,
-                                    tabu_list_size=tabu_list_size,
-                                    neighborhood_size=neighborhood_size,
-                                    neighborhood_wait=neighborhood_wait,
-                                    probability_change_machine=probability_change_machine
-                                    )
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.tabu_search_time(runtime,
+                                num_solutions_per_process=num_solutions_per_process,
+                                num_processes=num_processes,
+                                tabu_list_size=tabu_list_size,
+                                neighborhood_size=neighborhood_size,
+                                neighborhood_wait=neighborhood_wait,
+                                probability_change_machine=probability_change_machine
+                                )
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ts_agent_list)
@@ -66,34 +56,28 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ts_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
                         "ts_test_schedule.xlsx was not produced")
 
     def test_ts_time_benchmark(self):
+        runtime = 5  # seconds
+        num_solutions_per_process = 1
+        num_processes = 2
+        tabu_list_size = 50
+        neighborhood_size = 200
+        neighborhood_wait = 0.1
+        probability_change_machine = 0.8
 
-        try:
-            # parameters
-            runtime = 5  # seconds
-            num_solutions_per_process = 1
-            num_processes = 2
-            tabu_list_size = 50
-            neighborhood_size = 200
-            neighborhood_wait = 0.1
-            probability_change_machine = 0.8
-            solver = Solver()
-
-            solver.tabu_search_time(runtime,
-                                    num_solutions_per_process=num_solutions_per_process,
-                                    num_processes=num_processes,
-                                    tabu_list_size=tabu_list_size,
-                                    neighborhood_size=neighborhood_size,
-                                    neighborhood_wait=neighborhood_wait,
-                                    probability_change_machine=probability_change_machine,
-                                    benchmark=True)
-
-        except Exception as e:
-            self.fail('Unexpected exception raised:' + str(e))
+        solver = Solver(self.data)
+        solver.tabu_search_time(runtime,
+                                num_solutions_per_process=num_solutions_per_process,
+                                num_processes=num_processes,
+                                tabu_list_size=tabu_list_size,
+                                neighborhood_size=neighborhood_size,
+                                neighborhood_wait=neighborhood_wait,
+                                probability_change_machine=probability_change_machine,
+                                benchmark=True)
 
         self.assertIsNotNone(solver.solution)
         self.assertIsNotNone(solver.ts_agent_list)
@@ -133,10 +117,7 @@ class TestTS(unittest.TestCase):
                         "TS benchmark results ts_schedule.xlsx was not produced")
 
     def test_ts_iter(self):
-
         try:
-
-            # parameters
             iterations = 50
             num_solutions_per_process = 1
             num_processes = 2
@@ -144,8 +125,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver(self.data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -154,7 +135,6 @@ class TestTS(unittest.TestCase):
                                     neighborhood_wait=neighborhood_wait,
                                     probability_change_machine=probability_change_machine
                                     )
-
         except Exception as e:
             self.fail('Unexpected exception raised:' + str(e))
 
@@ -174,14 +154,12 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir, filename='ts_test_schedule')
+        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
         self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
                         "ts_test_schedule.xlsx was not produced")
 
     def test_ts_iter_benchmark(self):
-
         try:
-            # parameters
             iterations = 50
             num_solutions_per_process = 1
             num_processes = 2
@@ -189,8 +167,8 @@ class TestTS(unittest.TestCase):
             neighborhood_size = 200
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
-            solver = Solver()
 
+            solver = Solver(self.data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -240,8 +218,6 @@ class TestTS(unittest.TestCase):
                         "TS benchmark results ts_schedule.xlsx was not produced")
 
     def test_ts_multiple_solutions_per_process(self):
-
-        # parameters
         iterations = 10
         tabu_list_size = 50
         neighborhood_size = 200
@@ -253,21 +229,15 @@ class TestTS(unittest.TestCase):
 
         for num_processes in num_processes_list:
             for num_solutions_per_process in num_solutions_per_process_list:
-                try:
-
-                    solver = Solver()
-
-                    solver.tabu_search_iter(iterations,
-                                            num_solutions_per_process=num_solutions_per_process,
-                                            num_processes=num_processes,
-                                            tabu_list_size=tabu_list_size,
-                                            neighborhood_size=neighborhood_size,
-                                            neighborhood_wait=neighborhood_wait,
-                                            probability_change_machine=probability_change_machine
-                                            )
-
-                except Exception as e:
-                    self.fail('Unexpected exception raised:' + str(e))
+                solver = Solver(self.data)
+                solver.tabu_search_iter(iterations,
+                                        num_solutions_per_process=num_solutions_per_process,
+                                        num_processes=num_processes,
+                                        tabu_list_size=tabu_list_size,
+                                        neighborhood_size=neighborhood_size,
+                                        neighborhood_wait=neighborhood_wait,
+                                        probability_change_machine=probability_change_machine
+                                        )
 
                 self.assertIsNotNone(solver.solution)
                 self.assertIsNotNone(solver.ts_agent_list)
@@ -289,7 +259,7 @@ class TestTS(unittest.TestCase):
                     all_solutions += ts_agent.all_solutions
 
                 self.assertEqual(len(all_solutions), num_processes * num_solutions_per_process,
-                                 "Parallel TS should have produced (num_processes * num_solutions_to_get) solutions")
+                                 f"Parallel TS should have produced {num_processes * num_solutions_per_process} solutions")
 
 
 if __name__ == '__main__':

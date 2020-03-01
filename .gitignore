@@ -17,3 +17,6 @@ dist
 /data/given_data/convert_csv_to_rst.py
 /JSSP/test_parameters.json
 /tests/benchmark_output/
+/examples/docs_examples.py
+/examples/docs_examples_output
+/examples/.ipynb_checkpoints

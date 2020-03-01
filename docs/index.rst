@@ -2,12 +2,11 @@
    :maxdepth: 2
    :hidden:
 
-   Problem_description
-   Input_data
-   Algorithms
-   Getting_started
-   Examples
-   doc/JSSP
+   problem_description
+   input_data
+   getting_started
+   examples
+   api
 
 
 Welcome to JSSP's Documentation!
@@ -20,8 +19,6 @@ JSSP has two different optimization algorithms: |br|
 
 1. Parallel Tabu Search
 2. Genetic Algorithm
-
-For more information on these algorithms see the `Algorithms <Algorithms.html>`_ page.
 
 ========
 Features

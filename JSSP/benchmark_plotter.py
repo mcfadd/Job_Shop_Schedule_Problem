@@ -35,7 +35,7 @@ def iplot_benchmark_results(ts_agent_list=None, ga_agent=None):
         iplot(dict(data=makespans_traces, layout=makespans_layout))
         iplot(dict(data=nh_sizes_traces, layout=nh_sizes_layout))
         iplot(dict(data=tl_sizes_traces, layout=tl_sizes_layout))
-        min([ts_agent.best_solution for ts_agent in ts_agent_list]).create_continuous_gantt_chart(None, iplot_bool=True)
+        min([ts_agent.best_solution for ts_agent in ts_agent_list]).iplot_gantt_chart(continuous=True)
 
     if ga_agent is not None and ga_agent.benchmark:
         # create traces for plot
@@ -60,10 +60,10 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
     :param output_dir: path to the output directory to place the html files into
 
     :type name: str
-    :param name: name of the benchmark run
+    :param name: name of the benchmark run, default to current datetime
 
     :type auto_open: bool
-    :param auto_open: if true index.html is automatically opened in a browser
+    :param auto_open: if true the benchmark output is automatically opened in a browser
 
     :returns: None
     """
@@ -75,13 +75,10 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
         name = "benchmark_run_{}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))
 
     # output results
-    output_directory = os.path.abspath(output_dir + "/" + name)
-
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
+    output_directory = os.path.abspath(output_dir + os.sep + name)
 
     if not os.path.exists(output_directory):
-        os.mkdir(output_directory)
+        os.makedirs(output_directory)
 
     index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
                     <html>
@@ -92,11 +89,8 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
                         </head>
                         <body>
                             <h2>{name}</h2>
-                            {_ts_benchmark_results(ts_agent_list,
-                                                   output_directory) if ts_agent_list and all(
-        ts_agent.benchmark for ts_agent in ts_agent_list) else ''}
-                            {_ga_benchmark_results(ga_agent,
-                                                   output_directory) if ga_agent and ga_agent.benchmark else ''}
+                            {_ts_benchmark_results(ts_agent_list, output_directory) if ts_agent_list and all(ts_agent.benchmark for ts_agent in ts_agent_list) else ''}
+                            {_ga_benchmark_results(ga_agent, output_directory) if ga_agent and ga_agent.benchmark else ''}
                         {'<br>' * 10}
                         </body>
                     </html>
@@ -136,7 +130,7 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
         <b>Parameters:</b>
         <br>
         {"runtime = " + str(ts_agent_list[0].runtime) + " seconds" if ts_agent_list[0].time_condition
-    else "generations = " + str(ts_agent_list[0].iterations)}<br>
+    else "iterations = " + str(ts_agent_list[0].iterations)}<br>
         number of processes = {len(ts_agent_list)}<br>
         number of solutions to return per processes = {ts_agent_list[0].num_solutions_to_find}<br>
         tabu list size = {ts_agent_list[0].tabu_list_size}<br>
@@ -197,8 +191,8 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
 
     # create schedule
     best_solution = min([ts_agent.best_solution for ts_agent in ts_agent_list])
-    best_solution.create_schedule_xlsx_file(output_directory, filename='ts_schedule', continuous=True)
-    best_solution.create_gantt_chart_html_file(output_directory, filename='ts_gantt_chart.html', continuous=True)
+    best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ts_schedule', continuous=True)
+    best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ts_gantt_chart.html', continuous=True)
 
     return html
 
@@ -271,8 +265,8 @@ def _ga_benchmark_results(ga_agent, output_directory):
          auto_open=False)
 
     # create schedule
-    ga_agent.best_solution.create_schedule_xlsx_file(output_directory, filename='ga_schedule', continuous=True)
-    ga_agent.best_solution.create_gantt_chart_html_file(output_directory, filename='ga_gantt_chart.html', continuous=True)
+    ga_agent.best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ga_schedule', continuous=True)
+    ga_agent.best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ga_gantt_chart.html', continuous=True)
 
     return html
 

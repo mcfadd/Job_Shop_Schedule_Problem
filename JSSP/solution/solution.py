@@ -1,20 +1,28 @@
 import datetime
-import heapq
-import random
 
 import numpy as np
 
-from JSSP.data import Data
 from ._makespan import compute_machine_makespans
 from ._schedule_creator import create_schedule_xlsx_file, create_gantt_chart
+from ..data import Data
+from ..exception import IncompleteSolutionException
 
 
-class InfeasibleSolutionException(Exception):
-    pass
+class Operation:
+    def __init__(self, job_id, task_id, machine, wait, setup, runtime, start_time):
+        self.job_id = job_id
+        self.task_id = task_id
+        self.machine = machine
+        self.wait = wait
+        self.setup = setup
+        self.runtime = runtime
+        self.setup_start_time = start_time
+        self.setup_end_time = self.setup_start_time + datetime.timedelta(minutes=setup)
+        self.runtime_end_time = self.setup_end_time + datetime.timedelta(minutes=runtime)
 
-
-class IncompleteSolutionException(Exception):
-    pass
+    def __repr__(self):
+        return f"job_id={self.job_id}, task_id={self.task_id}, machine={self.machine}, " \
+               f"wait={self.wait}, setup={self.setup}, runtime={self.runtime}\n"
 
 
 class Solution:
@@ -24,11 +32,14 @@ class Solution:
     a 1d nparray memory view of machine makespan times,
     and the makespan time.
 
+    :type data: Data
+    :param data: JSSP instance data
+
     :type operation_2d_array: nparray
     :param operation_2d_array: 2d nparray of operations
     """
 
-    def __init__(self, operation_2d_array):
+    def __init__(self, data, operation_2d_array):
         """
         Initializes an instance of Solution.
 
@@ -40,21 +51,20 @@ class Solution:
 
         See help(Solution)
         """
-        if operation_2d_array.shape[0] != Data.sequence_dependency_matrix.shape[0]:
+        if operation_2d_array.shape[0] != data.total_number_of_tasks:
             raise IncompleteSolutionException(f"Incomplete Solution of size {operation_2d_array.shape[0]}. "
-                                              f"Should be {Data.sequence_dependency_matrix.shape[0]}")
+                                              f"Should be {data.total_number_of_tasks}")
 
         self.machine_makespans = compute_machine_makespans(operation_2d_array,
-                                                           Data.task_processing_times_matrix,
-                                                           Data.sequence_dependency_matrix,
-                                                           Data.job_task_index_matrix)
+                                                           data.task_processing_times_matrix,
+                                                           data.sequence_dependency_matrix,
+                                                           data.job_task_index_matrix)
         self.makespan = max(self.machine_makespans)
         self.operation_2d_array = operation_2d_array
+        self.data = data
 
     def __eq__(self, other_solution):
-        return self.makespan == other_solution.makespan and np.array_equal(
-            self.machine_makespans, other_solution.machine_makespans) and np.array_equal(
-            self.operation_2d_array, other_solution.operation_2d_array)
+        return np.array_equal(self.operation_2d_array, other_solution.operation_2d_array)
 
     def __ne__(self, other_solution):
         return not self == other_solution
@@ -72,6 +82,8 @@ class Solution:
         """
         if self.makespan < other_solution.makespan:
             return True
+        elif self.makespan > other_solution.makespan:
+            return False
         else:
             self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
             other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
@@ -99,6 +111,8 @@ class Solution:
         """
         if self.makespan > other_solution.makespan:
             return True
+        elif self.makespan < other_solution.makespan:
+            return False
         else:
             self_machine_makespans_sorted = sorted(list(self.machine_makespans), reverse=True)
             other_machine_makespans_sorted = sorted(list(other_solution.machine_makespans), reverse=True)
@@ -123,20 +137,25 @@ class Solution:
         self.machine_makespans = np.asarray(self.machine_makespans)  # need to convert memory view to np array
         return {'operation_2d_array': self.operation_2d_array,
                 'machine_makespans': self.machine_makespans,
-                'makespan': self.makespan}
+                'makespan': self.makespan,
+                'data': self.data}
 
     def __setstate__(self, state):
         self.operation_2d_array = state['operation_2d_array']
         self.machine_makespans = state['machine_makespans']
         self.makespan = state['makespan']
+        self.data = state['data']
 
-    def create_schedule_xlsx_file(self, output_dir, start_time=datetime.time(hour=8, minute=0),
-                                  end_time=datetime.time(hour=20, minute=0), filename='Schedule', continuous=False):
+    def create_schedule_xlsx_file(self, output_path, start_date=datetime.date.today(), start_time=datetime.time(hour=8, minute=0),
+                                  end_time=datetime.time(hour=20, minute=0), continuous=False):
         """
-        Creates an excel file in the output_dir directory that contains the schedule for each machine of this Solution.
+        Creates an excel file that contains the schedule for each machine of this Solution.
 
-        :type output_dir: str
-        :param output_dir: path to the directory to place the excel file into
+        :type output_path: str
+        :param output_path: path to the excel file to create
+
+        :type start_date: datetime.date
+        :param start_time: start date of the schedule
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -144,28 +163,24 @@ class Solution:
         :type end_time: datetime.time
         :param end_time: end time of the work day
 
-        :type filename: str
-        :param filename: name of the excel file
-
         :type continuous: bool
         :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
 
         :returns: None
         """
-        create_schedule_xlsx_file(self, output_dir, start_time=start_time, end_time=end_time, filename=filename,
-                                  continuous=continuous)
+        create_schedule_xlsx_file(self, output_path, start_date=start_date, start_time=start_time, end_time=end_time, continuous=continuous)
 
-    def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.datetime.now(),
+    def iplot_gantt_chart(self, title='Gantt Chart', start_date=datetime.date.today(),
                           start_time=datetime.time(hour=8, minute=0), end_time=datetime.time(hour=20, minute=0),
                           continuous=False):
         """
-        Plots a gantt chart of this Solution in an ipyton notebook.
+        Plots a gantt chart of this Solution in an ipython notebook.
 
         :type title: str
         :param title: name of the gantt chart
 
-        :type start_date: datetime.datetime
-        :param start_date: datetime to start the schedule from
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
@@ -178,35 +193,29 @@ class Solution:
 
         :returns: None
         """
-
         create_gantt_chart(self, "", title=title, start_date=start_date, start_time=start_time,
-                           end_time=end_time, filename="", iplot_bool=True, auto_open=False,
-                           continuous=continuous)
+                           end_time=end_time, iplot_bool=True, continuous=continuous)
 
-    def create_gantt_chart_html_file(self, output_dir, title='Gantt Chart', start_date=datetime.datetime.now(),
+    def create_gantt_chart_html_file(self, output_path, title='Gantt Chart', start_date=datetime.date.today(),
                                      start_time=datetime.time(hour=8, minute=0),
-                                     end_time=datetime.time(hour=20, minute=0),
-                                     filename='Gantt_Chart.html', auto_open=False, continuous=False):
+                                     end_time=datetime.time(hour=20, minute=0), auto_open=False, continuous=False):
         """
-        Creates a gantt chart html file of the solution parameters in the output_dir directory.
+        Creates a gantt chart html file of the solution.
 
-        :type output_dir: str
-        :param output_dir: path to the directory to place the excel file into
+        :type output_path: str
+        :param output_path: path to the gantt chart html file to create
 
         :type title: str
         :param title: name of the gantt chart
 
-        :type start_date: datetime.datetime
-        :param start_date: datetime to start the schedule from
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
 
         :type start_time: datetime.time
         :param start_time: start time of the work day
 
         :type end_time: datetime.time
         :param end_time: end time of the work day
-
-        :type filename: str
-        :param filename: name of the html file
 
         :type auto_open: bool
         :param auto_open: if true the gantt chart html file is automatically opened in a browser
@@ -216,261 +225,104 @@ class Solution:
 
         :returns: None
         """
-        create_gantt_chart(self, output_dir, title=title, start_date=start_date, start_time=start_time,
-                           end_time=end_time, filename=filename, iplot_bool=False, auto_open=auto_open,
+        create_gantt_chart(self, output_path, title=title, start_date=start_date, start_time=start_time,
+                           end_time=end_time, iplot_bool=False, auto_open=auto_open,
                            continuous=continuous)
 
-
-class SolutionFactory:
-    """
-    Factory class for generating Solution instances.
-    """
-
-    @staticmethod
-    def get_n_solutions(n):
+    def get_operation_list_for_machine(self, start_date=datetime.date.today(), start_time=datetime.time(hour=8),
+                                       end_time=datetime.time(hour=20), continuous=False, machines=None):
         """
-        Gets n random Solution instances.
+        Gets a list of Operations for a machine or set of machines.
 
-        :type n: int
-        :param n: number of Solutions to get
+        :type start_date: datetime.date
+        :param start_date: date to start the schedule from
 
-        :rtype: [Solution]
-        :returns: n randomly generated Solution instances
+        :type start_time: datetime.time
+        :param start_time: start time of the work day
+
+        :type end_time: datetime.time
+        :param end_time: end time of the work day
+
+        :type continuous: bool
+        :param continuous: if true a continuous schedule is created. (i.e. start_time and end_time are not used)
+
+        :type machines: [int]
+        :param machines: list of machine ids, or None
+
+        :rtype: [Operation]
+        :returns: list of Operations
         """
-        return [SolutionFactory.get_solution() for _ in range(n)]
+        result = []
+        num_jobs = self.data.total_number_of_jobs
+        num_machines = self.data.total_number_of_machines
+        start_datetime = datetime.datetime(year=start_date.year, month=start_date.month, day=start_date.day,
+                                           hour=start_time.hour, minute=start_time.minute, second=start_time.second)
+        machine_datetime_dict = {machine_id: start_datetime for machine_id in range(num_machines)}
 
-    @staticmethod
-    def get_solution():
-        """
-        Gets a random Solution instance.
+        # memory for keeping track of all machine's make span times
+        machine_makespan_memory = [0] * num_machines
 
-        :rtype: Solution
-        :returns: randomly generated Solution instance
-        """
-        return SolutionFactory._generate_solution()
+        # memory for keeping track of all machine's latest (job, task) that was processed
+        machine_jobs_memory = [(-1, -1)] * num_machines
 
-    @staticmethod
-    def get_n_longest_process_time_first_solution(n):
-        """
-        Gets n random Solution instances that are generated using longest processing time first criteria.
+        # memory for keeping track of all job's latest task's sequence that was processed
+        job_seq_memory = [0] * num_jobs
 
-        :type n: int
-        :param n: number of Solutions to get
+        # memory for keeping track of all job's previous sequence end time (used for calculating wait times)
+        prev_job_seq_end_memory = [0] * num_jobs
 
-        :rtype: [Solution]
-        :returns: n randomly generated Solution instances
-        """
-        return [SolutionFactory._generate_solution_w_processing_time_criteria(lpt=True) for _ in range(n)]
+        # memory for keeping track of all job's latest end time (used for updating prev_job_seq_end_memory)
+        job_end_memory = [0] * num_jobs
 
-    @staticmethod
-    def get_longest_process_time_first_solution():
-        """
-        Gets a random Solution instance that is generated using longest processing time first criteria.
+        for row in range(self.operation_2d_array.shape[0]):
 
-        :rtype: Solution
-        :returns: randomly generated Solution instance
-        """
-        return SolutionFactory._generate_solution_w_processing_time_criteria(lpt=True)
+            job_id = self.operation_2d_array[row, 0]
+            task_id = self.operation_2d_array[row, 1]
+            sequence = self.operation_2d_array[row, 2]
+            machine = self.operation_2d_array[row, 3]
 
-    @staticmethod
-    def get_n_shortest_process_time_first_solution(n):
-        """
-        Gets n random Solution instances that are generated using shortest processing time first criteria.
+            setup = self.data.get_setup_time(job_id, task_id, machine_jobs_memory[machine][0], machine_jobs_memory[machine][1])
 
-        :type n: int
-        :param n: number of Solutions to get
+            if job_seq_memory[job_id] < sequence:
+                prev_job_seq_end_memory[job_id] = job_end_memory[job_id]
 
-        :rtype: [Solution]
-        :returns: n randomly generated Solution instances
-        """
-        return [SolutionFactory._generate_solution_w_processing_time_criteria(lpt=False) for _ in range(n)]
+            if prev_job_seq_end_memory[job_id] <= machine_makespan_memory[machine]:
+                wait = 0
+            else:
+                wait = prev_job_seq_end_memory[job_id] - machine_makespan_memory[machine]
 
-    @staticmethod
-    def get_shortest_process_time_first_solution():
-        """
-        Gets a random Solution instance that is generated using shortest processing time first criteria.
+            runtime = self.data.get_runtime(job_id, task_id, machine)
 
-        :rtype: Solution
-        :returns: randomly generated Solution instance
-        """
-        return SolutionFactory._generate_solution_w_processing_time_criteria(lpt=False)
+            tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=wait)
+            if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
+                machine_datetime_dict[machine] += datetime.timedelta(days=1)
+                machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute,
+                                                       second=start_time.second)
+            else:
+                machine_datetime_dict[machine] += datetime.timedelta(minutes=wait)
 
-    @staticmethod
-    def _generate_solution():
-        """
-        Generates a random Solution instance.
+            tmp_dt = machine_datetime_dict[machine] + datetime.timedelta(minutes=setup + runtime)
+            if not continuous and (tmp_dt.time() > end_time or tmp_dt.day != machine_datetime_dict[machine].day):
+                machine_datetime_dict[machine] += datetime.timedelta(days=1)
+                machine_datetime_dict[machine].replace(hour=start_time.hour, minute=start_time.minute,
+                                                       second=start_time.second)
+                setup = 0
 
-        :rtype: Solution
-        :returns: randomly generated Solution instance
-        """
+            if machines is None or machine in machines:
+                result.append(Operation(job_id,
+                                        task_id,
+                                        machine,
+                                        float(wait),
+                                        float(setup),
+                                        float(runtime),
+                                        machine_datetime_dict[machine]))  # start time
 
-        operation_list = []
-        last_task_scheduled_on_machine = [None] * Data.total_number_of_machines
-        available = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
-                     Data.jobs}
+            machine_datetime_dict[machine] += datetime.timedelta(minutes=setup + runtime)
 
-        while 0 < len(available):
-            get_unstuck = 0
-            rand_job_id = random.choice(list(available.keys()))
-            rand_task = random.choice(available[rand_job_id])
-            rand_machine = np.random.choice(rand_task.get_usable_machines())
+            # compute total added time and update memory modules
+            machine_makespan_memory[machine] += runtime + wait + setup
+            job_end_memory[job_id] = max(machine_makespan_memory[machine], job_end_memory[job_id])
+            job_seq_memory[job_id] = sequence
+            machine_jobs_memory[machine] = (job_id, task_id)
 
-            # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
-            # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
-            while not Data.fjs_instance \
-                    and last_task_scheduled_on_machine[rand_machine] is not None \
-                    and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
-                    and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
-
-                rand_job_id = random.choice(list(available.keys()))
-                rand_task = random.choice(available[rand_job_id])
-                rand_machine = np.random.choice(rand_task.get_usable_machines())
-                get_unstuck += 1
-                if get_unstuck > 50:
-                    return SolutionFactory.get_solution()  # this is not the best way to do this...
-
-            available[rand_job_id].remove(rand_task)
-            if len(available[rand_job_id]) == 0:
-                if rand_task.get_sequence() == Data.jobs[rand_job_id].get_max_sequence():
-                    # all of the tasks in the job have been scheduled
-                    del available[rand_job_id]
-                else:
-                    # add all the tasks in the same job with the next sequence number
-                    available[rand_job_id] = [t for t in Data.jobs[rand_job_id].get_tasks() if
-                                              t.get_sequence() == rand_task.get_sequence() + 1]
-
-            last_task_scheduled_on_machine[rand_machine] = rand_task
-            operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine])
-
-        return Solution(np.array(operation_list, dtype=np.intc))
-
-    @staticmethod
-    def _generate_solution_w_processing_time_criteria(lpt):
-        """
-        Generates a random Solution instance with either shortest or longest processing time first criteria.
-
-        :rtype: Solution
-        :returns: randomly generated Solution instance
-        """
-
-        operation_list = []
-        last_task_scheduled_on_machine = [None] * Data.total_number_of_machines
-        available_heap = SolutionFactory._JobTaskHeap(maxheap=lpt)
-
-        while 0 < len(available_heap):
-            get_unstuck = 0
-            rand_task = available_heap.pop_task()
-            rand_job_id = rand_task.get_job_id()
-            rand_machine = np.random.choice(rand_task.get_usable_machines())
-
-            # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
-            # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
-            tmp_task_list = []
-            # TODO the heap (i.e. list) is depleted in this while loop which causes an index out of bound exception
-            # This shouldn't happen if the sequence dependency matrix is correct and accounts for wait time
-            while not Data.fjs_instance \
-                    and last_task_scheduled_on_machine[rand_machine] is not None \
-                    and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
-                    and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
-
-                # save the task that was removed but cannot be scheduled
-                tmp_task_list.append(rand_task)
-
-                rand_task = available_heap.pop_task()
-                rand_job_id = rand_task.get_job_id()
-                rand_machine = np.random.choice(rand_task.get_usable_machines())
-                get_unstuck += 1
-
-                if get_unstuck > 50:
-                    return SolutionFactory.get_solution()
-
-            # add the tasks that were removed back if any
-            for task in tmp_task_list:
-                available_heap.push_task(task)
-
-            if len(available_heap.dict[rand_job_id]) == 0:
-                if rand_task.get_sequence() == Data.jobs[rand_job_id].get_max_sequence():
-                    # all of the tasks in the job have been scheduled
-                    del available_heap.dict[rand_job_id]
-                else:
-                    # add all the tasks in the same job with the next sequence number
-                    for t in Data.jobs[rand_job_id].get_tasks():
-                        if t.get_sequence() == rand_task.get_sequence() + 1:
-                            # available_heap.dict[rand_job_id].append(t)
-                            available_heap.push_task(t)
-
-            last_task_scheduled_on_machine[rand_machine] = rand_task
-            operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine])
-
-        return Solution(np.array(operation_list, dtype=np.intc))
-
-    """
-    Data structures
-    """
-
-    class _JobTaskHeap:
-        def __init__(self, maxheap=True):
-            self.maxheap = maxheap
-            self.heap = []
-            self.dict = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
-                         Data.jobs}
-            for job in Data.jobs:
-                for task in job.get_tasks():
-                    if task.get_sequence() == 0:
-                        heapq.heappush(self.heap, SolutionFactory._MaxHeapObj(
-                            task) if self.maxheap else SolutionFactory._MinHeapObj(task))
-
-        def push_task(self, task):
-            heapq.heappush(self.heap,
-                           SolutionFactory._MaxHeapObj(task) if self.maxheap else SolutionFactory._MinHeapObj(task))
-            self.dict[task.get_job_id()].append(task)
-
-        def pop_task(self):
-            task = heapq.heappop(self.heap).val
-            self.dict[task.get_job_id()].remove(task)
-            return task
-
-        def __len__(self):
-            return len(self.heap)
-
-    class _MaxHeapObj(object):
-        def __init__(self, val):
-            self.val = val
-
-        def __lt__(self, other):
-            self_index = Data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
-            other_index = Data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
-
-            self_processing_times = [processing_time for processing_time in
-                                     Data.task_processing_times_matrix[self_index] if
-                                     processing_time != -1]
-            other_processing_times = [processing_time for processing_time in
-                                      Data.task_processing_times_matrix[other_index]
-                                      if
-                                      processing_time != -1]
-
-            self_avg_processing_time = sum(self_processing_times) / len(self_processing_times)
-            other_avg_processing_time = sum(other_processing_times) / len(other_processing_times)
-
-            return self_avg_processing_time > other_avg_processing_time
-
-        def __eq__(self, other):
-            return self.val == other.val
-
-    class _MinHeapObj(_MaxHeapObj):
-        def __lt__(self, other):
-            self_index = Data.job_task_index_matrix[self.val.get_job_id(), self.val.get_task_id()]
-            other_index = Data.job_task_index_matrix[other.val.get_job_id(), other.val.get_task_id()]
-
-            self_processing_times = [processing_time for processing_time in
-                                     Data.task_processing_times_matrix[self_index] if
-                                     processing_time != -1]
-            other_processing_times = [processing_time for processing_time in
-                                      Data.task_processing_times_matrix[other_index]
-                                      if
-                                      processing_time != -1]
-
-            self_avg_processing_time = sum(self_processing_times) / len(self_processing_times)
-            other_avg_processing_time = sum(other_processing_times) / len(other_processing_times)
-
-            return self_avg_processing_time < other_avg_processing_time
+        return result

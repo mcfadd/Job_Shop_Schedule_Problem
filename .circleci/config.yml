@@ -1,58 +1,65 @@
-# Python CircleCI 2.0 configuration file
-version: 2
+version: 2.1
+
+orbs:
+  win: circleci/windows@2.2.0
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+default_steps: &default_steps
+  parameters:
+    sonar_analysis:
+      type: boolean
+      default: false
+  working_directory: ~/Job_Shop_Schedule_Problem
+  steps:
+    - checkout
+    - run:
+        name: Test pip install
+        command: |
+          pip install .
+          pip uninstall -y JSSP
+    - run:
+        name: Get Dependencies
+        command: pip install -r requirements.txt
+    - run:
+        name: Build Cython
+        command: python setup.py build_ext
+    - run:
+        name: Unit Tests
+        command: python -m unittest discover -s tests/unit_tests
+    - run:
+        name: Functional Tests
+        command: python -m unittest discover -s tests/functional_tests
+    - when:
+        condition: <<parameters.sonar_analysis>>
+        steps:
+          - run:
+              name: Install Coverage.py
+              command: pip install coverage
+          - run:
+              name: Run Coverage
+              command: |
+                coverage run --source=JSSP -m unittest discover
+                coverage xml -o coverage.xml
+          - sonarcloud/scan
+
 jobs:
-  build:
+  windows-build-and-test:
+    executor:
+      name: win/default
+      shell: bash.exe
+    <<: *default_steps
+
+  linux-build-and-test:
     docker:
       - image: circleci/python:3.6
-
-    working_directory: ~/Job_Shop_Schedule_Problem
-
-    steps:
-      - checkout
-      - run:
-          name: Install JSSP
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install .
-
-  test:
-    docker:
-      - image: circleci/python:3.6
-
-    working_directory: ~/Job_Shop_Schedule_Problem
-
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-      - run:
-          name: Build cython
-          command: |
-            . venv/bin/activate
-            python setup.py build_ext
-      - run:
-          name: Unit tests
-          command: |
-            . venv/bin/activate
-            python -m unittest discover -s ./tests/unit_tests
-      - run:
-          name: Integration tests
-          command: |
-            . venv/bin/activate
-            python -m unittest discover -s ./tests/functional_tests
-
+    <<: *default_steps
 
 workflows:
-  version: 2
-  build_and_test:
+  tests:
     jobs:
-      - build
-      - test:
-          requires:
-            - build
+      - windows-build-and-test:
+          name: "Windows Build and Test"
+      - linux-build-and-test:
+          name: "Linux Build and Test"
+          context: SonarQube
+          sonar_analysis: true

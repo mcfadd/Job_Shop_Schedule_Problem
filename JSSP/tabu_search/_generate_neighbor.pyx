@@ -1,4 +1,4 @@
-from JSSP.solution import Solution
+from ..solution import Solution
 cimport cython
 import numpy as np
 cimport numpy as np
@@ -73,4 +73,4 @@ cpdef generate_neighbor(solution, double probability_change_machine, int[:, ::1]
         i = dependency_matrix_index_encoding[operation[0], operation[1]]
         operation[3] = np.random.choice(usable_machines_matrix[i])
 
-    return Solution(np.insert(result_operation_2d_array, placement_index, operation, axis=0))
+    return Solution(solution.data, np.insert(result_operation_2d_array, placement_index, operation, axis=0))

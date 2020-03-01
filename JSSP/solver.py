@@ -1,46 +1,13 @@
 import multiprocessing as mp
-import os
 import pickle
 import time
 
 from progressbar import Bar, ETA, ProgressBar, RotatingMarker
 
-from JSSP import benchmark_plotter
-from JSSP import genetic_algorithm
-from JSSP import tabu_search
-from JSSP.data import Data
-from JSSP.solution import SolutionFactory, Solution
-
-
-class _SpawnedProcess(mp.Process):
-    """
-    Extension of mp.Process which is used when mp.context is set to spawn.
-    """
-
-    def __init__(self, sequence_dependency_matrix, job_task_index_matrix, usable_machines_matrix,
-                 task_processing_times_matrix, ts_agent, child_results_queue):
-        super(_SpawnedProcess, self).__init__()
-
-        self.sequence_dependency_matrix = sequence_dependency_matrix
-        self.job_task_index_matrix = job_task_index_matrix
-        self.usable_machines_matrix = usable_machines_matrix
-        self.task_processing_times_matrix = task_processing_times_matrix
-        self.ts_agent = ts_agent
-        self.child_results_queue = child_results_queue
-
-    def run(self):
-        """
-        Re-initializes static Data before running tabu search.
-
-        :return: None
-        """
-        from JSSP.data import Data
-        Data.sequence_dependency_matrix = self.sequence_dependency_matrix
-        Data.job_task_index_matrix = self.job_task_index_matrix
-        Data.usable_machines_matrix = self.usable_machines_matrix
-        Data.task_processing_times_matrix = self.task_processing_times_matrix
-
-        self.ts_agent.start(self.child_results_queue)
+from . import benchmark_plotter
+from . import genetic_algorithm
+from . import tabu_search
+from .solution import SolutionFactory, Solution
 
 
 def _run_progress_bar(seconds):
@@ -64,20 +31,24 @@ def _run_progress_bar(seconds):
 class Solver:
     """
     The main solver class which calls tabu search and/or the genetic algorithm.
+
+    :type data: Data
+    :param data: JSSP instance data
     """
 
-    def __init__(self):
+    def __init__(self, data):
         """
         Initializes an instance of Solver.
         """
+        self.data = data
         self.solution = None
         self.ts_agent_list = None
         self.ga_agent = None
+        self.solution_factory = SolutionFactory(data)
 
     def tabu_search_time(self, runtime, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
-                         neighborhood_size=300,
-                         neighborhood_wait=0.1, probability_change_machine=0.8, reset_threshold=100,
-                         initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
+                         neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
+                         reset_threshold=100, initial_solutions=None, benchmark=False, verbose=False, progress_bar=False):
         """
         Performs parallel tabu search for a certain number of seconds.
 
@@ -105,7 +76,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -125,7 +96,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._tabu_search(runtime, time_condition=True, num_solutions_per_process=num_solutions_per_process,
                                  num_processes=num_processes, tabu_list_size=tabu_list_size,
                                  neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
@@ -135,8 +105,7 @@ class Solver:
 
     def tabu_search_iter(self, iterations, num_solutions_per_process=1, num_processes=4, tabu_list_size=50,
                          neighborhood_size=300, neighborhood_wait=0.1, probability_change_machine=0.8,
-                         reset_threshold=100,
-                         initial_solutions=None, benchmark=False, verbose=False):
+                         reset_threshold=100, initial_solutions=None, benchmark=False, verbose=False):
         """
         Performs parallel tabu search for a certain number of iterations.
 
@@ -164,7 +133,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -221,7 +190,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -241,13 +210,10 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        if initial_solutions is not None and not all(isinstance(s, Solution) for s in initial_solutions):
-            raise TypeError("initial_solutions must be a list of solutions or None")
-
         if initial_solutions is None:
-            initial_solutions = [SolutionFactory.get_solution() for _ in range(num_processes)]
+            initial_solutions = [self.solution_factory.get_solution() for _ in range(num_processes)]
         else:
-            initial_solutions += [SolutionFactory.get_solution() for _ in
+            initial_solutions += [self.solution_factory.get_solution() for _ in
                                   range(max(0, num_processes - len(initial_solutions)))]
 
         ts_agent_list = [tabu_search.TabuSearchAgent(stopping_condition,
@@ -269,7 +235,7 @@ class Solver:
             else:
                 print("Running TS")
             print("Parameters:")
-            print("stopping_condition =", stopping_condition)
+            print(f"stopping_condition = {stopping_condition} {'seconds' if time_condition else 'iterations'}")
             print("time_condition =", time_condition)
             print("num_solutions_per_process =", num_solutions_per_process)
             print("num_processes =", num_processes)
@@ -286,17 +252,7 @@ class Solver:
         # create child processes to run tabu search
         child_results_queue = mp.Queue()
         processes = [
-            # if os is windows use spawn process
-            _SpawnedProcess(Data.sequence_dependency_matrix,
-                            Data.job_task_index_matrix,
-                            Data.usable_machines_matrix,
-                            Data.task_processing_times_matrix,
-                            ts_agent,
-                            child_results_queue)
-            if os.name == 'nt' else
-            # else use normal process
-            mp.Process(target=ts_agent.start,
-                       args=[child_results_queue])
+            mp.Process(target=ts_agent.start, args=[child_results_queue])
             for ts_agent in ts_agent_list
         ]
 
@@ -335,7 +291,7 @@ class Solver:
         :param runtime: seconds to run the GA
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -344,7 +300,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -361,7 +317,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._genetic_algorithm(runtime, time_condition=True, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
@@ -382,7 +337,7 @@ class Solver:
         :param iterations: number of generations to go through during the GA
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -391,7 +346,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -405,7 +360,6 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-
         return self._genetic_algorithm(iterations, time_condition=False, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
@@ -428,7 +382,7 @@ class Solver:
         :param time_condition: if true GA is ran for stopping_condition number of seconds else GA is ran for stopping_condition number of iterations
 
         :type population: [Solution]
-        :param population: initial population to start the GA from
+        :param population: list of Solutions to start the GA from
 
         :type population_size: int
         :param population_size: size of the initial population
@@ -437,7 +391,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -454,14 +408,17 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
+        if population is None:
+            population = [self.solution_factory.get_solution() for _ in range(population_size)]
+        else:
+            population = population[:] + [self.solution_factory.get_solution() for _ in range(max(0, population_size - len(population)))]
 
         self.ga_agent = genetic_algorithm.GeneticAlgorithmAgent(stopping_condition,
-                                                                time_condition,
                                                                 population,
-                                                                population_size,
+                                                                time_condition,
                                                                 selection_method_enum,
                                                                 mutation_probability,
-                                                                selection_size if selection_method_enum is genetic_algorithm.GASelectionEnum.TOURNAMENT else None,
+                                                                selection_size,
                                                                 benchmark
                                                                 )
 
@@ -471,7 +428,7 @@ class Solver:
             else:
                 print("Running GA")
             print("Parameters:")
-            print("stopping_condition =", stopping_condition)
+            print(f"stopping_condition = {stopping_condition} {'seconds' if time_condition else 'iterations'}")
             print("time_condition =", time_condition)
             print("population_size =", population_size)
             print("selection_method =", selection_method_enum.__name__)
@@ -493,7 +450,6 @@ class Solver:
         :param output_dir: path to the output directory to place the results into
 
         :type name: str
-        :param name: name of the benchmark run
         :param name: name of the benchmark run
 
         :type auto_open: bool
