@@ -107,6 +107,9 @@ class Job:
 
 
 class Data:
+    """
+    Base class for JSSP instance data.
+    """
 
     def __init__(self):
         raise TypeError("Cannot instantiate type Data")
@@ -188,11 +191,20 @@ class Data:
         :param machine: id of machine
 
         :rtype: float
-        :return: run time
+        :returns: run time
         """
         return self.task_processing_times_matrix[self.job_task_index_matrix[job_id, task_id], machine]
 
     def get_job(self, job_id):
+        """
+        Gets the Job with job id = job_id.
+
+        :type job_id: int
+        :param job_id: id of the Job to get
+
+        :rtype: Job
+        :returns: Job with id = job_id
+        """
         return self.jobs[job_id]
 
     def __str__(self):
@@ -299,6 +311,20 @@ class Data:
 
 # noinspection PyMissingConstructor
 class CSVData(Data):
+    """
+    JSSP instance data class for .csv data.
+
+    :type seq_dep_matrix_file: str
+    :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
+
+    :type machine_speeds_file: str
+    :param machine_speeds_file: path to the csv file containing all of the machine speeds
+
+    :type job_tasks_file: str
+    :param job_tasks_file: path to the csv file containing all of the job-tasks
+
+    :returns: None
+    """
 
     def __init__(self, seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
         """
@@ -435,6 +461,14 @@ class CSVData(Data):
 
 # noinspection PyMissingConstructor
 class FJSData(Data):
+    """
+    JSSP instance data class for .fjs data.
+
+    :type input_file: str
+    :param input_file: path to the fjs file to read the data from
+
+    :returns: None
+    """
 
     def __init__(self, input_file):
         """

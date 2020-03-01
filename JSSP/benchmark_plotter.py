@@ -60,10 +60,10 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
     :param output_dir: path to the output directory to place the html files into
 
     :type name: str
-    :param name: name of the benchmark run
+    :param name: name of the benchmark run, default to current datetime
 
     :type auto_open: bool
-    :param auto_open: if true index.html is automatically opened in a browser
+    :param auto_open: if true the benchmark output is automatically opened in a browser
 
     :returns: None
     """

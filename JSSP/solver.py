@@ -76,7 +76,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -133,7 +133,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -190,7 +190,7 @@ class Solver:
         :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
 
         :type probability_change_machine: float
-        :param probability_change_machine: probability of changing a chosen operations machine
+        :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
         :type reset_threshold: int
         :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -300,7 +300,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -346,7 +346,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -391,7 +391,7 @@ class Solver:
         :param selection_method_enum: selection method to use for selecting parents from the population. Options are GASelectionEnum.TOURNAMENT, GASelectionEnum.FITNESS_PROPORTIONATE, GASelectionEnum.RANDOM
 
         :type mutation_probability: float
-        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine)
+        :param mutation_probability: probability of mutating a chromosome (i.e change an operation's machine), must be in range [0, 1]
 
         :type selection_size: int
         :param selection_size: size of the selection group for tournament style selection
@@ -450,7 +450,6 @@ class Solver:
         :param output_dir: path to the output directory to place the results into
 
         :type name: str
-        :param name: name of the benchmark run
         :param name: name of the benchmark run
 
         :type auto_open: bool

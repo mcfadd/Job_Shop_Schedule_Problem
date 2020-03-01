@@ -149,7 +149,7 @@ class Solution:
     def create_schedule_xlsx_file(self, output_path, start_date=datetime.date.today(), start_time=datetime.time(hour=8, minute=0),
                                   end_time=datetime.time(hour=20, minute=0), continuous=False):
         """
-        Creates an excel file in the output_dir directory that contains the schedule for each machine of this Solution.
+        Creates an excel file that contains the schedule for each machine of this Solution.
 
         :type output_path: str
         :param output_path: path to the excel file to create
@@ -200,10 +200,10 @@ class Solution:
                                      start_time=datetime.time(hour=8, minute=0),
                                      end_time=datetime.time(hour=20, minute=0), auto_open=False, continuous=False):
         """
-        Creates a gantt chart html file of the solution parameters in the output_dir directory.
+        Creates a gantt chart html file of the solution.
 
         :type output_path: str
-        :param output_path: path to the directory to place the excel file into
+        :param output_path: path to the gantt chart html file to create
 
         :type title: str
         :param title: name of the gantt chart
@@ -249,8 +249,8 @@ class Solution:
         :type machines: [int]
         :param machines: list of machine ids, or None
 
-        :rtype [Operation]
-        :return: list of Operations
+        :rtype: [Operation]
+        :returns: list of Operations
         """
         result = []
         num_jobs = self.data.total_number_of_jobs

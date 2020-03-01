@@ -29,13 +29,13 @@ class TabuSearchAgent:
     :param tabu_list_size: size of the Tabu list
 
     :type neighborhood_size: int
-    :param neighborhood_size: size of neighborhoods to generate during each TS iteration
+    :param neighborhood_size: size of neighborhoods to generate during each iteration
 
     :type neighborhood_wait: float
-    :param neighborhood_wait: maximum time to wait while generating a neighborhood in seconds
+    :param neighborhood_wait: maximum time (in seconds) to wait while generating a neighborhood
 
     :type probability_change_machine: float
-    :param probability_change_machine: probability of changing a chosen operations machine
+    :param probability_change_machine: probability of changing a chosen operations machine, must be in range [0, 1]
 
     :type reset_threshold: int
     :param reset_threshold: number of iterations to potentially force a worse move after if the best solution is not improved
@@ -118,7 +118,7 @@ class TabuSearchAgent:
         If the multi_process_queue parameter is not None, this function attempts to push this TabuSearchAgent to the multi processing queue.
 
         :type multi_process_queue: multiprocessing.Queue
-        :param multi_process_queue: queue to put result into
+        :param multi_process_queue: queue to put this TabuSearchAgent into
 
         :rtype: Solution
         :returns: best Solution found
