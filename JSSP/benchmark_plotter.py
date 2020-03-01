@@ -35,7 +35,7 @@ def iplot_benchmark_results(ts_agent_list=None, ga_agent=None):
         iplot(dict(data=makespans_traces, layout=makespans_layout))
         iplot(dict(data=nh_sizes_traces, layout=nh_sizes_layout))
         iplot(dict(data=tl_sizes_traces, layout=tl_sizes_layout))
-        min([ts_agent.best_solution for ts_agent in ts_agent_list]).create_continuous_gantt_chart(None, iplot_bool=True)
+        min([ts_agent.best_solution for ts_agent in ts_agent_list]).iplot_gantt_chart(continuous=True)
 
     if ga_agent is not None and ga_agent.benchmark:
         # create traces for plot
