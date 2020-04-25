@@ -3,3 +3,4 @@ include LICENSE
 include JSSP/tabu_search/*.so
 include JSSP/solution/*.so
 include JSSP/genetic_algorithm/*.so
+include JSSP/templates

@@ -458,7 +458,7 @@ class Solver:
         :returns: None
         """
         benchmark_plotter.output_benchmark_results(output_dir, ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent,
-                                                   name=name, auto_open=auto_open)
+                                                   title=name, auto_open=auto_open)
 
     def iplot_benchmark_results(self):
         """
