@@ -302,13 +302,13 @@ class CSVData(Data):
     """
     JSSP instance data class for .csv data.
 
-    :type seq_dep_matrix_file: str
+    :type seq_dep_matrix_file: Path | str
     :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
 
-    :type machine_speeds_file: str
+    :type machine_speeds_file: Path | str
     :param machine_speeds_file: path to the csv file containing all of the machine speeds
 
-    :type job_tasks_file: str
+    :type job_tasks_file: Path | str
     :param job_tasks_file: path to the csv file containing all of the job-tasks
 
     :returns: None
@@ -444,7 +444,7 @@ class FJSData(Data):
     """
     JSSP instance data class for .fjs data.
 
-    :type input_file: str
+    :type input_file: Path | str
     :param input_file: path to the fjs file to read the data from
 
     :returns: None
@@ -454,7 +454,7 @@ class FJSData(Data):
         """
         Initializes all of the static data from a fjs file.
 
-        :type input_file: str
+        :type input_file: Path | str
         :param input_file: path to the fjs file to read the data from
 
         :returns: None
