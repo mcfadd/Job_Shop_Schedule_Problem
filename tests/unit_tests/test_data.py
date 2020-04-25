@@ -1,20 +1,18 @@
-import os
-import shutil
 import unittest
 
 import numpy as np
 
 from JSSP import data
-from tests import project_root
-from tests import tmp_dir, get_all_fjs_files
+from tests.util import project_root, tmp_dir, get_files_with_suffix, rm_tree
 
 
 class TestData(unittest.TestCase):
-    def test_create_csv_data(self):
+
+    def test_create_csv_data_path(self):
         csv_data = data.CSVData(
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
+            project_root / 'data/given_data/sequenceDependencyMatrix.csv',
+            project_root / 'data/given_data/machineRunSpeed.csv',
+            project_root / 'data/given_data/jobTasks.csv')
 
         self.assertIsNotNone(csv_data.seq_dep_matrix_file_path)
         self.assertIsNotNone(csv_data.machine_speeds_file_path)
@@ -31,10 +29,29 @@ class TestData(unittest.TestCase):
         self.assertIsNotNone(csv_data.total_number_of_machines)
         self.assertIsNotNone(csv_data.max_tasks_for_a_job)
 
-        print(csv_data)
+    def test_create_csv_data_str(self):
+        csv_data = data.CSVData(
+            str(project_root / 'data/given_data/sequenceDependencyMatrix.csv'),
+            str(project_root / 'data/given_data/machineRunSpeed.csv'),
+            str(project_root / 'data/given_data/jobTasks.csv'))
+
+        self.assertIsNotNone(csv_data.seq_dep_matrix_file_path)
+        self.assertIsNotNone(csv_data.machine_speeds_file_path)
+        self.assertIsNotNone(csv_data.job_tasks_file_path)
+        self.assertIsNotNone(csv_data.sequence_dependency_matrix)
+        self.assertIsNotNone(csv_data.job_task_index_matrix)
+        self.assertIsNotNone(csv_data.usable_machines_matrix)
+        self.assertIsNotNone(csv_data.task_processing_times_matrix)
+        self.assertIsNotNone(csv_data.machine_speeds)
+
+        self.assertNotEqual([], csv_data.jobs)
+        self.assertIsNotNone(csv_data.total_number_of_jobs)
+        self.assertIsNotNone(csv_data.total_number_of_tasks)
+        self.assertIsNotNone(csv_data.total_number_of_machines)
+        self.assertIsNotNone(csv_data.max_tasks_for_a_job)
 
     def test_create_fjs_data(self):
-        fjs_lst = get_all_fjs_files()
+        fjs_lst = get_files_with_suffix(project_root / 'data/fjs_data', '.fjs')
 
         for i, fjs_instance in enumerate(fjs_lst):
             print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_lst)})")
@@ -56,21 +73,21 @@ class TestData(unittest.TestCase):
         try:
             data.Data()
             self.fail("Should not be able to instantiate type Data")
-        except TypeError:
+        except Exception:
             pass
 
 
 class TestFJSConversionToCSV(unittest.TestCase):
 
     def setUp(self) -> None:
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
+        if not tmp_dir.exists():
+            tmp_dir.mkdir()
 
     def tearDown(self) -> None:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        rm_tree(tmp_dir)
 
     def test_converting_fjs_instances(self):
-        fjs_lst = get_all_fjs_files()
+        fjs_lst = get_files_with_suffix(project_root / 'data/fjs_data', '.fjs')
 
         for i, fjs_instance in enumerate(fjs_lst):
             print(f"testing fjs instance {fjs_instance} ({i + 1} of {len(fjs_lst)})")
@@ -90,9 +107,9 @@ class TestFJSConversionToCSV(unittest.TestCase):
             data.Data.convert_fjs_to_csv(fjs_instance, tmp_dir)
 
             # read in converted csv file
-            csv_data = data.CSVData(tmp_dir + os.sep + 'sequenceDependencyMatrix.csv',
-                                    tmp_dir + os.sep + 'machineRunSpeed.csv',
-                                    tmp_dir + os.sep + 'jobTasks.csv')
+            csv_data = data.CSVData(tmp_dir / 'sequenceDependencyMatrix.csv',
+                                    tmp_dir / 'machineRunSpeed.csv',
+                                    tmp_dir / 'jobTasks.csv')
 
             # make sure the data is the same
             np.testing.assert_array_equal(sequence_dependency_matrix, csv_data.sequence_dependency_matrix,

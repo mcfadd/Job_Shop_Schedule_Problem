@@ -1,6 +1,6 @@
 import datetime
-import os
 import random
+from pathlib import Path
 
 import plotly.figure_factory as ff
 import xlsxwriter
@@ -37,20 +37,21 @@ def _check_output_path(output_path, file_ext):
     """
     Creates the output path if it doesnt exist.
 
-    :type output_path: str
+    :type output_path: Path | str
     :param output_path: the output path to create
 
     :type file_ext: str
     :param file_ext: file extension of the output path
 
-    :rtype: str
+    :rtype: Path
     :return: the output path with the file extension
     """
-    if not os.path.exists(os.path.dirname(output_path)):
-        os.makedirs(os.path.dirname(output_path))
+    output_path = Path(output_path)
+    if not output_path.parent.exists():
+        output_path.parent.mkdir(parents=True)
 
-    if not output_path.endswith(file_ext):
-        return output_path + file_ext
+    if output_path.suffix != file_ext:
+        return output_path.with_suffix(file_ext)
     else:
         return output_path
 
@@ -63,7 +64,7 @@ def create_schedule_xlsx_file(solution, output_path, start_date=datetime.date.to
     :type solution: Solution
     :param solution: solution to create a schedule for
 
-    :type output_path: str
+    :type output_path: Path | str
     :param output_path: path to the excel file to create
 
     :type start_date: datetime.date
@@ -80,7 +81,7 @@ def create_schedule_xlsx_file(solution, output_path, start_date=datetime.date.to
 
     :returns: None
     """
-    output_path = _check_output_path(output_path, ".xlsx")
+    output_path = _check_output_path(output_path, '.xlsx')
 
     # create an excel workbook and worksheet in output directory
     workbook = xlsxwriter.Workbook(f'{output_path}')
@@ -145,7 +146,7 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
     :type solution: Solution
     :param solution: solution to create a schedule for
 
-    :type output_path: str
+    :type output_path: Path | str
     :param output_path: path to the gantt chart file to create
 
     :type title: str
@@ -203,4 +204,4 @@ def create_gantt_chart(solution, output_path, title='Gantt Chart', start_date=da
     if iplot_bool:
         iplot(fig)
     else:
-        plot(fig, filename=output_path, auto_open=auto_open)
+        plot(fig, filename=str(output_path), auto_open=auto_open)

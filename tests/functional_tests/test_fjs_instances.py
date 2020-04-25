@@ -1,24 +1,22 @@
-import os
 import random
-import shutil
 import unittest
 
 from JSSP import data
 from JSSP.solver import Solver
-from tests import tmp_dir, get_all_fjs_files
+from tests.util import project_root, tmp_dir, get_files_with_suffix, rm_tree
 
-# directory used by tests
-fjs_data = random.choices(get_all_fjs_files(), k=20)
+fjs_data = get_files_with_suffix(project_root / 'data/fjs_data', '.fjs')
+fjs_data = random.choices(fjs_data, k=20)
 
 
 class TestFJSOptimization(unittest.TestCase):
 
     def setUp(self) -> None:
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
+        if not tmp_dir.exists():
+            tmp_dir.mkdir()
 
     def tearDown(self) -> None:
-        shutil.rmtree(tmp_dir)
+        rm_tree(tmp_dir)
 
     def test_ts_iter(self):
         # parameters
@@ -49,9 +47,9 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertIsNotNone(solver.solution, "TS should have produced a best solution")
 
             # output results
-            solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'fjs_ts_schedule')
-            self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ts_schedule.xlsx'),
-                            "fjs_ts_schedule.xlsx was not produced")
+            output_file = tmp_dir / 'fjs_ts_schedule.xlsx'
+            solver.solution.create_schedule_xlsx_file(output_file)
+            self.assertTrue(output_file.exists(), "fjs_ts_schedule.xlsx was not produced")
 
     def test_ts_iter_benchmark(self):
         # parameters
@@ -83,9 +81,9 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertIsNotNone(solver.solution, "TS should have produced a best solution")
 
             # output results
-            solver.output_benchmark_results(tmp_dir, name='fjs_ts_benchmark', auto_open=False)
-            self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ts_benchmark'),
-                            "fjs_ts_benchmark was not produced")
+            output_file = tmp_dir / 'fjs_ts_benchmark'
+            solver.output_benchmark_results(output_file, auto_open=False)
+            self.assertTrue(output_file.exists(), "fjs_ts_benchmark was not produced")
 
     def test_ga_iter(self):
         # parameters
@@ -131,9 +129,9 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertTrue(not any(sol in seen or seen.append(sol) for sol in solver.ga_agent.result_population))
 
             # output results
-            solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'fjs_ga_schedule')
-            self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ga_schedule.xlsx'),
-                            "fjs_ga_schedule.xlsx was not produced")
+            output_file = tmp_dir / 'fjs_ga_schedule.xlsx'
+            solver.solution.create_schedule_xlsx_file(output_file)
+            self.assertTrue(output_file.exists(), "fjs_ga_schedule.xlsx was not produced")
 
     def test_ga_iter_benchmark(self):
         # parameters
@@ -180,9 +178,9 @@ class TestFJSOptimization(unittest.TestCase):
             self.assertTrue(not any(sol in seen or seen.append(sol) for sol in solver.ga_agent.result_population))
 
             # output results
-            solver.output_benchmark_results(tmp_dir, name='fjs_ga_benchmark', auto_open=False)
-            self.assertTrue(os.path.exists(tmp_dir + os.sep + 'fjs_ga_benchmark'),
-                            "fjs_ga_benchmark was not produced")
+            output_file = tmp_dir / 'fjs_ga_benchmark'
+            solver.output_benchmark_results(output_file, auto_open=False)
+            self.assertTrue(output_file.exists(), "fjs_ga_benchmark was not produced")
 
 
 if __name__ == '__main__':

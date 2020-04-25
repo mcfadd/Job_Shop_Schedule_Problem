@@ -1,25 +1,17 @@
-import os
-import shutil
 import unittest
 
-from JSSP import data
 from JSSP.solver import Solver
-from tests import project_root, tmp_dir
+from tests.util import tmp_dir, csv_data, rm_tree
 
 
 class TestTS(unittest.TestCase):
 
     def setUp(self) -> None:
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
-
-        self.data = data.CSVData(
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
+        if not tmp_dir.exists():
+            tmp_dir.mkdir()
 
     def tearDown(self) -> None:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        rm_tree(tmp_dir)
 
     def test_ts_time(self):
         runtime = 5  # seconds
@@ -30,7 +22,7 @@ class TestTS(unittest.TestCase):
         neighborhood_wait = 0.1
         probability_change_machine = 0.8
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.tabu_search_time(runtime,
                                 num_solutions_per_process=num_solutions_per_process,
                                 num_processes=num_processes,
@@ -56,9 +48,9 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
-                        "ts_test_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ts_test_schedule.xlsx'
+        solver.solution.create_schedule_xlsx_file(output_file)
+        self.assertTrue(output_file.exists(), "ts_test_schedule.xlsx was not produced")
 
     def test_ts_time_benchmark(self):
         runtime = 5  # seconds
@@ -69,7 +61,7 @@ class TestTS(unittest.TestCase):
         neighborhood_wait = 0.1
         probability_change_machine = 0.8
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.tabu_search_time(runtime,
                                 num_solutions_per_process=num_solutions_per_process,
                                 num_processes=num_processes,
@@ -102,19 +94,9 @@ class TestTS(unittest.TestCase):
             self.assertNotEqual((0, 0), ts_agent.min_makespan_coordinates)
 
         # output results
-        solver.output_benchmark_results(tmp_dir, name='ts_test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark'),
-                        "TS benchmark results were not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'index.html'),
-                        "TS benchmark results index.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'ts_makespans.html'),
-                        "TS benchmark results ts_makespans.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'neighborhood_sizes.html'),
-                        "TS benchmark results neighborhood_sizes.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'tabu_list_sizes.html'),
-                        "TS benchmark results tabu_list_sizes.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'ts_schedule.xlsx'),
-                        "TS benchmark results ts_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ts_test_benchmark'
+        solver.output_benchmark_results(output_file, auto_open=False)
+        self.assertTrue(output_file.exists(), "TS benchmark results were not produced")
 
     def test_ts_iter(self):
         try:
@@ -126,7 +108,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver(self.data)
+            solver = Solver(csv_data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -154,9 +136,9 @@ class TestTS(unittest.TestCase):
             self.assertEqual(probability_change_machine, ts_agent.probability_change_machine)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ts_test_schedule')
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_schedule.xlsx'),
-                        "ts_test_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ts_test_schedule.xlsx'
+        solver.solution.create_schedule_xlsx_file(output_file)
+        self.assertTrue(output_file.exists(), "ts_test_schedule.xlsx was not produced")
 
     def test_ts_iter_benchmark(self):
         try:
@@ -168,7 +150,7 @@ class TestTS(unittest.TestCase):
             neighborhood_wait = 0.1
             probability_change_machine = 0.8
 
-            solver = Solver(self.data)
+            solver = Solver(csv_data)
             solver.tabu_search_iter(iterations,
                                     num_solutions_per_process=num_solutions_per_process,
                                     num_processes=num_processes,
@@ -203,19 +185,9 @@ class TestTS(unittest.TestCase):
             self.assertNotEqual((0, 0), ts_agent.min_makespan_coordinates)
 
         # output results
-        solver.output_benchmark_results(tmp_dir, name='ts_test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark'),
-                        "TS benchmark results were not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'index.html'),
-                        "TS benchmark results index.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'ts_makespans.html'),
-                        "TS benchmark results ts_makespans.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'neighborhood_sizes.html'),
-                        "TS benchmark results neighborhood_sizes.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'tabu_list_sizes.html'),
-                        "TS benchmark results tabu_list_sizes.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ts_test_benchmark' + os.sep + 'ts_schedule.xlsx'),
-                        "TS benchmark results ts_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ts_test_benchmark'
+        solver.output_benchmark_results(output_file, auto_open=False)
+        self.assertTrue(output_file.exists(), "TS benchmark results were not produced")
 
     def test_ts_multiple_solutions_per_process(self):
         iterations = 10
@@ -229,7 +201,7 @@ class TestTS(unittest.TestCase):
 
         for num_processes in num_processes_list:
             for num_solutions_per_process in num_solutions_per_process_list:
-                solver = Solver(self.data)
+                solver = Solver(csv_data)
                 solver.tabu_search_iter(iterations,
                                         num_solutions_per_process=num_solutions_per_process,
                                         num_processes=num_processes,

@@ -1,6 +1,7 @@
 import csv
-import os
 import re
+from abc import ABC
+from pathlib import Path
 
 import numpy as np
 
@@ -106,26 +107,12 @@ class Job:
                and self._tasks == other.get_tasks()
 
 
-class Data:
+class Data(ABC):
     """
     Base class for JSSP instance data.
     """
 
     def __init__(self):
-        raise TypeError("Cannot instantiate type Data")
-
-    def _initialize(self):
-        self.seq_dep_matrix_file_path = None
-        "path to the sequence dependency matrix csv file that was read in"
-
-        self.machine_speeds_file_path = None
-        "path to the machine speeds csv file was read in"
-
-        self.job_tasks_file_path = None
-        "path to the job-tasks csv file was read in"
-
-        self.fjs_file_path = None
-        "path to the .fjs file was read in"
 
         self.sequence_dependency_matrix = None
         "2d nparray of sequence dependency matrix"
@@ -242,28 +229,30 @@ class Data:
         return result
 
     @staticmethod
-    def convert_fjs_to_csv(input_file, output_dir):
+    def convert_fjs_to_csv(fjs_file, output_dir):
         """
         Converts a fjs file into three csv files, jobTasks.csv, machineRunSpeed.csv, and sequenceDependencyMatrix.csv,
         then it puts them in the output directory.
 
-        :type input_file: str
-        :param input_file: path to the fjs file containing a flexible job shop schedule problem instance
+        :type fjs_file: Path | str
+        :param fjs_file: path to the fjs file containing a flexible job shop schedule problem instance
 
-        :type output_dir: str
+        :type output_dir: Path | str
         :param output_dir: path to the directory to place the csv files into
 
         :returns: None
         """
         total_num_tasks = 0
 
-        # create output directory if it doesn't exist
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        fjs_file = Path(fjs_file)
+        output_dir = Path(output_dir)
+
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
 
         # read .fjs input file and create jobTasks.csv
-        with open(input_file, 'r') as fin:
-            with open(output_dir + os.sep + 'jobTasks.csv', 'w') as fout:
+        with open(fjs_file, 'r') as fin:
+            with open(output_dir / 'jobTasks.csv', 'w') as fout:
                 fout.write("Job,Task,Sequence,Usable_Machines,Pieces\n")
 
                 lines = [line for line in [l.strip() for l in fin] if line]
@@ -297,19 +286,18 @@ class Data:
                         fout.write(output_line + '\n')
 
         # create machineRunSpeed.csv
-        with open(output_dir + os.sep + 'machineRunSpeed.csv', 'w') as fout:
+        with open(output_dir / 'machineRunSpeed.csv', 'w') as fout:
             fout.write("Machine,RunSpeed\n")
             for i in range(total_num_machines):
                 fout.write(f"{i},1\n")
 
         # create sequenceDependencyMatrix.csv
-        with open(output_dir + os.sep + 'sequenceDependencyMatrix.csv', 'w') as fout:
+        with open(output_dir / 'sequenceDependencyMatrix.csv', 'w') as fout:
             line = "0," * total_num_tasks + "0\n"
             for _ in range(total_num_tasks + 1):
                 fout.write(line)
 
 
-# noinspection PyMissingConstructor
 class CSVData(Data):
     """
     JSSP instance data class for .csv data.
@@ -330,32 +318,59 @@ class CSVData(Data):
         """
         Initializes all of the static data from the csv files.
 
-        :type seq_dep_matrix_file: str
+        :type seq_dep_matrix_file: Path | str
         :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
 
-        :type machine_speeds_file: str
+        :type machine_speeds_file: Path | str
         :param machine_speeds_file: path to the csv file containing all of the machine speeds
 
-        :type job_tasks_file: str
+        :type job_tasks_file: Path | str
         :param job_tasks_file: path to the csv file containing all of the job-tasks
 
         :returns: None
         """
-        super()._initialize()
-        self.seq_dep_matrix_file_path = seq_dep_matrix_file
-        self.machine_speeds_file_path = machine_speeds_file
-        self.job_tasks_file_path = job_tasks_file
+        super().__init__()
+        self.job_tasks_file_path = Path(job_tasks_file)
+        self.seq_dep_matrix_file_path = Path(seq_dep_matrix_file)
+        self.machine_speeds_file_path = Path(machine_speeds_file)
 
-        self._read_job_tasks_file(job_tasks_file)
-        self._read_sequence_dependency_matrix_file(seq_dep_matrix_file)
-        self._read_machine_speeds_file(machine_speeds_file)
-        self._initialize_derived_data()
+        self._read_job_tasks_file(self.job_tasks_file_path)
+        self._read_sequence_dependency_matrix_file(self.seq_dep_matrix_file_path)
+        self._read_machine_speeds_file(self.machine_speeds_file_path)
+
+        self.total_number_of_jobs = len(self.jobs)
+        self.total_number_of_tasks = self.sequence_dependency_matrix.shape[0]
+        self.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in self.jobs])
+        self.total_number_of_machines = self.machine_speeds.shape[0]
+
+        self.job_task_index_matrix = np.full((self.total_number_of_jobs, self.max_tasks_for_a_job), -1, dtype=np.intc)
+        self.usable_machines_matrix = np.empty((self.total_number_of_tasks, self.total_number_of_machines), dtype=np.intc)
+        self.task_processing_times_matrix = np.full((self.total_number_of_tasks, self.total_number_of_machines), -1, dtype=np.float)
+
+        # process all job-tasks
+        task_index = 0
+        for job in self.jobs:
+            for task in job.get_tasks():
+
+                # create mapping of (job id, task id) to index
+                self.job_task_index_matrix[job.get_job_id(), task.get_task_id()] = task_index
+
+                # create row in usable_machines_matrix
+                self.usable_machines_matrix[task_index] = np.resize(task.get_usable_machines(),
+                                                                    self.total_number_of_machines)
+
+                # create row in task_processing_times
+                for machine in task.get_usable_machines():
+                    self.task_processing_times_matrix[task_index, machine] = task.get_pieces() / self.machine_speeds[
+                        machine]
+
+                task_index += 1
 
     def _read_job_tasks_file(self, job_tasks_file):
         """
         Populates self.jobs by reading the job_tasks_file csv file.
 
-        :type job_tasks_file: str
+        :type job_tasks_file: Path | str
         :param job_tasks_file: path to the csv file that contains the job-task data
 
         :returns: None
@@ -392,7 +407,7 @@ class CSVData(Data):
         """
         Populates self.sequence_dependency_matrix by reading the seq_dep_matrix_file csv file.
 
-        :type seq_dep_matrix_file: str
+        :type seq_dep_matrix_file: Path | str
         :param seq_dep_matrix_file: path to the csv file that contains the sequence dependency matrix
 
         :returns: None
@@ -412,7 +427,7 @@ class CSVData(Data):
         """
         Populates self.machine_speeds by reading the machine_speeds_file csv file.
 
-        :type machine_speeds_file: str
+        :type machine_speeds_file: Path | str
         :param machine_speeds_file: path to the csv file that contains the machine run speeds
 
         :returns: None
@@ -424,42 +439,7 @@ class CSVData(Data):
             next(fin)
             self.machine_speeds = np.array([int(row[1]) for row in csv.reader(fin)], dtype=np.float)
 
-    def _initialize_derived_data(self):
-        """
-        Initializes derived data such as self.dependency_matrix_index_encoding and self.usable_machines_matrix
 
-        :returns: None
-        """
-        self.total_number_of_jobs = len(self.jobs)
-        self.total_number_of_tasks = self.sequence_dependency_matrix.shape[0]
-        self.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in self.jobs])
-        self.total_number_of_machines = self.machine_speeds.shape[0]
-
-        self.job_task_index_matrix = np.full((self.total_number_of_jobs, self.max_tasks_for_a_job), -1, dtype=np.intc)
-        self.usable_machines_matrix = np.empty((self.total_number_of_tasks, self.total_number_of_machines), dtype=np.intc)
-        self.task_processing_times_matrix = np.full((self.total_number_of_tasks, self.total_number_of_machines), -1, dtype=np.float)
-
-        # process all job-tasks
-        task_index = 0
-        for job in self.jobs:
-            for task in job.get_tasks():
-
-                # create mapping of (job id, task id) to index
-                self.job_task_index_matrix[job.get_job_id(), task.get_task_id()] = task_index
-
-                # create row in usable_machines_matrix
-                self.usable_machines_matrix[task_index] = np.resize(task.get_usable_machines(),
-                                                                    self.total_number_of_machines)
-
-                # create row in task_processing_times
-                for machine in task.get_usable_machines():
-                    self.task_processing_times_matrix[task_index, machine] = task.get_pieces() / self.machine_speeds[
-                        machine]
-
-                task_index += 1
-
-
-# noinspection PyMissingConstructor
 class FJSData(Data):
     """
     JSSP instance data class for .fjs data.
@@ -479,10 +459,10 @@ class FJSData(Data):
 
         :returns: None
         """
-        super()._initialize()
-        self.fjs_file_path = input_file
+        super().__init__()
+        self.fjs_file_path = Path(input_file)
         # read .fjs input file
-        with open(input_file, 'r') as fin:
+        with open(self.fjs_file_path, 'r') as fin:
 
             lines = [line for line in [l.strip() for l in fin] if line]  # read all non-blank lines
             first_line = [int(s) for s in re.sub(r'\s+', ' ', lines[0].strip()).split(' ')[:-1]]

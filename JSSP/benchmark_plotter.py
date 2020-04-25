@@ -1,10 +1,10 @@
 import datetime
-import os
 import statistics
 import webbrowser
+from pathlib import Path
 
 import plotly.graph_objs as go
-from jinja2 import PackageLoader, Environment, select_autoescape
+from jinja2 import PackageLoader, Environment
 from plotly.offline import plot, iplot
 
 template_env = Environment(
@@ -63,7 +63,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
     :type ga_agent: GeneticAlgorithmAgent
     :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for
 
-    :type output_dir: Path
+    :type output_dir: Path | str
     :param output_dir: path to the output directory to place the html files into
 
     :type title: str
@@ -81,6 +81,8 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
     if title is None:
         title = "Benchmark Run {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
 
+    output_dir = Path(output_dir)
+
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
@@ -96,7 +98,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
 
     # tabu search results
     if ts_agent_list is not None:
-        _ts_benchmark_results(ts_agent_list, output_dir)
+        _create_ts_plots(ts_agent_list, output_dir)
         ts_result_makespans = []
         ts_initial_makespans = []
         ts_iterations = []
@@ -116,7 +118,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
 
     # genetic algorithm results
     if ga_agent is not None:
-        _ga_benchmark_results(ga_agent, output_dir)
+        _create_ga_plots(ga_agent, output_dir)
         ga_initial_makespans = [sol.makespan for sol in ga_agent.initial_population]
         ga_result_makespans = [sol.makespan for sol in ga_agent.result_population]
 
@@ -149,7 +151,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
         webbrowser.open(f'file://{output_dir.resolve()}/index.html')
 
 
-def _ts_benchmark_results(ts_agent_list, output_directory):
+def _create_ts_plots(ts_agent_list, output_directory):
     """
     Formats TS benchmark results in an html file & creates plots (html files).
 
@@ -185,7 +187,7 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
     best_solution.create_gantt_chart_html_file(str(output_directory / 'ts_gantt_chart.html'), continuous=True)
 
 
-def _ga_benchmark_results(ga_agent, output_directory):
+def _create_ga_plots(ga_agent, output_directory):
     """
     Formats GA benchmark results in an html file & creates plots (html files).
 

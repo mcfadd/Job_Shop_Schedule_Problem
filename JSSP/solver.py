@@ -446,7 +446,7 @@ class Solver:
         """
         Outputs html files containing benchmark results in the output directory specified.
 
-        :type output_dir: str
+        :type output_dir: Path | str
         :param output_dir: path to the output directory to place the results into
 
         :type name: str
