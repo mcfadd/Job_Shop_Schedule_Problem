@@ -1,14 +1,17 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 import os
+from pathlib import Path
 
 from setuptools import find_packages, setup, Extension
-import pathlib
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
-README = (pathlib.Path(__file__).parent / "README.md").read_text()
+README = (Path(__file__).parent / "README.md").read_text()
+requirements_txt = Path(__file__).parent / "requirements.txt"
+
+with open(requirements_txt) as req_file:
+    requirements = req_file.readlines()
 
 
 class NumpyExtension(Extension):
@@ -62,8 +65,8 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Office/Business :: Scheduling',
     ],
-    setup_requires=['numpy', 'cython'],
-    install_requires=['numpy', 'plotly', 'progressbar', 'XlsxWriter'],
+    setup_requires=['numpy==1.16.*', 'cython==0.29.*'],
+    install_requires=requirements,
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     include_package_data=True,
     ext_modules=ext_modules,

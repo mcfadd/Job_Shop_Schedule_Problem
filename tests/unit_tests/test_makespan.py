@@ -3,12 +3,12 @@ import unittest
 from pathlib import Path
 
 from JSSP.solution._makespan import compute_machine_makespans
+
 from tests.util import csv_data
 
 
 class TestMakespan(unittest.TestCase):
 
-    # operation_matrices_dir = os.path.dirname(os.path.abspath(__file__)) + os.sep + 'operation_matrices'
     operation_matrices_dir = Path(__file__).parent / 'operation_matrices'
 
     def test_makespan_integrity1(self):
