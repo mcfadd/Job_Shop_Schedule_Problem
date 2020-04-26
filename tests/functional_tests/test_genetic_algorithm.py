@@ -182,16 +182,16 @@ class TestGA(unittest.TestCase):
 class TestGASelectionMethods(unittest.TestCase):
 
     def test_tournament_selection(self):
-        test_selection(self, GASelectionEnum.TOURNAMENT, csv_data)
+        _test_selection(self, GASelectionEnum.TOURNAMENT, csv_data)
 
     def test_fitness_proportionate_selection(self):
-        test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE, csv_data)
+        _test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE, csv_data)
 
     def test_random_selection(self):
-        test_selection(self, GASelectionEnum.RANDOM, csv_data)
+        _test_selection(self, GASelectionEnum.RANDOM, csv_data)
 
 
-def test_selection(unit_test, selection_method, instance_data):
+def _test_selection(unit_test, selection_method, instance_data):
     iterations = 50
     population = None
     population_size = 100
