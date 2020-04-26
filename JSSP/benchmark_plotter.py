@@ -8,7 +8,8 @@ from jinja2 import PackageLoader, Environment
 from plotly.offline import plot, iplot
 
 template_env = Environment(
-    loader=PackageLoader('JSSP', 'templates')
+    loader=PackageLoader('JSSP', 'templates'),
+    autoescape=True
 )
 
 benchmark_template = "benchmark.html"
