@@ -31,17 +31,17 @@ class Task:
 
         See help(_Task)
         """
-        self._jobId = job_id
-        self._taskId = task_id
+        self._job_id = job_id
+        self._task_id = task_id
         self._sequence = sequence
         self._usable_machines = usable_machines
         self._pieces = pieces
 
     def get_job_id(self):
-        return self._jobId
+        return self._job_id
 
     def get_task_id(self):
-        return self._taskId
+        return self._task_id
 
     def get_sequence(self):
         return self._sequence
@@ -53,14 +53,14 @@ class Task:
         return self._pieces
 
     def __eq__(self, other):
-        return self._jobId == other.get_job_id() \
-               and self._taskId == other.get_task_id() \
+        return self._job_id == other.get_job_id() \
+               and self._task_id == other.get_task_id() \
                and self._sequence == other.get_sequence() \
                and np.array_equal(self._usable_machines, other.get_usable_machines())  # note pieces are omitted
 
     def __str__(self):
-        return f"[{self._jobId}, " \
-            f"{self._taskId}, " \
+        return f"[{self._job_id}, " \
+            f"{self._task_id}, " \
             f"{self._sequence}, " \
             f"{self._usable_machines}, " \
             f"{self._pieces}]"
@@ -79,7 +79,7 @@ class Job:
 
         See help(_Job)
         """
-        self._jobId = job_id
+        self._job_id = job_id
         self._tasks = []
         self._max_sequence = 0
 
@@ -96,13 +96,13 @@ class Job:
         return self._tasks[task_id]
 
     def get_job_id(self):
-        return self._jobId
+        return self._job_id
 
     def get_number_of_tasks(self):
         return len(self._tasks)
 
     def __eq__(self, other):
-        return self._jobId == other.get_job_id() \
+        return self._job_id == other.get_job_id() \
                and self._max_sequence == other.get_max_sequence() \
                and self._tasks == other.get_tasks()
 
