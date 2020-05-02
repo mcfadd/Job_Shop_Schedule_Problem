@@ -22,7 +22,7 @@ def _get_n_colors(n):
     g = int(random.random() * 256)
     b = int(random.random() * 256)
     step = 256 / n
-    for i in range(n):
+    for _ in range(n):
         r += step
         g += step
         b += step
