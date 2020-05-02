@@ -8,7 +8,7 @@
 
 {% if ts_agent_list %}
     <h3>Tabu Search</h3>
-    <b>Parameters</b>
+    <strong>Parameters</strong>
     <br>
     {% if ts_agent_list[0].time_condition %}
         runtime =  {{ ts_agent_list[0].runtime }}
@@ -24,7 +24,7 @@
     probability of changing an operation's machine = {{ ts_agent_list[0].probability_change_machine }}<br>
     reset threshold = {{ ts_agent_list[0].reset_threshold }} iterations<br>
     <br>
-    <b>Initial Makespan Statistics</b>
+    <strong>Initial Makespan Statistics</strong>
     <br>
     min = {{ ts_initial_makespans_stats.min }}<br>
     median = {{ ts_initial_makespans_stats.median }}<br>
@@ -34,7 +34,7 @@
     mean = {{ ts_initial_makespans_stats.mean }}<br>
     <br>
     <br>
-    <b>Final Makespan Statistics</b>
+    <strong>Final Makespan Statistics</strong>
     <br>
     min = {{ ts_result_makespans_stats.min }}<br>
     median = {{ ts_result_makespans_stats.median }}<br>
@@ -43,7 +43,7 @@
     variance = {{ ts_result_makespans_stats.var }}<br>
     mean = {{ ts_result_makespans_stats.mean }}<br>
     <br>
-    <b>Iteration Statistics</b>
+    <strong>Iteration Statistics</strong>
     <br>
     min = {{ iterations_per_ts_agent_stats.min }}<br>
     median = {{ iterations_per_ts_agent_stats.median }}<br>
@@ -52,13 +52,13 @@
     variance = {{ iterations_per_ts_agent_stats.var }}<br>
     mean = {{ iterations_per_ts_agent_stats.mean }}<br>
     <br>
-    <b>Plots</b>
+    <strong>Plots</strong>
     <br>
     <a href="./ts_makespans.html">Makespan vs Iteration</a><br>
     <a href="./neighborhood_sizes.html">Neighborhood Size vs Iteration</a><br>
     <a href="./tabu_list_sizes.html">Tabu Size vs Iteration</a><br>
     <br>
-    <b>Schedule</b>
+    <strong>Schedule</strong>
     <br>
     <a href="file://{{ output_directory }}/ts_schedule.xlsx">Excel Schedule</a><br>
     <a href="./ts_gantt_chart.html">Gantt Chart</a>
@@ -67,7 +67,7 @@
 
 {% if ga_agent and ga_agent.benchmark %}
     <h3>Genetic Algorithm</h3>
-    <b>Parameters</b>
+    <strong>Parameters</strong>
     <br>
     {% if  ga_agent.time_condition %}
         runtime =  {{ ga_agent.runtime }}
@@ -80,7 +80,7 @@
     selection size = {{ ga_agent.selection_size }}<br>
     mutation probability = {{ ga_agent.mutation_probability }}<br>
     <br>
-    <b>Initial Makespan Statistics</b>
+    <strong>Initial Makespan Statistics</strong>
     <br>
     min = {{ ga_initial_makespans_stats.min }}<br>
     median = {{ ga_initial_makespans_stats.median }}<br>
@@ -89,7 +89,7 @@
     variance = {{ ga_initial_makespans_stats.var }}    <br>
     mean = {{ ga_initial_makespans_stats.mean }}<br>
     <br>
-    <b>Final Makespan Statistics</b>
+    <strong>Final Makespan Statistics</strong>
     <br>
     min = {{ ga_result_makespans_stats.min }}<br>
     median = {{ ga_result_makespans_stats.median }}<br>
@@ -98,11 +98,11 @@
     variance = {{ ga_result_makespans_stats.var }}<br>
     mean = {{ ga_result_makespans_stats.mean }}<br>
     <br>
-    <b>Plots</b>
+    <strong>Plots</strong>
     <br>
     <a href="./ga_makespans.html">Makespan vs Iteration</a><br>
     <br>
-    <b>Schedule</b>
+    <strong>Schedule</strong>
     <br>
     <a href="file://{{ output_directory }}/ga_schedule.xlsx">Excel Schedule</a><br>
     <a href="./ga_gantt_chart.html">Gantt Chart</a>
