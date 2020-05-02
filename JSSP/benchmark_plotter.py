@@ -1,10 +1,18 @@
 import datetime
-import os
 import statistics
 import webbrowser
+from pathlib import Path
 
 import plotly.graph_objs as go
+from jinja2 import PackageLoader, Environment
 from plotly.offline import plot, iplot
+
+template_env = Environment(
+    loader=PackageLoader('JSSP', 'templates'),
+    autoescape=True
+)
+
+benchmark_template = "benchmark.html"
 
 
 def iplot_benchmark_results(ts_agent_list=None, ga_agent=None):
@@ -46,7 +54,7 @@ def iplot_benchmark_results(ts_agent_list=None, ga_agent=None):
         ga_agent.best_solution.iplot_gantt_chart(continuous=True)
 
 
-def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name=None, auto_open=True):
+def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, title=None, auto_open=True):
     """
     Outputs html files containing benchmark results in the output directory specified.
 
@@ -56,11 +64,11 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
     :type ga_agent: GeneticAlgorithmAgent
     :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for
 
-    :type output_dir: str
+    :type output_dir: Path | str
     :param output_dir: path to the output directory to place the html files into
 
-    :type name: str
-    :param name: name of the benchmark run, default to current datetime
+    :type title: str
+    :param title: name of the benchmark run, default to current datetime
 
     :type auto_open: bool
     :param auto_open: if true the benchmark output is automatically opened in a browser
@@ -71,107 +79,92 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, name
             and (ga_agent is None or not ga_agent.benchmark):
         return
 
-    if name is None:
-        name = "benchmark_run_{}".format(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))
+    if title is None:
+        title = "Benchmark Run {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
 
-    # output results
-    output_directory = os.path.abspath(output_dir + os.sep + name)
+    output_dir = Path(output_dir)
 
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
 
-    index_text = f'''<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-                    <html>
-                        <head>
-                            <meta content="text/html; charset=ISO-8859-1"
-                                http-equiv="content-type">
-                            <title>{name}</title>
-                        </head>
-                        <body>
-                            <h2>{name}</h2>
-                            {_ts_benchmark_results(ts_agent_list, output_directory) if ts_agent_list and all(ts_agent.benchmark for ts_agent in ts_agent_list) else ''}
-                            {_ga_benchmark_results(ga_agent, output_directory) if ga_agent and ga_agent.benchmark else ''}
-                        {'<br>' * 10}
-                        </body>
-                    </html>
-                    '''
+    def compute_stats(lst):
+        return {
+            'min': round(min(lst)),
+            'median': round(statistics.median(lst)),
+            'max': round(max(lst)),
+            'std': round(statistics.stdev(lst)) if len(lst) > 1 else 0,
+            'var': round(statistics.variance(lst)) if len(lst) > 1 else 0,
+            'mean': round(statistics.mean(lst))
+        }
+
+    # tabu search results
+    if ts_agent_list is not None:
+        _create_ts_plots(ts_agent_list, output_dir)
+        ts_result_makespans = []
+        ts_initial_makespans = []
+        ts_iterations = []
+        for ts_agent in ts_agent_list:
+            ts_result_makespans.append(ts_agent.best_solution.makespan)
+            ts_initial_makespans.append(ts_agent.initial_solution.makespan)
+            ts_iterations.append(ts_agent.benchmark_iterations)
+
+        ts_result_makespans_stats = compute_stats(ts_result_makespans)
+        ts_initial_makespans_stats = compute_stats(ts_initial_makespans)
+        ts_iterations_stats = compute_stats(ts_iterations)
+
+    else:
+        ts_result_makespans_stats = None
+        ts_initial_makespans_stats = None
+        ts_iterations_stats = None
+
+    # genetic algorithm results
+    if ga_agent is not None:
+        _create_ga_plots(ga_agent, output_dir)
+        ga_initial_makespans = [sol.makespan for sol in ga_agent.initial_population]
+        ga_result_makespans = [sol.makespan for sol in ga_agent.result_population]
+
+        ga_initial_makespans_stats = compute_stats(ga_initial_makespans)
+        ga_result_makespans_stats = compute_stats(ga_result_makespans)
+
+    else:
+        ga_initial_makespans_stats = None
+        ga_result_makespans_stats = None
+
+    # render template
+    template = template_env.get_template(benchmark_template)
+    rendered_template = template.render(
+        title=title,
+        ts_agent_list=ts_agent_list,
+        ts_initial_makespans_stats=ts_initial_makespans_stats,
+        ts_result_makespans_stats=ts_result_makespans_stats,
+        iterations_per_ts_agent_stats=ts_iterations_stats,
+        output_directory=output_dir.resolve(),
+        ga_agent=ga_agent,
+        ga_initial_makespans_stats=ga_initial_makespans_stats,
+        ga_result_makespans_stats=ga_result_makespans_stats,
+    )
 
     # create index.html
-    with open(output_directory + '/index.html', 'w') as output_file:
-        output_file.write(index_text)
+    with open(output_dir / 'index.html', 'w') as output_file:
+        output_file.write(rendered_template)
 
     if auto_open:
-        print(f'opening file://{output_directory} in browser')
-        webbrowser.open(f'file://{output_directory}/index.html')
+        webbrowser.open(f'file://{output_dir.resolve()}/index.html')
 
 
-def _ts_benchmark_results(ts_agent_list, output_directory):
+def _create_ts_plots(ts_agent_list, output_directory):
     """
     Formats TS benchmark results in an html file & creates plots (html files).
 
     :type ts_agent_list: [TabuSearchAgent]
     :param ts_agent_list: list of TabuSearchAgent instances to output the benchmark results for
 
-    :type output_directory: str
+    :type output_directory: Path
     :param output_directory: path to the directory to place the html files containing plots into
 
     :rtype: str
     :returns: html containing benchmark results
     """
-    best_makespans_per_ts_agent = []
-    iterations_per_ts_agent = []
-    for ts_agent in ts_agent_list:
-        best_makespans_per_ts_agent.append(ts_agent.min_makespan_coordinates[1])
-        iterations_per_ts_agent.append(ts_agent.benchmark_iterations)
-
-    # TODO come up with a way to display individual TS agent parameters
-    html = f'''
-        <h3>Tabu Search</h3>
-        <b>Parameters:</b>
-        <br>
-        {"runtime = " + str(ts_agent_list[0].runtime) + " seconds" if ts_agent_list[0].time_condition
-    else "iterations = " + str(ts_agent_list[0].iterations)}<br>
-        number of processes = {len(ts_agent_list)}<br>
-        number of solutions to return per processes = {ts_agent_list[0].num_solutions_to_find}<br>
-        tabu list size = {ts_agent_list[0].tabu_list_size}<br>
-        neighborhood size = {ts_agent_list[0].neighborhood_size}<br>
-        neighborhood wait = {ts_agent_list[0].neighborhood_wait} seconds<br>
-        probability of changing an operation's machine = {ts_agent_list[0].probability_change_machine}<br>
-        reset threshold = {ts_agent_list[0].reset_threshold} iterations<br>
-        best initial makespan = {round(min([ts_agent.initial_solution for ts_agent in ts_agent_list]).makespan)}<br>
-        <br>
-        <b>Makespan Results:</b>
-        <br>
-        min = {round(min(best_makespans_per_ts_agent))}<br>
-        median = {round(statistics.median(best_makespans_per_ts_agent))}<br>
-        max = {round(max(best_makespans_per_ts_agent))}<br>
-        stdev = {round(statistics.stdev(best_makespans_per_ts_agent)) if len(
-        best_makespans_per_ts_agent) > 1 else 0}<br>
-        var = {round(statistics.variance(best_makespans_per_ts_agent)) if len(
-        best_makespans_per_ts_agent) > 1 else 0}<br>
-        mean = {round(statistics.mean(best_makespans_per_ts_agent))}<br>
-        <br>
-        <b>Iterations Results:</b>
-        <br>
-        min = {min(iterations_per_ts_agent)}<br>
-        median = {statistics.median(iterations_per_ts_agent)}<br>
-        max = {max(iterations_per_ts_agent)}<br>
-        stdev = {statistics.stdev(iterations_per_ts_agent) if len(iterations_per_ts_agent) > 1 else 0}<br>
-        var = {statistics.variance(iterations_per_ts_agent) if len(iterations_per_ts_agent) > 1 else 0}<br>
-        mean = {statistics.mean(iterations_per_ts_agent)}<br>
-        <br>
-        <b>Plots:</b>
-        <br>
-        <a href="./ts_makespans.html">Makespan vs Iteration</a><br>
-        <a href="./neighborhood_sizes.html">Neighborhood Size vs Iteration</a><br>
-        <a href="./tabu_list_sizes.html">Tabu Size vs Iteration</a><br>
-        <br>
-        <b>Schedule:</b>
-        <br>
-        <a href="file://{output_directory}/ts_schedule.xlsx">ts_schedule.xlsx</a><br>
-        <a href="./ts_gantt_chart.html">Gantt Chart</a>
-        <br>
-        '''
 
     # create traces for plots
     makespans_traces, makespans_layout, \
@@ -180,95 +173,46 @@ def _ts_benchmark_results(ts_agent_list, output_directory):
 
     # create plots
     plot(dict(data=makespans_traces, layout=makespans_layout),
-         filename=output_directory + '/ts_makespans.html',
+         filename=str(output_directory / 'ts_makespans.html'),
          auto_open=False)
     plot(dict(data=nh_sizes_traces, layout=nh_sizes_layout),
-         filename=output_directory + '/neighborhood_sizes.html',
+         filename=str(output_directory / 'neighborhood_sizes.html'),
          auto_open=False)
     plot(dict(data=tl_sizes_traces, layout=tl_sizes_layout),
-         filename=output_directory + '/tabu_list_sizes.html',
+         filename=str(output_directory / 'tabu_list_sizes.html'),
          auto_open=False)
 
     # create schedule
     best_solution = min([ts_agent.best_solution for ts_agent in ts_agent_list])
-    best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ts_schedule', continuous=True)
-    best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ts_gantt_chart.html', continuous=True)
-
-    return html
+    best_solution.create_schedule_xlsx_file(str(output_directory / 'ts_schedule'), continuous=True)
+    best_solution.create_gantt_chart_html_file(str(output_directory / 'ts_gantt_chart.html'), continuous=True)
 
 
-def _ga_benchmark_results(ga_agent, output_directory):
+def _create_ga_plots(ga_agent, output_directory):
     """
     Formats GA benchmark results in an html file & creates plots (html files).
 
     :type ga_agent: GeneticAlgorithmAgent
     :param ga_agent: GeneticAlgorithmAgent instance to output the benchmark results for
 
-    :type output_directory: str
+    :type output_directory: Path
     :param output_directory: path to the directory to place the html files containing plots
 
     :rtype: str
     :returns: html containing benchmark results
     """
-    initial_population_makespans = [sol.makespan for sol in ga_agent.initial_population]
-    result_population_makespans = [sol.makespan for sol in ga_agent.result_population]
-    html = f'''
-        <h3>Genetic Algorithm</h3>
-        <b>Parameters:</b>
-        <br>
-        {"runtime = " + str(ga_agent.runtime) + " seconds" if ga_agent.time_condition
-    else "generations = " + str(ga_agent.iterations)}<br>
-        population size = {ga_agent.population_size}<br>
-        selection method = {ga_agent.selection_method.__name__}<br>
-        selection size = {ga_agent.selection_size}<br>
-        mutation probability = {ga_agent.mutation_probability}<br>
-        <br>
-        <b>Initial Population Makespans:</b>
-        <br>
-        min = {round(min(initial_population_makespans))}<br>
-        median = {round(statistics.median(initial_population_makespans))}<br>
-        max = {round(max(initial_population_makespans))}<br>
-        stdev = {round(statistics.stdev(initial_population_makespans)) if len(
-        initial_population_makespans) > 1 else 0}<br>
-        var = {round(statistics.variance(initial_population_makespans)) if len(
-        initial_population_makespans) > 1 else 0}<br>
-        mean = {round(statistics.mean(initial_population_makespans))}<br>
-        <br>
-        <b>Final Population Makespans:</b>
-        <br>
-        min = {round(min(result_population_makespans))}<br>
-        median = {round(statistics.median(result_population_makespans))}<br>
-        max = {round(max(result_population_makespans))}<br>
-        stdev = {round(statistics.stdev(result_population_makespans)) if len(
-        result_population_makespans) > 1 else 0}<br>
-        var = {round(statistics.variance(result_population_makespans)) if len(
-        result_population_makespans) > 1 else 0}<br>
-        mean = {round(statistics.mean(result_population_makespans))}<br>
-        <br>
-        <b>Plots:</b>
-        <br>
-        <a href="./ga_makespans.html">Makespan vs Iteration</a><br>
-        <br>
-        <b>Schedule:</b>
-        <br>
-        <a href="file://{output_directory}/ga_schedule.xlsx">ga_schedule.xlsx</a><br>
-        <a href="./ga_gantt_chart.html">Gantt Chart</a>
-        <br>
-        '''
 
     # create trace for plot
     makespans_traces, makespans_layout = _make_ga_traces(ga_agent)
 
     # create plot
     plot(dict(data=makespans_traces, layout=makespans_layout),
-         filename=output_directory + '/ga_makespans.html',
+         filename=str(output_directory / 'ga_makespans.html'),
          auto_open=False)
 
     # create schedule
-    ga_agent.best_solution.create_schedule_xlsx_file(output_directory + os.sep + 'ga_schedule', continuous=True)
-    ga_agent.best_solution.create_gantt_chart_html_file(output_directory + os.sep + 'ga_gantt_chart.html', continuous=True)
-
-    return html
+    ga_agent.best_solution.create_schedule_xlsx_file(str(output_directory / 'ga_schedule'), continuous=True)
+    ga_agent.best_solution.create_gantt_chart_html_file(str(output_directory / 'ga_gantt_chart.html'), continuous=True)
 
 
 def _make_ts_traces(ts_agent_list):
@@ -284,7 +228,8 @@ def _make_ts_traces(ts_agent_list):
     # create traces for plots
     makespans_traces = [
         go.Scatter(x=[ts_agent.min_makespan_coordinates[0] for ts_agent in ts_agent_list],
-                   y=[ts_agent.min_makespan_coordinates[1] for ts_agent in ts_agent_list], mode='markers', name='best makespans')
+                   y=[ts_agent.min_makespan_coordinates[1] for ts_agent in ts_agent_list], mode='markers',
+                   name='best makespans')
     ]
 
     nh_sizes_traces = []

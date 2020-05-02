@@ -1,26 +1,18 @@
-import os
-import shutil
 import unittest
 
-from JSSP import data
 from JSSP.genetic_algorithm import GASelectionEnum
 from JSSP.solver import Solver
-from tests import project_root, tmp_dir
+from tests.util import tmp_dir, csv_data, rm_tree
 
 
 class TestGA(unittest.TestCase):
 
     def setUp(self) -> None:
-        if not os.path.exists(tmp_dir):
-            os.mkdir(tmp_dir)
-
-        self.data = data.CSVData(
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
+        if not tmp_dir.exists():
+            tmp_dir.mkdir()
 
     def tearDown(self) -> None:
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        rm_tree(tmp_dir)
 
     def test_ga_time(self):
         runtime = 5  # seconds
@@ -29,7 +21,7 @@ class TestGA(unittest.TestCase):
         mutation_probability = 0.8
         selection_size = 5
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.genetic_algorithm_time(runtime=runtime,
                                       population=population,
                                       population_size=population_size,
@@ -56,9 +48,9 @@ class TestGA(unittest.TestCase):
             self.assertLessEqual(solver.solution, initial_sol)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ga_test_schedule')
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_schedule.xlsx'),
-                        "ga_test_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ga_test_schedule.xlsx'
+        solver.solution.create_schedule_xlsx_file(output_file)
+        self.assertTrue(output_file.exists(), "ga_test_schedule.xlsx was not produced")
 
     def test_ga_time_benchmark(self):
         runtime = 5  # seconds
@@ -67,7 +59,7 @@ class TestGA(unittest.TestCase):
         mutation_probability = 0.8
         selection_size = 5
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.genetic_algorithm_time(runtime=runtime,
                                       population=population,
                                       population_size=population_size,
@@ -100,15 +92,9 @@ class TestGA(unittest.TestCase):
         self.assertNotEqual(0, len(solver.ga_agent.min_makespan_coordinates))
 
         # output results
-        solver.output_benchmark_results(tmp_dir, name='ga_test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark'),
-                        "GA benchmark results were not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'index.html'),
-                        "GA benchmark results index.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'ga_makespans.html'),
-                        "GA benchmark results ga_makespans.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'ga_schedule.xlsx'),
-                        "GA benchmark results ga_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ga_test_benchmark'
+        solver.output_benchmark_results(output_file, auto_open=False)
+        self.assertTrue(output_file.exists(), "GA benchmark results were not produced")
 
     def test_ga_iter(self):
         iterations = 50
@@ -117,7 +103,7 @@ class TestGA(unittest.TestCase):
         mutation_probability = 0.8
         selection_size = 5
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.genetic_algorithm_iter(iterations=iterations,
                                       population=population,
                                       population_size=population_size,
@@ -144,9 +130,9 @@ class TestGA(unittest.TestCase):
             self.assertLessEqual(solver.solution, initial_sol)
 
         # output results
-        solver.solution.create_schedule_xlsx_file(tmp_dir + os.sep + 'ga_test_schedule')
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_schedule.xlsx'),
-                        "ga_test_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ga_test_schedule.xlsx'
+        solver.solution.create_schedule_xlsx_file(output_file)
+        self.assertTrue(output_file.exists(), "ga_test_schedule.xlsx was not produced")
 
     def test_ga_iter_benchmark(self):
         iterations = 50
@@ -155,7 +141,7 @@ class TestGA(unittest.TestCase):
         mutation_probability = 0.8
         selection_size = 5
 
-        solver = Solver(self.data)
+        solver = Solver(csv_data)
         solver.genetic_algorithm_iter(iterations=iterations,
                                       population=population,
                                       population_size=population_size,
@@ -188,36 +174,24 @@ class TestGA(unittest.TestCase):
         self.assertNotEqual(0, len(solver.ga_agent.min_makespan_coordinates))
 
         # # output results
-        solver.output_benchmark_results(tmp_dir, name='ga_test_benchmark', auto_open=False)
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark'),
-                        "GA benchmark results were not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'index.html'),
-                        "GA benchmark results index.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'ga_makespans.html'),
-                        "GA benchmark results ga_makespans.html was not produced")
-        self.assertTrue(os.path.exists(tmp_dir + os.sep + 'ga_test_benchmark' + os.sep + 'ga_schedule.xlsx'),
-                        "GA benchmark results ga_schedule.xlsx was not produced")
+        output_file = tmp_dir / 'ga_test_benchmark'
+        solver.output_benchmark_results(output_file, auto_open=False)
+        self.assertTrue(output_file.exists(), "GA benchmark results were not produced")
 
 
 class TestGASelectionMethods(unittest.TestCase):
 
-    def setUp(self) -> None:
-        self.data = data.CSVData(
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'sequenceDependencyMatrix.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'machineRunSpeed.csv',
-            project_root + os.sep + 'data' + os.sep + 'given_data' + os.sep + 'jobTasks.csv')
-
     def test_tournament_selection(self):
-        test_selection(self, GASelectionEnum.TOURNAMENT, self.data)
+        _test_selection(self, GASelectionEnum.TOURNAMENT, csv_data)
 
     def test_fitness_proportionate_selection(self):
-        test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE, self.data)
+        _test_selection(self, GASelectionEnum.FITNESS_PROPORTIONATE, csv_data)
 
     def test_random_selection(self):
-        test_selection(self, GASelectionEnum.RANDOM, self.data)
+        _test_selection(self, GASelectionEnum.RANDOM, csv_data)
 
 
-def test_selection(unit_test, selection_method, instance_data):
+def _test_selection(unit_test, selection_method, instance_data):
     iterations = 50
     population = None
     population_size = 100

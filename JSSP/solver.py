@@ -442,15 +442,15 @@ class Solver:
         self.solution = self.ga_agent.start()
         return self.solution
 
-    def output_benchmark_results(self, output_dir, name=None, auto_open=True):
+    def output_benchmark_results(self, output_dir, title=None, auto_open=True):
         """
         Outputs html files containing benchmark results in the output directory specified.
 
-        :type output_dir: str
+        :type output_dir: Path | str
         :param output_dir: path to the output directory to place the results into
 
-        :type name: str
-        :param name: name of the benchmark run
+        :type title: str
+        :param title: title of the benchmark run
 
         :type auto_open: bool
         :param auto_open: if true index.html is automatically opened in a browser
@@ -458,7 +458,7 @@ class Solver:
         :returns: None
         """
         benchmark_plotter.output_benchmark_results(output_dir, ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent,
-                                                   name=name, auto_open=auto_open)
+                                                   title=title, auto_open=auto_open)
 
     def iplot_benchmark_results(self):
         """

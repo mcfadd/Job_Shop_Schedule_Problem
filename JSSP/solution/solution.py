@@ -151,7 +151,7 @@ class Solution:
         """
         Creates an excel file that contains the schedule for each machine of this Solution.
 
-        :type output_path: str
+        :type output_path: Path | str
         :param output_path: path to the excel file to create
 
         :type start_date: datetime.date
@@ -202,7 +202,7 @@ class Solution:
         """
         Creates a gantt chart html file of the solution.
 
-        :type output_path: str
+        :type output_path: Path | str
         :param output_path: path to the gantt chart html file to create
 
         :type title: str
