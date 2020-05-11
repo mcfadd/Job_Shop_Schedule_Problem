@@ -1,9 +1,9 @@
-import csv
 import re
 from abc import ABC
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 
 class Task:
@@ -300,16 +300,16 @@ class Data(ABC):
 
 class CSVData(Data):
     """
-    JSSP instance data class for .csv data.
+    JSSP instance data class for .csv or .xlsx data.
 
     :type seq_dep_matrix_file: Path | str
-    :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
+    :param seq_dep_matrix_file: path to the csv or xlsx file containing the sequence dependency setup times
 
     :type machine_speeds_file: Path | str
-    :param machine_speeds_file: path to the csv file containing all of the machine speeds
+    :param machine_speeds_file: path to the csv or xlsx file containing all of the machine speeds
 
     :type job_tasks_file: Path | str
-    :param job_tasks_file: path to the csv file containing all of the job-tasks
+    :param job_tasks_file: path to the csv or xlsx file containing all of the job-tasks
 
     :returns: None
     """
@@ -319,13 +319,13 @@ class CSVData(Data):
         Initializes all of the static data from the csv files.
 
         :type seq_dep_matrix_file: Path | str
-        :param seq_dep_matrix_file: path to the csv file containing the sequence dependency setup times
+        :param seq_dep_matrix_file: path to the csv or xlsx file containing the sequence dependency setup times
 
         :type machine_speeds_file: Path | str
-        :param machine_speeds_file: path to the csv file containing all of the machine speeds
+        :param machine_speeds_file: path to the csv or xlsx file containing all of the machine speeds
 
         :type job_tasks_file: Path | str
-        :param job_tasks_file: path to the csv file containing all of the job-tasks
+        :param job_tasks_file: path to the csv or xlsx file containing all of the job-tasks
 
         :returns: None
         """
@@ -334,13 +334,34 @@ class CSVData(Data):
         self.seq_dep_matrix_file_path = Path(seq_dep_matrix_file)
         self.machine_speeds_file_path = Path(machine_speeds_file)
 
-        self._read_job_tasks_file(self.job_tasks_file_path)
-        self._read_sequence_dependency_matrix_file(self.seq_dep_matrix_file_path)
-        self._read_machine_speeds_file(self.machine_speeds_file_path)
+        def _convert_to_df(path):
+            """
+            Returns a data frame by reading a file.
+
+            :type path: Path
+            :param path: file to read as a data frame
+
+            :rtype: DataFrame
+            :return: data frame that was read
+            """
+            if path.suffix == ".csv":
+                return pd.read_csv(path)
+            elif path.suffix == ".xlsx":
+                return pd.read_excel(path)
+            else:
+                raise UserWarning("File extension must either be .csv or .xlsx")
+
+        self.job_tasks_df = _convert_to_df(self.job_tasks_file_path)
+        self.seq_dep_matrix_file_df = _convert_to_df(self.seq_dep_matrix_file_path)
+        self.machine_speeds_file_df = _convert_to_df(self.machine_speeds_file_path)
+
+        self._read_job_tasks_df(self.job_tasks_df)
+        self._read_sequence_dependency_matrix_df(self.seq_dep_matrix_file_df)
+        self._read_machine_speeds_df(self.machine_speeds_file_df)
 
         self.total_number_of_jobs = len(self.jobs)
-        self.total_number_of_tasks = self.sequence_dependency_matrix.shape[0]
-        self.max_tasks_for_a_job = max([x.get_number_of_tasks() for x in self.jobs])
+        self.total_number_of_tasks = sum(len(job.get_tasks()) for job in self.jobs)
+        self.max_tasks_for_a_job = max(x.get_number_of_tasks() for x in self.jobs)
         self.total_number_of_machines = self.machine_speeds.shape[0]
 
         self.job_task_index_matrix = np.full((self.total_number_of_jobs, self.max_tasks_for_a_job), -1, dtype=np.intc)
@@ -366,83 +387,74 @@ class CSVData(Data):
 
                 task_index += 1
 
-    def _read_job_tasks_file(self, job_tasks_file):
+    def _read_job_tasks_df(self, job_tasks_df):
         """
-        Populates self.jobs by reading the job_tasks_file csv file.
+        Populates self.jobs by reading the job_tasks_df data frame.
 
-        :type job_tasks_file: Path | str
-        :param job_tasks_file: path to the csv file that contains the job-task data
+        :type job_tasks_df: DataFrame
+        :param job_tasks_df: data frame that contains the job-task data
 
         :returns: None
-
-        .. Note:: this function assumes that all of the jobs in job_tasks_file are in ascending order
-        and are in the same order as in the sequence_dependency_matrix csv file.
         """
-        prev_job_id = -1  # record previously seen job_id
-        with open(job_tasks_file) as fin:
-            # skip headers (i.e. first row in csv file)
-            next(fin)
-            for row in csv.reader(fin):
-                # create task object
-                task = Task(
-                    int(row[0]),  # job_id
-                    int(row[1]),  # task_id
-                    int(row[2]),  # seq num
-                    np.array([int(x) for x in row[3][1:-1].strip().split(' ')], dtype=np.intc),  # usable machines
-                    int(row[4])  # pieces
-                )
-                # create & append new job if we encounter job_id that has not been seen
-                if task.get_job_id() != prev_job_id:
-                    self.jobs.append(Job(task.get_job_id()))
-                    prev_job_id = task.get_job_id()
+        seen_jobs_ids = set()
+        for i, row in job_tasks_df.iterrows():
+            # create task object
+            task = Task(
+                int(row['Job']),
+                int(row['Task']),
+                int(row['Sequence']),
+                np.array([int(x) for x in row['Usable_Machines'][1:-1].strip().split(' ')], dtype=np.intc),
+                int(row['Pieces'])
+            )
+            job_id = task.get_job_id()
 
-                # update job's max sequence number
-                if task.get_sequence() > self.jobs[task.get_job_id()].get_max_sequence():
-                    self.jobs[task.get_job_id()].set_max_sequence(task.get_sequence())
+            # create & append new job if we encounter job_id that has not been seen
+            if job_id not in seen_jobs_ids:
+                self.jobs.append(Job(job_id))
+                seen_jobs_ids.add(job_id)
 
-                # append task to associated job.tasks list
-                self.jobs[task.get_job_id()].get_tasks().append(task)
+            # update job's max sequence number
+            if task.get_sequence() > self.get_job(job_id).get_max_sequence():
+                self.get_job(job_id).set_max_sequence(task.get_sequence())
 
-    def _read_sequence_dependency_matrix_file(self, seq_dep_matrix_file):
+            # append task to associated job.tasks list
+            self.get_job(job_id).get_tasks().append(task)
+
+    def _read_sequence_dependency_matrix_df(self, seq_dep_matrix_df):
         """
-        Populates self.sequence_dependency_matrix by reading the seq_dep_matrix_file csv file.
+        Populates self.sequence_dependency_matrix by reading the seq_dep_matrix_df data frame.
 
-        :type seq_dep_matrix_file: Path | str
-        :param seq_dep_matrix_file: path to the csv file that contains the sequence dependency matrix
+        :type seq_dep_matrix_df: DataFrame
+        :param seq_dep_matrix_df: data frame that contains the sequence dependency matrix
 
         :returns: None
-
-        .. Note:: this function assumes that all of the jobs in job_tasks_file are in ascending order
-        and are in the same order as in the sequence_dependency_matrix csv file.
-
         """
-        with open(seq_dep_matrix_file) as fin:
-            # skip headers (i.e. first row in csv file)
-            next(fin)
-            self.sequence_dependency_matrix = np.array(
-                [[int(x) for x in row[1:]]
-                 for row in csv.reader(fin)], dtype=np.intc)
+        seq_dep_matrix_df = seq_dep_matrix_df.drop(seq_dep_matrix_df.columns[0], axis=1)  # drop first column
+        tmp = []
+        for r, row in seq_dep_matrix_df.iterrows():
+            tmp2 = []
+            for c, value in row.iteritems():
+                tmp2.append(value)
+            tmp.append(tmp2)
 
-    def _read_machine_speeds_file(self, machine_speeds_file):
+        self.sequence_dependency_matrix = np.array(tmp, dtype=np.intc)
+
+    def _read_machine_speeds_df(self, machine_speeds_df):
         """
-        Populates self.machine_speeds by reading the machine_speeds_file csv file.
+        Populates self.machine_speeds by reading the machine_speeds_df data frame.
 
-        :type machine_speeds_file: Path | str
-        :param machine_speeds_file: path to the csv file that contains the machine run speeds
+        :type machine_speeds_df: DataFrame
+        :param machine_speeds_df: data frame that contains the machine run speeds
 
         :returns: None
-
-        .. Note:: this function assumes that the machines are listed in ascending order.
         """
-        with open(machine_speeds_file) as fin:
-            # skip headers (i.e. first row in csv file)
-            next(fin)
-            self.machine_speeds = np.array([int(row[1]) for row in csv.reader(fin)], dtype=np.float)
+        machine_speeds_df = machine_speeds_df.sort_values('Machine')
+        self.machine_speeds = np.array([row['RunSpeed'] for i, row in machine_speeds_df.iterrows()], dtype=np.float)
 
 
 class FJSData(Data):
     """
-    JSSP instance data class for .fjs data.
+    JSSP instance data class for .fjs (Flexible Job Shop) data.
 
     :type input_file: Path | str
     :param input_file: path to the fjs file to read the data from
