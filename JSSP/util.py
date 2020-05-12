@@ -46,7 +46,10 @@ class Heap:
             heapq.heappush(self._heap, obj)
 
     def pop(self):
-        return heapq.heappop(self._heap).val
+        if self._is_max_heap:
+            return heapq.heappop(self._heap).val
+        else:
+            return heapq.heappop(self._heap)
 
     def __getitem__(self, i):
         return self._heap[i].val

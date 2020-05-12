@@ -202,10 +202,9 @@ class _JobTaskHeap(Heap):
         self.dict = {}
         for job in data.jobs:
             self.dict[job.get_job_id()] = []
-
             for task in job.get_tasks():
                 if task.get_sequence() == 0:
-                    super().push(TaskWrapper(self.data, task))
+                    self.push(task)
 
     def push(self, task):
         super().push(TaskWrapper(self.data, task))

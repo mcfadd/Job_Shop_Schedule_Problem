@@ -152,16 +152,6 @@ class TabuSearchAgent:
 
         # create stopping condition function
         stop_condition = get_stop_condition(self.time_condition, self.runtime, self.iterations)
-        # if self.time_condition:
-        #     stop_time = time.time() + self.runtime
-        #
-        #     def stop_condition():
-        #         return time.time() >= stop_time
-        # else:
-        #     stop_iter = self.iterations
-        #
-        #     def stop_condition():
-        #         return iterations >= stop_iter
 
         while not stop_condition(iterations):
             neighborhood = self._generate_neighborhood(seed_solution,
@@ -246,63 +236,6 @@ TS data structures
 '''
 
 
-# class _MaxHeapObj:
-#     """
-#     Wrapper class for Solution used in _MaxHeap.
-#     """
-#     def __init__(self, val):
-#         self.val = val
-#
-#     def __lt__(self, other):
-#         return self.val > other.val
-#
-#     def __eq__(self, other):
-#         return self.val == other.val
-
-
-# class _MaxHeap:
-#     """
-#     Heap for containing Solution instances.
-#     """
-#     def __init__(self):
-#         self.h = []
-#
-#     def push(self, solution):
-#         """
-#         Pushes a solution onto this _MaxHeap.
-#
-#         :type solution: Solution
-#         :param solution: solution to push
-#
-#         :return: None
-#         """
-#         heapq.heappush(self.h, _MaxHeapObj(solution))
-#
-#     def pop(self):
-#         """
-#         Pops a solution from the top of this _MaxHeap.
-#
-#         :rtype: Solution
-#         :return: solution at the top of this heap
-#         """
-#         return heapq.heappop(self.h).val
-#
-#     def __getitem__(self, i):
-#         return self.h[i].val
-#
-#     def __len__(self):
-#         return len(self.h)
-
-
-# class _Node:
-#     """
-#     Single linked list node ADT used in _TabuList.
-#     """
-#     def __init__(self, data_val=None):
-#         self.data_val = data_val
-#         self.next_node = None
-
-
 class _TabuList(Queue):
     """
     Queue for containing Solution instances.
@@ -325,47 +258,6 @@ class _TabuList(Queue):
 
     def __len__(self):
         return self.solutions.size
-
-# class _TabuList:
-#     """
-#     Queue for containing Solution instances.
-#     """
-#     def __init__(self, initial_solution):
-#         self.head = self.tail = _Node(data_val=initial_solution)  # use linked list to keep FIFO behavior
-#         self.solutions = _SolutionSet()
-#         self.solutions.add(initial_solution)
-#
-#     def enqueue(self, solution):
-#         """
-#         Adds a solution to the end of this _TabuList.
-#
-#         :type solution: Solution
-#         :param solution: solution to add
-#
-#         :returns: None
-#         """
-#         self.solutions.add(solution)
-#         new_node = _Node(data_val=solution)
-#         self.tail.next_node = new_node
-#         self.tail = new_node
-#
-#     def dequeue(self):
-#         """
-#         Removes the solution at the beginning of this _TabuList.
-#
-#         :rtype: Solution
-#         :returns: Solution that was removed
-#         """
-#         head_node = self.head
-#         self.head = self.head.next_node
-#         self.solutions.remove(head_node.value)
-#         return head_node.value
-#
-#     def __contains__(self, solution):
-#         return solution in self.solutions
-#
-#     def __len__(self):
-#         return self.solutions.size
 
 
 class _SolutionSet:

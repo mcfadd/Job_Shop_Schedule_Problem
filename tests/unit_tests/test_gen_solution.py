@@ -3,37 +3,29 @@ import unittest
 
 from JSSP import data
 from JSSP.exception import InfeasibleSolutionException
-from JSSP.solution.factory import TaskWrapper, _MinHeapObj, _JobTaskHeap, SolutionFactory
+from JSSP.solution.factory import TaskWrapper, _JobTaskHeap, SolutionFactory
 from tests.util import project_root, csv_data, get_files_with_suffix
 
 
 class TestHeap(unittest.TestCase):
 
-    def test_min_heap_class(self):
-        task1 = csv_data.jobs[0].get_task(0)
-        task2 = csv_data.jobs[0].get_task(1)
-
-        min_heap_obj_task1 = _MinHeapObj(csv_data, task1)
-        min_heap_obj_task2 = _MinHeapObj(csv_data, task2)
-        self.assertGreater(min_heap_obj_task1, min_heap_obj_task2)
-
-    def test_max_heap_class(self):
+    def test_task_wrapper_class(self):
         task1 = csv_data.jobs[0].get_task(0)
         task2 = csv_data.jobs[0].get_task(1)
 
         max_heap_obj_task1 = TaskWrapper(csv_data, task1)
         max_heap_obj_task2 = TaskWrapper(csv_data, task2)
-        self.assertLess(max_heap_obj_task1, max_heap_obj_task2)
+        self.assertGreater(max_heap_obj_task1, max_heap_obj_task2)
 
     def test_min_heap(self):
-        heap = _JobTaskHeap(csv_data, maxheap=False)
+        heap = _JobTaskHeap(csv_data, max_heap=False)
         for job in csv_data.jobs:
             for task in job.get_tasks():
-                heap.push_task(task)
+                heap.push(task)
 
         tmp_list = []
         while len(heap) > 0:
-            task = heap.pop_task()
+            task = heap.pop()
             task_index = csv_data.job_task_index_matrix[task.get_job_id(), task.get_task_id()]
 
             processing_times = [processing_time for processing_time in
@@ -47,14 +39,14 @@ class TestHeap(unittest.TestCase):
             self.assertLessEqual(tmp_list[i][1], tmp_list[i + 1][1])
 
     def test_max_heap(self):
-        heap = _JobTaskHeap(csv_data, maxheap=True)
+        heap = _JobTaskHeap(csv_data, max_heap=True)
         for job in csv_data.jobs:
             for task in job.get_tasks():
-                heap.push_task(task)
+                heap.push(task)
 
         tmp_list = []
         while len(heap) > 0:
-            task = heap.pop_task()
+            task = heap.pop()
             task_index = csv_data.job_task_index_matrix[task.get_job_id(), task.get_task_id()]
 
             processing_times = [processing_time for processing_time in

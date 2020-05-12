@@ -178,16 +178,6 @@ class GeneticAlgorithmAgent:
 
         # create stopping condition function
         stop_condition = get_stop_condition(self.time_condition, self.runtime, self.iterations)
-        # if self.time_condition:
-        #     stop_time = time.time() + self.runtime
-        #
-        #     def stop_condition():
-        #         return time.time() >= stop_time
-        # else:
-        #     stop_iter = self.iterations
-        #
-        #     def stop_condition():
-        #         return iterations >= stop_iter
 
         not_done = True
         while not stop_condition(iterations):
