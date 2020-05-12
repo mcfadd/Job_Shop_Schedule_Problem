@@ -3,7 +3,7 @@ import unittest
 
 from JSSP import data
 from JSSP.exception import InfeasibleSolutionException
-from JSSP.solution.factory import _MaxHeapObj, _MinHeapObj, _JobTaskHeap, SolutionFactory
+from JSSP.solution.factory import TaskWrapper, _MinHeapObj, _JobTaskHeap, SolutionFactory
 from tests.util import project_root, csv_data, get_files_with_suffix
 
 
@@ -21,8 +21,8 @@ class TestHeap(unittest.TestCase):
         task1 = csv_data.jobs[0].get_task(0)
         task2 = csv_data.jobs[0].get_task(1)
 
-        max_heap_obj_task1 = _MaxHeapObj(csv_data, task1)
-        max_heap_obj_task2 = _MaxHeapObj(csv_data, task2)
+        max_heap_obj_task1 = TaskWrapper(csv_data, task1)
+        max_heap_obj_task2 = TaskWrapper(csv_data, task2)
         self.assertLess(max_heap_obj_task1, max_heap_obj_task2)
 
     def test_min_heap(self):

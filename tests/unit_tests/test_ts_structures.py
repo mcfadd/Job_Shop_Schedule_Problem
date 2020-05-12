@@ -1,7 +1,7 @@
 import unittest
 
 from JSSP.solution import SolutionFactory
-from JSSP.tabu_search.ts import _SolutionSet, _TabuList, _MaxHeap
+from JSSP.tabu_search.ts import _SolutionSet, _TabuList
 from tests.util import csv_data
 
 
@@ -49,7 +49,7 @@ class TestTSStructures(unittest.TestCase):
         size = 100
         while tabu_list.solutions.size < size:
             tabu_list.enqueue(SolutionFactory(csv_data).get_solution())
-        self.assertNotEqual(tabu_list.head.data_val, tabu_list.tail.data_val)
+        self.assertNotEqual(tabu_list.head.value, tabu_list.tail.value)
 
         # count the number of solutions in tabu_list
         cnt = 0
