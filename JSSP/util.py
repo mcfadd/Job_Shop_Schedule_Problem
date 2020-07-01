@@ -4,24 +4,24 @@ import time
 
 def get_stop_condition(time_condition, runtime, max_iterations):
     """
-    TODO
+    Gets a function for checking the stopping condition of an optimization function.
 
     :type time_condition: bool
-    :param time_condition:
+    :param time_condition: If True then runtime is used as the stopping condition
 
-    :type runtime: int
-    :param runtime:
+    :type runtime: float
+    :param runtime: number of seconds that the optimization function should run for
 
     :type max_iterations: int
-    :param max_iterations:
+    :param max_iterations: maximum number of iterations that the optimization function should execute
 
     :rtype: function
-    :return:
+    :return: function which returns True if the stopping condition is met
     """
     if time_condition:
         stop_time = time.time() + runtime
 
-        def stop_condition(iterations):
+        def stop_condition(_):
             return time.time() >= stop_time
     else:
         def stop_condition(iterations):
@@ -32,7 +32,7 @@ def get_stop_condition(time_condition, runtime, max_iterations):
 
 class Heap:
     """
-    TODO
+    Heap data structure.
     """
 
     def __init__(self, max_heap=False):
@@ -60,7 +60,7 @@ class Heap:
 
 class MaxHeapObj:
     """
-    TODO
+    Wrapper class used for max heaps.
     """
     def __init__(self, val):
         self.val = val
