@@ -95,6 +95,7 @@ workflows:
               only: /.*/
       - publish-github-release:
           name: "Publish Github Release"
+          context: GithubRelease
           requires:
             - "Windows Build and Test"
             - "Linux Build and Test"
