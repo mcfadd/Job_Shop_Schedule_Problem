@@ -1,9 +1,8 @@
 import unittest
 
-from JSSP.solution import SolutionFactory
 from JSSP.tabu_search.ts import _SolutionSet, _TabuList
 from JSSP.util import Heap
-from tests.util import csv_data
+from tests.util import csv_data_solution_factory
 
 
 class TestTSStructures(unittest.TestCase):
@@ -12,7 +11,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = SolutionFactory(csv_data).get_solution()
+        solution_obj1 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -20,7 +19,7 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(solution_set.size, 1)
 
         # add another Solution
-        solution_obj2 = SolutionFactory(csv_data).get_solution()
+        solution_obj2 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
@@ -31,7 +30,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = SolutionFactory(csv_data).get_solution()
+        solution_obj1 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -49,14 +48,14 @@ class TestTSStructures(unittest.TestCase):
         tabu_list = _TabuList()
         size = 100
         while tabu_list.solutions.size < size:
-            sol = SolutionFactory(csv_data).get_solution()
+            sol = csv_data_solution_factory.get_solution()
             tabu_list.put(sol)
             self.assertTrue(sol in tabu_list)
 
         self.assertEqual(len(tabu_list), size)
 
     def test_tabu_list_dequeue(self):
-        initial_solution = SolutionFactory(csv_data).get_solution()
+        initial_solution = csv_data_solution_factory.get_solution()
 
         # build tabu_list and solutions list
         tabu_list = _TabuList()
@@ -64,7 +63,7 @@ class TestTSStructures(unittest.TestCase):
         lst = [initial_solution]
         size = 100
         while tabu_list.solutions.size < size:
-            solution_obj = SolutionFactory(csv_data).get_solution()
+            solution_obj = csv_data_solution_factory.get_solution()
             tabu_list.put(solution_obj)
             lst.append(solution_obj)
 
@@ -81,7 +80,7 @@ class TestTSStructures(unittest.TestCase):
         heap_size = 50
         heap = Heap(max_heap=True)
         for _ in range(heap_size):
-            heap.push(SolutionFactory(csv_data).get_solution())
+            heap.push(csv_data_solution_factory.get_solution())
 
         self.assertEqual(heap_size, len(heap), f"The max heap size should be equal to {heap_size}")
 

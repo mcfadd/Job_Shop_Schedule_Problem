@@ -11,6 +11,8 @@ csv_data = data.SpreadsheetData(
             project_root / 'data/given_data/machineRunSpeed.csv',
             project_root / 'data/given_data/jobTasks.csv')
 
+csv_data_solution_factory = SolutionFactory(csv_data)
+
 
 def path_walk(top, topdown=False, followlinks=False):
     names = list(top.iterdir())
