@@ -466,7 +466,10 @@ class Solver:
         :param auto_open: if true index.html is automatically opened in a browser
 
         :returns: None
+
+        :raise UserWarning if one of the optimization functions was not ran in benchmark mode
         """
+        self._check_agents()
         benchmark_plotter.output_benchmark_results(output_dir, ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent,
                                                    title=title, auto_open=auto_open)
 
@@ -475,5 +478,19 @@ class Solver:
         Plots the benchmark results in an ipython notebook.
 
         :returns: None
+
+        :raise UserWarning if one of the optimization functions was not ran in benchmark mode
         """
+        self._check_agents()
         benchmark_plotter.iplot_benchmark_results(ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent)
+
+    def _check_agents(self):
+        # check if both agents are None
+        if self.ts_agent_list is None and self.ga_agent is None:
+            raise UserWarning("Solver's agents were None. You need to run at least one optimization function.")
+
+        # check if one agent was ran in benchmark mode
+        if not any([self.ts_agent_list is None or all(ts_agent.benchmark for ts_agent in self.ts_agent_list),
+                    self.ga_agent is None or self.ga_agent.benchmark]):
+            raise UserWarning("You must run one of the optimization functions in benchmark mode.")
+

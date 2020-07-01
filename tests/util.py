@@ -1,3 +1,5 @@
+import random
+import string
 import tempfile
 from pathlib import Path
 
@@ -64,3 +66,8 @@ def get_files_with_suffix(dir_path, suffix):
                 result.append(fname)
 
     return result
+
+
+def random_string(length=8):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for _ in range(length))
