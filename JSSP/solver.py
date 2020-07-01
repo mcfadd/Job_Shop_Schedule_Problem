@@ -1,3 +1,4 @@
+import datetime
 import multiprocessing as mp
 import pickle
 import time
@@ -57,8 +58,8 @@ class Solver:
 
         The parent process waits for the child processes to finish, then collects their results and updates self.solution.
 
-        :type runtime: float
-        :param runtime: seconds that tabu search should run for
+        :type runtime: float | datetime.timedelta
+        :param runtime: either the number of seconds or timedelta that tabu search should run for
 
         :type num_solutions_per_process: int
         :param num_solutions_per_process: number of solutions that one tabu search process should gather
@@ -96,7 +97,12 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        return self._tabu_search(runtime, time_condition=True, num_solutions_per_process=num_solutions_per_process,
+        if isinstance(runtime, datetime.timedelta):
+            runtime_seconds = runtime.total_seconds()
+        else:
+            runtime_seconds = runtime
+
+        return self._tabu_search(runtime_seconds, time_condition=True, num_solutions_per_process=num_solutions_per_process,
                                  num_processes=num_processes, tabu_list_size=tabu_list_size,
                                  neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
                                  probability_change_machine=probability_change_machine,
@@ -287,8 +293,8 @@ class Solver:
         First this function generates a random initial population if the population parameter is None,
         then it runs GA with the parameters specified and updates self.solution.
 
-        :type runtime: float
-        :param runtime: seconds to run the GA
+        :type runtime: float | datetime.timedelta
+        :param runtime: either the number of seconds or timedelta to run the GA for
 
         :type population: [Solution]
         :param population: list of Solutions to start the GA from
@@ -317,7 +323,11 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        return self._genetic_algorithm(runtime, time_condition=True, population=population,
+        if isinstance(runtime, datetime.timedelta):
+            runtime_seconds = runtime.total_seconds()
+        else:
+            runtime_seconds = runtime
+        return self._genetic_algorithm(runtime_seconds, time_condition=True, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
                                        selection_size=selection_size, benchmark=benchmark, verbose=verbose,
