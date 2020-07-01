@@ -1,11 +1,11 @@
 import random
 import statistics
-import time
 from enum import Enum
 
 from ._ga_helpers import crossover
 from ..exception import InfeasibleSolutionException
 from ..solution import Solution, SolutionFactory
+from ..util import get_stop_condition
 
 """
 GA selection functions
@@ -128,6 +128,8 @@ class GeneticAlgorithmAgent:
         assert selection_size is not None and 1 < selection_size, "selection_size must be an integer greater than 1"
 
         # parameters
+        self.runtime = None
+        self.iterations = None
         self.time_condition = time_condition
         if time_condition:
             self.runtime = stopping_condition
@@ -175,19 +177,10 @@ class GeneticAlgorithmAgent:
         best_solution_iteration = 0
 
         # create stopping condition function
-        if self.time_condition:
-            stop_time = time.time() + self.runtime
-
-            def stop_condition():
-                return time.time() >= stop_time
-        else:
-            stop_iter = self.iterations
-
-            def stop_condition():
-                return iterations >= stop_iter
+        stop_condition = get_stop_condition(self.time_condition, self.runtime, self.iterations)
 
         not_done = True
-        while not stop_condition():
+        while not stop_condition(iterations):
             if self.benchmark:
                 avg_population_makespan_v_iter.append(statistics.mean([sol.makespan for sol in population]))
 
@@ -210,7 +203,7 @@ class GeneticAlgorithmAgent:
                         if child1 != parent1 and child1 != parent2:
                             feasible_child = True
                     except InfeasibleSolutionException:
-                        if stop_condition():
+                        if stop_condition(iterations):
                             not_done = False
                             break
 
@@ -224,7 +217,7 @@ class GeneticAlgorithmAgent:
                         if child2 != parent1 and child2 != parent2:
                             feasible_child = True
                     except InfeasibleSolutionException:
-                        if stop_condition():
+                        if stop_condition(iterations):
                             not_done = False
                             break
 
