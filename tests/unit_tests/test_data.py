@@ -9,7 +9,7 @@ from tests.util import project_root, tmp_dir, get_files_with_suffix, rm_tree
 class TestData(unittest.TestCase):
 
     def test_create_csv_data_path(self):
-        csv_data = data.CSVData(
+        csv_data = data.SpreadsheetData(
             project_root / 'data/given_data/sequenceDependencyMatrix.csv',
             project_root / 'data/given_data/machineRunSpeed.csv',
             project_root / 'data/given_data/jobTasks.csv')
@@ -30,7 +30,7 @@ class TestData(unittest.TestCase):
         self.assertIsNotNone(csv_data.max_tasks_for_a_job)
 
     def test_create_csv_data_str(self):
-        csv_data = data.CSVData(
+        csv_data = data.SpreadsheetData(
             str(project_root / 'data/given_data/sequenceDependencyMatrix.csv'),
             str(project_root / 'data/given_data/machineRunSpeed.csv'),
             str(project_root / 'data/given_data/jobTasks.csv'))
@@ -107,9 +107,9 @@ class TestFJSConversionToCSV(unittest.TestCase):
             data.Data.convert_fjs_to_csv(fjs_instance, tmp_dir)
 
             # read in converted csv file
-            csv_data = data.CSVData(tmp_dir / 'sequenceDependencyMatrix.csv',
-                                    tmp_dir / 'machineRunSpeed.csv',
-                                    tmp_dir / 'jobTasks.csv')
+            csv_data = data.SpreadsheetData(tmp_dir / 'sequenceDependencyMatrix.csv',
+                                            tmp_dir / 'machineRunSpeed.csv',
+                                            tmp_dir / 'jobTasks.csv')
 
             # make sure the data is the same
             np.testing.assert_array_equal(sequence_dependency_matrix, csv_data.sequence_dependency_matrix,

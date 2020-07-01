@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from .solution import Solution
-from ..data import Data, CSVData
+from ..data import Data, SpreadsheetData
 from ..util import Heap
 
 
@@ -101,7 +101,7 @@ class SolutionFactory:
 
             # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
             # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
-            if isinstance(self.jssp_instance_data, CSVData):
+            if isinstance(self.jssp_instance_data, SpreadsheetData):
                 while last_task_scheduled_on_machine[rand_machine] is not None \
                         and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
                         and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
@@ -153,7 +153,7 @@ class SolutionFactory:
             tmp_task_list = []
             # TODO the heap (i.e. list) is depleted in this while loop which causes an index out of bound exception.
             #  This shouldn't happen if the sequence dependency matrix is correct and accounts for wait time
-            if isinstance(self.jssp_instance_data, CSVData):
+            if isinstance(self.jssp_instance_data, SpreadsheetData):
                 while last_task_scheduled_on_machine[rand_machine] is not None \
                         and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
                         and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():

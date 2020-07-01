@@ -52,12 +52,12 @@ The following example minimally demonstrates how to run parallel tabu search to 
 
 ```python
 from JSSP.solver import Solver
-from JSSP.data import CSVData
+from JSSP.data import SpreadsheetData
 
 # initialize data
-data = CSVData('data/given_data/sequenceDependencyMatrix.csv',
-               'data/given_data/machineRunSpeed.csv',
-               'data/given_data/jobTasks.csv')
+data = SpreadsheetData('data/given_data/sequenceDependencyMatrix.csv',
+                       'data/given_data/machineRunSpeed.csv',
+                       'data/given_data/jobTasks.csv')
 
 # run parallel Tabu Search
 solver = Solver(data)

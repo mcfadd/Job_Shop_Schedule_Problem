@@ -298,7 +298,7 @@ class Data(ABC):
                 fout.write(line)
 
 
-class CSVData(Data):
+class SpreadsheetData(Data):
     """
     JSSP instance data class for .csv or .xlsx data.
 
