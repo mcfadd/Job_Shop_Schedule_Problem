@@ -319,7 +319,8 @@ class SpreadsheetData(Data):
         Initializes all of the static data from the csv files.
 
         :type seq_dep_matrix: Path | str | Dataframe
-        :param seq_dep_matrix: path to the csv or xlsx file or a Dataframe containing the sequence dependency setup times
+        :param seq_dep_matrix: path to the csv or xlsx file or a Dataframe containing the sequence dependency setup times.
+        If this param is None, then it is assumed that all setup times are 0 minutes.
 
         :type machine_speeds: Path | str | Dataframe
         :param machine_speeds: path to the csv or xlsx file or a Dataframe containing all of the machine speeds
@@ -353,7 +354,7 @@ class SpreadsheetData(Data):
         else:
             self.job_tasks_df = _convert_to_df(job_tasks)
 
-        if isinstance(seq_dep_matrix, pd.DataFrame):
+        if seq_dep_matrix is None or isinstance(seq_dep_matrix, pd.DataFrame):
             self.seq_dep_matrix_df = seq_dep_matrix
         else:
             self.seq_dep_matrix_df = _convert_to_df(seq_dep_matrix)
@@ -364,8 +365,12 @@ class SpreadsheetData(Data):
             self.machine_speeds_df = _convert_to_df(machine_speeds)
 
         self._read_job_tasks_df(self.job_tasks_df)
-        self._read_sequence_dependency_matrix_df(self.seq_dep_matrix_df)
         self._read_machine_speeds_df(self.machine_speeds_df)
+        if self.seq_dep_matrix_df is not None:
+            self._read_sequence_dependency_matrix_df(self.seq_dep_matrix_df)
+        else:
+            num_tasks = self.job_tasks_df.shape[0]
+            self.sequence_dependency_matrix = np.zeros((num_tasks, num_tasks), dtype=np.intc)
 
         self.total_number_of_jobs = len(self.jobs)
         self.total_number_of_tasks = sum(len(job.get_tasks()) for job in self.jobs)

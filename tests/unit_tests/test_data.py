@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from JSSP import data
 from tests.util import project_root, tmp_dir, get_files_with_suffix, rm_tree
@@ -8,15 +9,12 @@ from tests.util import project_root, tmp_dir, get_files_with_suffix, rm_tree
 
 class TestData(unittest.TestCase):
 
-    def test_create_csv_data_path(self):
+    def test_create_spreadsheet_data_path(self):
         csv_data = data.SpreadsheetData(
             project_root / 'data/given_data/sequenceDependencyMatrix.csv',
             project_root / 'data/given_data/machineRunSpeed.csv',
             project_root / 'data/given_data/jobTasks.csv')
 
-        self.assertIsNotNone(csv_data.seq_dep_matrix_file_path)
-        self.assertIsNotNone(csv_data.machine_speeds_file_path)
-        self.assertIsNotNone(csv_data.job_tasks_file_path)
         self.assertIsNotNone(csv_data.sequence_dependency_matrix)
         self.assertIsNotNone(csv_data.job_task_index_matrix)
         self.assertIsNotNone(csv_data.usable_machines_matrix)
@@ -29,16 +27,58 @@ class TestData(unittest.TestCase):
         self.assertIsNotNone(csv_data.total_number_of_machines)
         self.assertIsNotNone(csv_data.max_tasks_for_a_job)
 
-    def test_create_csv_data_str(self):
+    def test_create_spreadsheet_data_str(self):
         csv_data = data.SpreadsheetData(
             str(project_root / 'data/given_data/sequenceDependencyMatrix.csv'),
             str(project_root / 'data/given_data/machineRunSpeed.csv'),
             str(project_root / 'data/given_data/jobTasks.csv'))
 
-        self.assertIsNotNone(csv_data.seq_dep_matrix_file_path)
-        self.assertIsNotNone(csv_data.machine_speeds_file_path)
-        self.assertIsNotNone(csv_data.job_tasks_file_path)
         self.assertIsNotNone(csv_data.sequence_dependency_matrix)
+        self.assertIsNotNone(csv_data.job_task_index_matrix)
+        self.assertIsNotNone(csv_data.usable_machines_matrix)
+        self.assertIsNotNone(csv_data.task_processing_times_matrix)
+        self.assertIsNotNone(csv_data.machine_speeds)
+
+        self.assertNotEqual([], csv_data.jobs)
+        self.assertIsNotNone(csv_data.total_number_of_jobs)
+        self.assertIsNotNone(csv_data.total_number_of_tasks)
+        self.assertIsNotNone(csv_data.total_number_of_machines)
+        self.assertIsNotNone(csv_data.max_tasks_for_a_job)
+
+    def test_create_spreadsheet_data_df(self):
+        seq_dep_df = pd.read_csv(project_root / 'data/given_data/sequenceDependencyMatrix.csv')
+        machine_df = pd.read_csv(project_root / 'data/given_data/machineRunSpeed.csv')
+        jobs_df = pd.read_csv(project_root / 'data/given_data/jobTasks.csv')
+
+        csv_data = data.SpreadsheetData(
+            seq_dep_df,
+            machine_df,
+            jobs_df)
+
+        self.assertIsNotNone(csv_data.sequence_dependency_matrix)
+        self.assertIsNotNone(csv_data.job_task_index_matrix)
+        self.assertIsNotNone(csv_data.usable_machines_matrix)
+        self.assertIsNotNone(csv_data.task_processing_times_matrix)
+        self.assertIsNotNone(csv_data.machine_speeds)
+
+        self.assertNotEqual([], csv_data.jobs)
+        self.assertIsNotNone(csv_data.total_number_of_jobs)
+        self.assertIsNotNone(csv_data.total_number_of_tasks)
+        self.assertIsNotNone(csv_data.total_number_of_machines)
+        self.assertIsNotNone(csv_data.max_tasks_for_a_job)
+
+    def test_create_spreadsheet_data_no_seq_dep(self):
+        seq_dep_df = None
+        machine_df = pd.read_csv(project_root / 'data/given_data/machineRunSpeed.csv')
+        jobs_df = pd.read_csv(project_root / 'data/given_data/jobTasks.csv')
+
+        csv_data = data.SpreadsheetData(
+            seq_dep_df,
+            machine_df,
+            jobs_df)
+
+        expected_sequence_dependency_matrix = np.zeros((csv_data.total_number_of_tasks, csv_data.total_number_of_tasks), dtype=np.intc)
+        self.assertTrue(np.equal(expected_sequence_dependency_matrix, csv_data.sequence_dependency_matrix).all())
         self.assertIsNotNone(csv_data.job_task_index_matrix)
         self.assertIsNotNone(csv_data.usable_machines_matrix)
         self.assertIsNotNone(csv_data.task_processing_times_matrix)
