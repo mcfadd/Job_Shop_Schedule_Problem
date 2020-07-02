@@ -77,7 +77,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
     """
     if (ts_agent_list is None or not all(ts_agent.benchmark for ts_agent in ts_agent_list)) \
             and (ga_agent is None or not ga_agent.benchmark):
-        return
+        raise UserWarning("agent arguments were None or were not ran in benchmark mode.")
 
     if title is None:
         title = "Benchmark Run {}".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -98,7 +98,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
         }
 
     # tabu search results
-    if ts_agent_list is not None:
+    if ts_agent_list is not None and all(ts_agent.benchmark for ts_agent in ts_agent_list):
         _create_ts_plots(ts_agent_list, output_dir)
         ts_result_makespans = []
         ts_initial_makespans = []
@@ -118,7 +118,7 @@ def output_benchmark_results(output_dir, ts_agent_list=None, ga_agent=None, titl
         ts_iterations_stats = None
 
     # genetic algorithm results
-    if ga_agent is not None:
+    if ga_agent is not None and ga_agent.benchmark:
         _create_ga_plots(ga_agent, output_dir)
         ga_initial_makespans = [sol.makespan for sol in ga_agent.initial_population]
         ga_result_makespans = [sol.makespan for sol in ga_agent.result_population]

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from setuptools import find_packages, setup, Extension
 
-__version__ = '1.1.0'
+__version__ = '2.1.0'
 
 README = (Path(__file__).parent / "README.md").read_text()
 requirements_txt = Path(__file__).parent / "requirements.txt"

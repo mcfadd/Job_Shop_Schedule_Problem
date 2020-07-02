@@ -24,7 +24,7 @@ copyright = '2019, Matt McFadden'
 author = 'Matt McFadden'
 
 # The full version, including alpha/beta/rc tags
-release = '1.1.0'
+release = '2.1.0'
 
 
 # -- General configuration ---------------------------------------------------

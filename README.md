@@ -4,7 +4,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mcfadd_Job_Shop_Schedule_Problem&metric=alert_status)](https://sonarcloud.io/dashboard?id=mcfadd_Job_Shop_Schedule_Problem)
 [![Documentation Status](https://readthedocs.org/projects/job-shop-schedule-problem/badge/?version=stable)](https://job-shop-schedule-problem.readthedocs.io/en/stable/?badge=stable)
 
-#### Version 1.1.0 
+#### Version 2.1.0 
 
 JSSP is an optimization package for the Job Shop Schedule Problem.  
 JSSP has two different optimization algorithms:  
@@ -52,12 +52,12 @@ The following example minimally demonstrates how to run parallel tabu search to 
 
 ```python
 from JSSP.solver import Solver
-from JSSP.data import CSVData
+from JSSP.data import SpreadsheetData
 
 # initialize data
-data = CSVData('data/given_data/sequenceDependencyMatrix.csv',
-               'data/given_data/machineRunSpeed.csv',
-               'data/given_data/jobTasks.csv')
+data = SpreadsheetData('data/given_data/sequenceDependencyMatrix.csv',
+                       'data/given_data/machineRunSpeed.csv',
+                       'data/given_data/jobTasks.csv')
 
 # run parallel Tabu Search
 solver = Solver(data)

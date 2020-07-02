@@ -1,10 +1,10 @@
-import heapq
 import random
 
 import numpy as np
 
 from .solution import Solution
-from ..data import Data, CSVData
+from ..data import Data, SpreadsheetData
+from ..util import Heap
 
 
 class SolutionFactory:
@@ -101,7 +101,7 @@ class SolutionFactory:
 
             # this loop prevents scheduling a task on a machine with sequence # > last task scheduled - 1 if the tasks are apart of the same job.
             # Without this loop Infeasible solutions may be generated. The get_unstuck variable ensures that this loop doesn't run forever.
-            if isinstance(self.jssp_instance_data, CSVData):
+            if isinstance(self.jssp_instance_data, SpreadsheetData):
                 while last_task_scheduled_on_machine[rand_machine] is not None \
                         and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
                         and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
@@ -132,16 +132,19 @@ class SolutionFactory:
         """
         Generates a random Solution instance with either shortest or longest processing time first criteria.
 
+        :type lpt: bool
+        :param lpt: if True a random Solution with longest processing time first criteria is returned
+
         :rtype: Solution
         :returns: randomly generated Solution instance
         """
         operation_list = []
         last_task_scheduled_on_machine = [None] * self.jssp_instance_data.total_number_of_machines
-        available_heap = _JobTaskHeap(self.jssp_instance_data, maxheap=lpt)
+        available_heap = _JobTaskHeap(self.jssp_instance_data, max_heap=lpt)
 
         while 0 < len(available_heap):
             get_unstuck = 0
-            rand_task = available_heap.pop_task()
+            rand_task = available_heap.pop()
             rand_job_id = rand_task.get_job_id()
             rand_machine = np.random.choice(rand_task.get_usable_machines())
 
@@ -150,7 +153,7 @@ class SolutionFactory:
             tmp_task_list = []
             # TODO the heap (i.e. list) is depleted in this while loop which causes an index out of bound exception.
             #  This shouldn't happen if the sequence dependency matrix is correct and accounts for wait time
-            if isinstance(self.jssp_instance_data, CSVData):
+            if isinstance(self.jssp_instance_data, SpreadsheetData):
                 while last_task_scheduled_on_machine[rand_machine] is not None \
                         and last_task_scheduled_on_machine[rand_machine].get_job_id() == rand_job_id \
                         and last_task_scheduled_on_machine[rand_machine].get_sequence() + 1 < rand_task.get_sequence():
@@ -158,7 +161,7 @@ class SolutionFactory:
                     # save the task that was removed but cannot be scheduled
                     tmp_task_list.append(rand_task)
 
-                    rand_task = available_heap.pop_task()
+                    rand_task = available_heap.pop()
                     rand_job_id = rand_task.get_job_id()
                     rand_machine = np.random.choice(rand_task.get_usable_machines())
                     get_unstuck += 1
@@ -168,7 +171,7 @@ class SolutionFactory:
 
             # add the tasks that were removed back if any
             for task in tmp_task_list:
-                available_heap.push_task(task)
+                available_heap.push(task)
 
             if len(available_heap.dict[rand_job_id]) == 0:
                 if rand_task.get_sequence() == self.jssp_instance_data.get_job(rand_job_id).get_max_sequence():
@@ -179,7 +182,7 @@ class SolutionFactory:
                     for t in self.jssp_instance_data.get_job(rand_job_id).get_tasks():
                         if t.get_sequence() == rand_task.get_sequence() + 1:
                             # available_heap.dict[rand_job_id].append(t)
-                            available_heap.push_task(t)
+                            available_heap.push(t)
 
             last_task_scheduled_on_machine[rand_machine] = rand_task
             operation_list.append([rand_job_id, rand_task.get_task_id(), rand_task.get_sequence(), rand_machine])
@@ -192,34 +195,29 @@ Data structures
 """
 
 
-class _JobTaskHeap:
-    def __init__(self, data, maxheap=True):
+class _JobTaskHeap(Heap):
+    def __init__(self, data, max_heap=False):
+        super().__init__(max_heap)
         self.data = data
-        self.maxheap = maxheap
-        self.heap = []
-        self.dict = {job.get_job_id(): [task for task in job.get_tasks() if task.get_sequence() == 0] for job in
-                     self.data.jobs}
-        for job in self.data.jobs:
+        self.dict = {}
+        for job in data.jobs:
+            self.dict[job.get_job_id()] = []
             for task in job.get_tasks():
                 if task.get_sequence() == 0:
-                    heapq.heappush(self.heap,
-                                   _MaxHeapObj(self.data, task) if self.maxheap else _MinHeapObj(self.data, task))
+                    self.push(task)
 
-    def push_task(self, task):
-        heapq.heappush(self.heap,
-                       _MaxHeapObj(self.data, task) if self.maxheap else _MinHeapObj(self.data, task))
+    def push(self, task):
+        super().push(TaskWrapper(self.data, task))
         self.dict[task.get_job_id()].append(task)
 
-    def pop_task(self):
-        task = heapq.heappop(self.heap).val
+    def pop(self):
+        task_wrapper = super().pop()
+        task = task_wrapper.val
         self.dict[task.get_job_id()].remove(task)
         return task
 
-    def __len__(self):
-        return len(self.heap)
 
-
-class _MaxHeapObj:
+class TaskWrapper:
     def __init__(self, data, val):
         self.data = data
         self.val = val
@@ -240,13 +238,11 @@ class _MaxHeapObj:
 
     def __lt__(self, other):
         other_avg_processing_time, self_avg_processing_time = self._get_avg_processing_time(other)
+        return self_avg_processing_time < other_avg_processing_time
+
+    def __gt__(self, other):
+        other_avg_processing_time, self_avg_processing_time = self._get_avg_processing_time(other)
         return self_avg_processing_time > other_avg_processing_time
 
     def __eq__(self, other):
         return self.val == other.val
-
-
-class _MinHeapObj(_MaxHeapObj):
-    def __lt__(self, other):
-        other_avg_processing_time, self_avg_processing_time = self._get_avg_processing_time(other)
-        return self_avg_processing_time < other_avg_processing_time

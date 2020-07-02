@@ -1,3 +1,4 @@
+import datetime
 import multiprocessing as mp
 import pickle
 import time
@@ -57,8 +58,8 @@ class Solver:
 
         The parent process waits for the child processes to finish, then collects their results and updates self.solution.
 
-        :type runtime: float
-        :param runtime: seconds that tabu search should run for
+        :type runtime: float | datetime.timedelta
+        :param runtime: either the number of seconds or timedelta that tabu search should run for
 
         :type num_solutions_per_process: int
         :param num_solutions_per_process: number of solutions that one tabu search process should gather
@@ -96,7 +97,12 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        return self._tabu_search(runtime, time_condition=True, num_solutions_per_process=num_solutions_per_process,
+        if isinstance(runtime, datetime.timedelta):
+            runtime_seconds = runtime.total_seconds()
+        else:
+            runtime_seconds = runtime
+
+        return self._tabu_search(runtime_seconds, time_condition=True, num_solutions_per_process=num_solutions_per_process,
                                  num_processes=num_processes, tabu_list_size=tabu_list_size,
                                  neighborhood_size=neighborhood_size, neighborhood_wait=neighborhood_wait,
                                  probability_change_machine=probability_change_machine,
@@ -287,8 +293,8 @@ class Solver:
         First this function generates a random initial population if the population parameter is None,
         then it runs GA with the parameters specified and updates self.solution.
 
-        :type runtime: float
-        :param runtime: seconds to run the GA
+        :type runtime: float | datetime.timedelta
+        :param runtime: either the number of seconds or timedelta to run the GA for
 
         :type population: [Solution]
         :param population: list of Solutions to start the GA from
@@ -317,7 +323,11 @@ class Solver:
         :rtype: Solution
         :returns: best solution found
         """
-        return self._genetic_algorithm(runtime, time_condition=True, population=population,
+        if isinstance(runtime, datetime.timedelta):
+            runtime_seconds = runtime.total_seconds()
+        else:
+            runtime_seconds = runtime
+        return self._genetic_algorithm(runtime_seconds, time_condition=True, population=population,
                                        population_size=population_size, selection_method_enum=selection_method_enum,
                                        mutation_probability=mutation_probability,
                                        selection_size=selection_size, benchmark=benchmark, verbose=verbose,
@@ -456,7 +466,10 @@ class Solver:
         :param auto_open: if true index.html is automatically opened in a browser
 
         :returns: None
+
+        :raise UserWarning if one of the optimization functions was not ran in benchmark mode
         """
+        self._check_agents()
         benchmark_plotter.output_benchmark_results(output_dir, ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent,
                                                    title=title, auto_open=auto_open)
 
@@ -465,5 +478,19 @@ class Solver:
         Plots the benchmark results in an ipython notebook.
 
         :returns: None
+
+        :raise UserWarning if one of the optimization functions was not ran in benchmark mode
         """
+        self._check_agents()
         benchmark_plotter.iplot_benchmark_results(ts_agent_list=self.ts_agent_list, ga_agent=self.ga_agent)
+
+    def _check_agents(self):
+        # check if both agents are None
+        if self.ts_agent_list is None and self.ga_agent is None:
+            raise UserWarning("Solver's agents were None. You need to run at least one optimization function.")
+
+        # check if one agent was ran in benchmark mode
+        if not any([self.ts_agent_list is None or all(ts_agent.benchmark for ts_agent in self.ts_agent_list),
+                    self.ga_agent is None or self.ga_agent.benchmark]):
+            raise UserWarning("You must run one of the optimization functions in benchmark mode.")
+

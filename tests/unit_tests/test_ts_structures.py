@@ -1,8 +1,8 @@
 import unittest
 
-from JSSP.solution import SolutionFactory
-from JSSP.tabu_search.ts import _SolutionSet, _TabuList, _MaxHeap
-from tests.util import csv_data
+from JSSP.tabu_search.ts import _SolutionSet, _TabuList
+from JSSP.util import Heap
+from tests.util import csv_data_solution_factory
 
 
 class TestTSStructures(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = SolutionFactory(csv_data).get_solution()
+        solution_obj1 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -19,7 +19,7 @@ class TestTSStructures(unittest.TestCase):
         self.assertEqual(solution_set.size, 1)
 
         # add another Solution
-        solution_obj2 = SolutionFactory(csv_data).get_solution()
+        solution_obj2 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj2)
 
         # make sure last Solution was added
@@ -30,7 +30,7 @@ class TestTSStructures(unittest.TestCase):
         solution_set = _SolutionSet()
 
         # add a Solution
-        solution_obj1 = SolutionFactory(csv_data).get_solution()
+        solution_obj1 = csv_data_solution_factory.get_solution()
         solution_set.add(solution_obj1)
 
         # make sure Solution was added
@@ -45,47 +45,42 @@ class TestTSStructures(unittest.TestCase):
 
     def test_tabu_list_enqueue(self):
         # add solutions to tabu list
-        tabu_list = _TabuList(SolutionFactory(csv_data).get_solution())
+        tabu_list = _TabuList()
         size = 100
         while tabu_list.solutions.size < size:
-            tabu_list.enqueue(SolutionFactory(csv_data).get_solution())
-        self.assertNotEqual(tabu_list.head.data_val, tabu_list.tail.data_val)
+            sol = csv_data_solution_factory.get_solution()
+            tabu_list.put(sol)
+            self.assertTrue(sol in tabu_list)
 
-        # count the number of solutions in tabu_list
-        cnt = 0
-        tmp_node = tabu_list.head
-        while tmp_node is not None:
-            tmp_node = tmp_node.next_node
-            cnt += 1
-
-        self.assertEqual(cnt, size)
+        self.assertEqual(len(tabu_list), size)
 
     def test_tabu_list_dequeue(self):
-        initial_solution = SolutionFactory(csv_data).get_solution()
+        initial_solution = csv_data_solution_factory.get_solution()
 
         # build tabu_list and solutions list
-        tabu_list = _TabuList(initial_solution)
+        tabu_list = _TabuList()
+        tabu_list.put(initial_solution)
         lst = [initial_solution]
         size = 100
         while tabu_list.solutions.size < size:
-            solution_obj = SolutionFactory(csv_data).get_solution()
-            tabu_list.enqueue(solution_obj)
+            solution_obj = csv_data_solution_factory.get_solution()
+            tabu_list.put(solution_obj)
             lst.append(solution_obj)
 
         # check that solutions are dequeued in correct order
         i = 0
         while 0 < tabu_list.solutions.size:
             self.assertTrue(lst[i] in tabu_list)
-            self.assertEqual(lst[i], tabu_list.dequeue())
+            self.assertEqual(lst[i], tabu_list.get())
             self.assertFalse(lst[i] in tabu_list)
             i += 1
 
     def test_max_heap(self):
 
         heap_size = 50
-        heap = _MaxHeap()
+        heap = Heap(max_heap=True)
         for _ in range(heap_size):
-            heap.push(SolutionFactory(csv_data).get_solution())
+            heap.push(csv_data_solution_factory.get_solution())
 
         self.assertEqual(heap_size, len(heap), f"The max heap size should be equal to {heap_size}")
 

@@ -1,15 +1,19 @@
+import random
+import string
 import tempfile
 from pathlib import Path
 
-from JSSP import data
+from JSSP import data, SolutionFactory
 
 project_root = Path(__file__).parent.parent
 tmp_dir = Path(tempfile.mkdtemp())
 
-csv_data = data.CSVData(
+csv_data = data.SpreadsheetData(
             project_root / 'data/given_data/sequenceDependencyMatrix.csv',
             project_root / 'data/given_data/machineRunSpeed.csv',
             project_root / 'data/given_data/jobTasks.csv')
+
+csv_data_solution_factory = SolutionFactory(csv_data)
 
 
 def path_walk(top, topdown=False, followlinks=False):
@@ -62,3 +66,8 @@ def get_files_with_suffix(dir_path, suffix):
                 result.append(fname)
 
     return result
+
+
+def random_string(length=8):
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for _ in range(length))
