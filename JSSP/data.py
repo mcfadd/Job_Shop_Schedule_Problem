@@ -300,39 +300,36 @@ class Data(ABC):
 
 class SpreadsheetData(Data):
     """
-    JSSP instance data class for .csv or .xlsx data.
+    JSSP instance data class for spreadsheet data.
 
-    :type seq_dep_matrix_file: Path | str
-    :param seq_dep_matrix_file: path to the csv or xlsx file containing the sequence dependency setup times
+    :type seq_dep_matrix: Path | str | Dataframe
+    :param seq_dep_matrix: path to the csv or xlsx file or a Dataframe containing the sequence dependency setup times
 
-    :type machine_speeds_file: Path | str
-    :param machine_speeds_file: path to the csv or xlsx file containing all of the machine speeds
+    :type machine_speeds: Path | str | Dataframe
+    :param machine_speeds: path to the csv or xlsx file or a Dataframe containing all of the machine speeds
 
-    :type job_tasks_file: Path | str
-    :param job_tasks_file: path to the csv or xlsx file containing all of the job-tasks
+    :type job_tasks: Path | str | Dataframe
+    :param job_tasks: path to the csv or xlsx file or a Dataframe containing all of the job-tasks
 
     :returns: None
     """
 
-    def __init__(self, seq_dep_matrix_file, machine_speeds_file, job_tasks_file):
+    def __init__(self, seq_dep_matrix, machine_speeds, job_tasks):
         """
         Initializes all of the static data from the csv files.
 
-        :type seq_dep_matrix_file: Path | str
-        :param seq_dep_matrix_file: path to the csv or xlsx file containing the sequence dependency setup times
+        :type seq_dep_matrix: Path | str | Dataframe
+        :param seq_dep_matrix: path to the csv or xlsx file or a Dataframe containing the sequence dependency setup times
 
-        :type machine_speeds_file: Path | str
-        :param machine_speeds_file: path to the csv or xlsx file containing all of the machine speeds
+        :type machine_speeds: Path | str | Dataframe
+        :param machine_speeds: path to the csv or xlsx file or a Dataframe containing all of the machine speeds
 
-        :type job_tasks_file: Path | str
-        :param job_tasks_file: path to the csv or xlsx file containing all of the job-tasks
+        :type job_tasks: Path | str | Dataframe
+        :param job_tasks: path to the csv or xlsx file or a Dataframe containing all of the job-tasks
 
         :returns: None
         """
         super().__init__()
-        self.job_tasks_file_path = Path(job_tasks_file)
-        self.seq_dep_matrix_file_path = Path(seq_dep_matrix_file)
-        self.machine_speeds_file_path = Path(machine_speeds_file)
 
         def _convert_to_df(path):
             """
@@ -351,17 +348,28 @@ class SpreadsheetData(Data):
             else:
                 raise UserWarning("File extension must either be .csv or .xlsx")
 
-        self.job_tasks_df = _convert_to_df(self.job_tasks_file_path)
-        self.seq_dep_matrix_file_df = _convert_to_df(self.seq_dep_matrix_file_path)
-        self.machine_speeds_file_df = _convert_to_df(self.machine_speeds_file_path)
+        if isinstance(job_tasks, pd.DataFrame):
+            self.job_tasks_df = job_tasks
+        else:
+            self.job_tasks_df = _convert_to_df(job_tasks)
+
+        if isinstance(seq_dep_matrix, pd.DataFrame):
+            self.seq_dep_matrix_df = seq_dep_matrix
+        else:
+            self.seq_dep_matrix_df = _convert_to_df(seq_dep_matrix)
+
+        if isinstance(machine_speeds, pd.DataFrame):
+            self.machine_speeds_df = machine_speeds
+        else:
+            self.machine_speeds_df = _convert_to_df(machine_speeds)
 
         self._read_job_tasks_df(self.job_tasks_df)
-        self._read_sequence_dependency_matrix_df(self.seq_dep_matrix_file_df)
-        self._read_machine_speeds_df(self.machine_speeds_file_df)
+        self._read_sequence_dependency_matrix_df(self.seq_dep_matrix_df)
+        self._read_machine_speeds_df(self.machine_speeds_df)
 
         self.total_number_of_jobs = len(self.jobs)
         self.total_number_of_tasks = sum(len(job.get_tasks()) for job in self.jobs)
-        self.max_tasks_for_a_job = max(x.get_number_of_tasks() for x in self.jobs)
+        self.max_tasks_for_a_job = max(job.get_number_of_tasks() for job in self.jobs)
         self.total_number_of_machines = self.machine_speeds.shape[0]
 
         self.job_task_index_matrix = np.full((self.total_number_of_jobs, self.max_tasks_for_a_job), -1, dtype=np.intc)
