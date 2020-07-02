@@ -336,12 +336,13 @@ class SpreadsheetData(Data):
             """
             Returns a data frame by reading a file.
 
-            :type path: Path
+            :type path: str | Path
             :param path: file to read as a data frame
 
             :rtype: DataFrame
             :return: data frame that was read
             """
+            path = Path(path)
             if path.suffix == ".csv":
                 return pd.read_csv(path)
             elif path.suffix == ".xlsx":
